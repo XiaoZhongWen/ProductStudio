@@ -4055,6 +4055,24 @@
 					"name": "课表、日历、我的"
 				}
 			]
+		},
+		{
+			"_type": "FCFlowchart",
+			"_id": "AAAAAAGJQ8U4UOpoamE=",
+			"_parent": {
+				"$ref": "AAAAAAFF+h6SjaM2Hec="
+			},
+			"name": "Flowchart3",
+			"ownedElements": [
+				{
+					"_type": "FCFlowchartDiagram",
+					"_id": "AAAAAAGJQ8U4UeppjHQ=",
+					"_parent": {
+						"$ref": "AAAAAAGJQ8U4UOpoamE="
+					},
+					"name": "role"
+				}
+			]
 		}
 	]
 }
