@@ -1,0 +1,105 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["registerDate", "expireDate"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"nickName": {
+			"bsonType": "string",
+			"description": "用户昵称",
+			"trim": "both",
+			"maxLength": 50
+		},
+		"avatarUrl": {
+			"bsonType": "string",
+			"description": "用户头像图片的 URL",
+			"trim": "both",
+			"maxLength": 100
+		},
+		"gender": {
+			"bsonType": "int",
+			"description": "用户性别：0 未知 1 男性 2 女性",
+			"enum": [0, 1, 2]
+		},
+		"birthday": {
+			"bsonType": "timestamp",
+			"description": "出生日期"
+		},
+		"roles": {
+			"bsonType": "array",
+			"description": "角色：1 机构负责人 2 老师 3 学生 4 家长",
+			"enum": [1, 2, 3, 4]
+		},
+		"registerDate": {
+			"bsonType": "timestamp",
+			"description": "用户注册时间"
+		},
+		"lastLoginDate": {
+			"bsonType": "timestamp",
+			"description": "最后登录时间"
+		},
+		"mobile": {
+			"bsonType": "string",
+			"description": "手机号码",
+			"pattern": "^\\+?[0-9-]{3,20}$",
+			"trim": "both"
+		},
+		"orgIds": {
+			"bsonType": "array",
+			"description": "用户所在机构id集合",
+			"maxLength": 100,
+			"foreignKey": "wk-orgs._id"
+		},
+		"orgExpireDate": {
+			"bsonType": "timestamp",
+			"description": "机构会员账号过期时间"
+		},
+		"familyExpireDate": {
+			"bsonType": "timestamp",
+			"description": "家庭会员账号过期时间"
+		},
+		"inputCount": {
+			"bsonType": "int",
+			"description": "录入用户数",
+			"maximum": 500,
+			"defaultValue": 0
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "学生状态：0 在读 1 结课"
+		},
+		"addr": {
+			"bsonType": "string",
+			"description": "用户地址",
+			"maxLength": 100
+		},
+		"school": {
+			"bsonType": "string",
+			"description": "学校名称",
+			"maxLength": 100
+		},
+		"grade": {
+			"bsonType": "string",
+			"description": "年级",
+			"enum": ["小班", "中班", "大班", "小学一年级", "小学二年级", "小学三年级", "小学四年级", "小学五年级", "小学六年级", "初中一年级", "初中二年级", "初中三年级", "高中一年级", "高中二年级", "高中三年级", "其他"]
+		},
+		"parentIds": {
+			"bsonType": "array",
+			"description": "家长的id集合",
+			"maxLength": 5
+		},
+		"tag": {
+			"bsonType": "string",
+			"description": "标签",
+			"maxLength": 50
+		}
+	}
+}

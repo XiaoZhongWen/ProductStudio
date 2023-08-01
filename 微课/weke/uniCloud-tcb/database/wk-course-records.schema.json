@@ -1,0 +1,58 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["courseId", "teacherId", "startTime", "endTime"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"courseId": {
+			"bsonType": "string",
+			"description": "课程id",
+			"foreignKey": "wk-courses._id"
+		},
+		"teacherId": {
+			"bsonType": "string",
+			"description": "老师id",
+			"foreignKey": "wk-users._id"
+		},
+		"studentId": {
+			"bsonType": "string",
+			"description": "学生id",
+			"foreignKey": "wk-users._id"
+		},
+		"startTime": {
+			"bsonType": "timestamp",
+			"description": "上课的开始时间"
+		},
+		"endTime": {
+			"bsonType": "timestamp",
+			"description": "上课的结束时间"
+		},
+		"classId": {
+			"bsonType": "string",
+			"description": "班级id",
+			"foreignKey": "wk-classes._id"
+		},
+		"studentIds": {
+			"bsonType": "array",
+			"description": "班级上课的学生id集合",
+			"foreignKey": "wk-users._id"
+		},
+		"feedback": {
+			"bsonType": "array",
+			"description": "老师的课程反馈"
+		},
+		"courseContent": {
+			"bsonType": "string",
+			"description": "上课内容",
+			"maxLength": 1000
+		}
+	}
+}

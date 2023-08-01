@@ -1,0 +1,38 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["studentId", "date", "courseId", "hour", "price"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"studentId": {
+			"bsonType": "string",
+			"description": "学生id",
+			"foreignKey": "wk-users._id"
+		},
+		"date": {
+			"bsonType": "timestamp",
+			"description": "缴费时间"
+		},
+		"courseId": {
+			"bsonType": "string",
+			"description": "课程id",
+			"foreignKey": "wk-courses._id"
+		},
+		"hour": {
+			"bsonType": "int",
+			"description": "课时数"
+		},
+		"price": {
+			"bsonType": "double",
+			"description": "缴费金额"
+		}
+	}
+}

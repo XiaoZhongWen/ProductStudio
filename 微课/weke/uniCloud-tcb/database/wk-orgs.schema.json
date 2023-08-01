@@ -1,0 +1,44 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["name", "createTime"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"name": {
+			"bsonType": "string",
+			"description": "机构名称",
+			"maxLength": 30
+		},
+		"tel": {
+			"bsonType": "string",
+			"description": "电话号码"
+		},
+		"addr": {
+			"bsonType": "string",
+			"description": "机构地址",
+			"maxLength": 100
+		},
+		"desc": {
+			"bsonType": "string",
+			"description": "机构简介",
+			"maxLength": 1000
+		},
+		"logo": {
+			"bsonType": "string",
+			"description": "机构字体图标",
+			"maxLength": 50
+		},
+		"createTime": {
+			"bsonType": "timestamp",
+			"description": "机构创建时间"
+		}
+	}
+}

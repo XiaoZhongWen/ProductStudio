@@ -1,0 +1,64 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["from", "to", "title", "startTime", "finished"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"from": {
+			"bsonType": "string",
+			"description": "任务派发人id",
+			"foreignKey": "wk-users._id"
+		},
+		"to": {
+			"bsonType": "string",
+			"description": "任务接收人id",
+			"foreignKey": "wk-users._id"
+		},
+		"title": {
+			"bsonType": "string",
+			"description": "任务标题",
+			"maxLength": 100
+		},
+		"desc": {
+			"bsonType": "string",
+			"description": "任务描述",
+			"maxLength": 500
+		},
+		"startTime": {
+			"bsonType": "timestamp",
+			"description": "任务的开始时间"
+		},
+		"endTime": {
+			"bsonType": "timestamp",
+			"description": "任务的结束时间"
+		},
+		"repeatType": {
+			"bsonType": "int",
+			"description": "重复类型, 0 不重发 1 每天 2 每个工作日 3 每个周末 4 每周"
+		},
+		"endType": {
+			"bsonType": "int",
+			"description": "重复类型, 0 永不 1 按日期 2 按次数"
+		},
+		"color": {
+			"bsonType": "string",
+			"description": "颜色标签"
+		},
+		"remind": {
+			"bsonType": "bool",
+			"description": "true 提醒，false 不提醒"
+		},
+		"finished": {
+			"bsonType": "bool",
+			"description": "true 完成，false 未完成"
+		}
+	}
+}

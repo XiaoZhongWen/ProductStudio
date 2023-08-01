@@ -1,0 +1,36 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": ["userId", "scheduleId", "status"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"userId": {
+			"bsonType": "string",
+			"description": "用户id",
+			"foreignKey": "wk-users._id"
+		},
+		"scheduleId": {
+			"bsonType": "string",
+			"description": "排课id",
+			"foreignKey": "wk-schedules._id"
+		},
+		"desc": {
+			"bsonType": "string",
+			"description": "请假原因",
+			"maxLength": 100
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "请假状态, 1:学生申请请假、2:老师批准请假",
+			"enum": [1, 2]
+		}
+	}
+}
