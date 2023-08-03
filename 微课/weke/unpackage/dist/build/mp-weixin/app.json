@@ -1,0 +1,35 @@
+{
+  "pages": [
+    "pages/calendar/calendar",
+    "pages/student/student",
+    "pages/course/course",
+    "pages/mine/mine"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F2F4FD"
+  },
+  "tabBar": {
+    "backgroundColor": "#F2F4FD",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/calendar/calendar",
+        "iconPath": "static/icon/tab/icon_tab_calendar.png",
+        "selectedIconPath": "static/icon/tab/icon_tab_calender_selected.png"
+      },
+      {
+        "pagePath": "pages/student/student",
+        "iconPath": "static/icon/tab/icon_tab_student.png",
+        "selectedIconPath": "static/icon/tab/icon_tab_student_selected.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "iconPath": "static/icon/tab/icon_tab_mine.png",
+        "selectedIconPath": "static/icon/tab/icon_tab_mine_selected.png"
+      }
+    ]
+  },
+  "usingComponents": {}
+}
