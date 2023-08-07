@@ -17,7 +17,12 @@
       {
         "pagePath": "pages/calendar/calendar",
         "iconPath": "static/icon/tab/icon_tab_calendar.png",
-        "selectedIconPath": "static/icon/tab/icon_tab_calender_selected.png"
+        "selectedIconPath": "static/icon/tab/icon_tab_calendar_selected.png"
+      },
+      {
+        "pagePath": "pages/course/course",
+        "iconPath": "static/icon/tab/icon_tab_course.png",
+        "selectedIconPath": "static/icon/tab/icon_tab_course_selected.png"
       },
       {
         "pagePath": "pages/student/student",

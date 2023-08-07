@@ -1,6 +1,6 @@
 <template>
 	<view>
-		日历
+		
 	</view>
 </template>
 

@@ -4,7 +4,7 @@
             "path" : "pages/calendar/calendar",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "日历",
+                "navigationBarTitleText": "课表",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
@@ -14,7 +14,7 @@
             "path" : "pages/student/student",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
+                "navigationBarTitleText": "学员",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
@@ -24,7 +24,7 @@
             "path" : "pages/course/course",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
+                "navigationBarTitleText": "课程",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
@@ -34,7 +34,7 @@
             "path" : "pages/mine/mine",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
+                "navigationBarTitleText": "我的",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
@@ -54,7 +54,12 @@
 			{
 				"pagePath": "pages/calendar/calendar",
 				"iconPath": "static/icon/tab/icon_tab_calendar.png",
-				"selectedIconPath": "static/icon/tab/icon_tab_calender_selected.png"
+				"selectedIconPath": "static/icon/tab/icon_tab_calendar_selected.png"
+			},
+			{
+				"pagePath": "pages/course/course",
+				"iconPath": "static/icon/tab/icon_tab_course.png",
+				"selectedIconPath": "static/icon/tab/icon_tab_course_selected.png"
 			},
 			{
 				"pagePath": "pages/student/student",
