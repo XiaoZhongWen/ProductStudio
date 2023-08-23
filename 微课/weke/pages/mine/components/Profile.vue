@@ -13,29 +13,43 @@
 			<uni-icons class="member" type="vip-filled" color="#f4b240" size=26></uni-icons>
 		</view>
 		<view class="right-container">
-			<view class="top">
-				<!-- 昵称 -->
-				<text class="nickname">Julien</text>
-				<!-- 角色 -->
-				<view class="tags">
-					<WkTag class="tag" content="机构负责人"></WkTag>
-					<WkTag class="tag" content="老师"></WkTag>
-					<WkTag class="tag" content="家长"></WkTag>
+			<template v-if="usersStore.isLogin">
+				<view class="top">
+					<!-- 昵称 -->
+					<text class="nickname">Julien</text>
+					<!-- 角色 -->
+					<view class="tags">
+						<WkTag class="tag" content="机构负责人"></WkTag>
+						<WkTag class="tag" content="老师"></WkTag>
+						<WkTag class="tag" content="家长"></WkTag>
+					</view>
 				</view>
-			</view>
-			<!-- 个性签名 -->
-			<view class="">
-				<text class="sign">个性签名</text>
-				<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
-			</view>
-			<!-- 有效期 -->
-			<text class="expired">有效期至2023年9月22日</text>
+				<!-- 个性签名 -->
+				<view class="">
+					<text class="sign">个性签名</text>
+					<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
+				</view>
+				<!-- 有效期 -->
+				<text class="expired">有效期至2023年9月22日</text>
+			</template>
+			<template v-else>
+				<view class="login" @tap="onLoginTap">点击登录</view>
+			</template>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
 import WkTag from './WkTag.vue'
+import { useUsersStore } from '../../../store/users'
+
+const usersStore = useUsersStore()
+const emit = defineEmits(['login'])
+
+function onLoginTap() {
+	emit('login')
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -96,6 +110,10 @@ import WkTag from './WkTag.vue'
 			display: block;
 			font-size: $uni-font-size-10;
 			color: $uni-text-color-disable;
+		}
+		.login {
+			font-size: $uni-font-size-base;
+			font-weight: bold;
 		}
 	}
 }

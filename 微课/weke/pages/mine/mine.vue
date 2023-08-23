@@ -2,7 +2,7 @@
 	<view>
 		<scroll-view scroll-y="true" show-scrollbar=false enhanced=true>
 			<!-- 个人信息 -->
-			<Profile></Profile>
+			<Profile @login="loginAuthPopup.open()"></Profile>
 			
 			<!-- 机构相关 -->
 			<view class="org-container">
@@ -162,12 +162,23 @@
 					</uni-list-item>
 				</uni-list>
 			</view>
+			
+			<!-- popup 登录授权 -->
+			<uni-popup ref="loginAuthPopup" background-color="#fff" type="bottom" style="z-index: 10;">
+				<view class="">内容1</view>
+				<view class="">内容2</view>
+				<button type="default">关闭</button>
+			</uni-popup>
+			
 		</scroll-view>
 	</view>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
+
+const loginAuthPopup = ref()
 
 </script>
 
