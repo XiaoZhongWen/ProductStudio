@@ -1,10 +1,11 @@
 <template>
 	<view class="container">
-		<text>机构负责人</text>
+		<text>{{props.content}}</text>
 	</view>
 </template>
 
 <script setup lang="ts">
+const props = defineProps(['content'])
 </script>
 
 <style lang="scss">

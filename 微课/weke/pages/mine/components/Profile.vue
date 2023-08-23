@@ -17,11 +17,17 @@
 				<!-- 昵称 -->
 				<text class="nickname">Julien</text>
 				<!-- 角色 -->
-				<WkTag></WkTag>
-				<!-- <uni-tag text="机构负责人" type="primary" size="mini" circle="true"></uni-tag> -->
+				<view class="tags">
+					<WkTag class="tag" content="机构负责人"></WkTag>
+					<WkTag class="tag" content="老师"></WkTag>
+					<WkTag class="tag" content="家长"></WkTag>
+				</view>
 			</view>
 			<!-- 个性签名 -->
-			<text class="sign">个性签名</text>
+			<view class="">
+				<text class="sign">个性签名</text>
+				<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
+			</view>
 			<!-- 有效期 -->
 			<text class="expired">有效期至2023年9月22日</text>
 		</view>
@@ -65,12 +71,28 @@ import WkTag from './WkTag.vue'
 		justify-content: space-around;
 		flex: 1;
 		padding: $uni-padding-base $uni-padding-base $uni-padding-base 16px;
-		.nickname {
-			font-size: $uni-font-size-base;
-			padding-right: $uni-spacing-row-base;
-			font-weight: bold;
+		.top {
+			display: flex;
+			.nickname {
+				position: relative;
+				font-size: $uni-font-size-base;
+				font-weight: bold;
+				top: 3px;
+			}
+			.tags {
+				display: inline-block;
+				flex: 1;
+				padding: 0 $uni-padding-normal;
+				.tag {
+					margin: 0 $uni-spacing-row-mini;
+				}
+			}
 		}
-		.sign, .expired {
+		.sign {
+			font-size: $uni-font-size-10;
+			color: $uni-text-color-disable;
+		}
+		.expired {
 			display: block;
 			font-size: $uni-font-size-10;
 			color: $uni-text-color-disable;
