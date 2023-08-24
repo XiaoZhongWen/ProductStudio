@@ -10,7 +10,7 @@
 				mode="aspectFill">
 			</image>
 			<!-- 会员标识 -->
-			<uni-icons class="member" type="vip-filled" color="#f4b240" size=26></uni-icons>
+			<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
 		</view>
 		<view class="right-container">
 			<template v-if="usersStore.isLogin">
@@ -46,7 +46,7 @@ import { useUsersStore } from '../../../store/users'
 const usersStore = useUsersStore()
 const emit = defineEmits(['login'])
 
-function onLoginTap() {
+const onLoginTap = () => {
 	emit('login')
 }
 
@@ -77,6 +77,9 @@ function onLoginTap() {
 			position: absolute;
 			left: $member-left-offset;
 			top: $member-top-offset;
+			background-color: $wk-text-color-orange;
+			border-radius: $uni-border-radius-circle;
+			padding: 0 $uni-padding-sm;
 		}
 	}
 	.right-container {
@@ -91,6 +94,7 @@ function onLoginTap() {
 				position: relative;
 				font-size: $uni-font-size-base;
 				font-weight: bold;
+				color: $wk-text-color;
 				top: 3px;
 			}
 			.tags {
@@ -104,16 +108,16 @@ function onLoginTap() {
 		}
 		.sign {
 			font-size: $uni-font-size-10;
-			color: $uni-text-color-disable;
+			color: $wk-text-color-grey;
 		}
 		.expired {
 			display: block;
 			font-size: $uni-font-size-10;
-			color: $uni-text-color-disable;
+			color: $wk-text-color-grey;
 		}
 		.login {
 			font-size: $uni-font-size-base;
-			font-weight: bold;
+			color: $wk-text-color;
 		}
 	}
 }

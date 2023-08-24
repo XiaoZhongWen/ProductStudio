@@ -15,6 +15,6 @@ const props = defineProps(['content'])
 	padding: 2px 4px;
 	border-radius: 2px;
 	font-size: $uni-font-size-10;
-	color: $uni-theme-color;
+	color: $wk-theme-color;
 }
 </style>

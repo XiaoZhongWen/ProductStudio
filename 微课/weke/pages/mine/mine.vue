@@ -2,7 +2,7 @@
 	<view>
 		<scroll-view scroll-y="true" show-scrollbar=false enhanced=true>
 			<!-- 个人信息 -->
-			<Profile @login="loginAuthPopup.open()"></Profile>
+			<Profile @login="onLogin"></Profile>
 			
 			<!-- 机构相关 -->
 			<view class="org-container">
@@ -38,7 +38,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="shop-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons type="chatboxes-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">班级</text>
 							</view>
 						</template>
@@ -47,7 +47,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="chatboxes-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons type="wallet-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">课程</text>
 							</view>
 						</template>
@@ -137,7 +137,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="navigate-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons type="navigate-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">新手指南</text>
 							</view>
 						</template>
@@ -146,7 +146,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="chatboxes-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons type="chatboxes-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">反馈意见</text>
 							</view>
 						</template>
@@ -155,7 +155,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="heart-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons type="heart-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">关于我们</text>
 							</view>
 						</template>
@@ -164,10 +164,12 @@
 			</view>
 			
 			<!-- popup 登录授权 -->
-			<uni-popup ref="loginAuthPopup" background-color="#fff" type="bottom" style="z-index: 10;">
-				<view class="">内容1</view>
-				<view class="">内容2</view>
-				<button type="default">关闭</button>
+			<uni-popup 
+				ref="loginAuthPopup" 
+				type="bottom"
+				background-color="white"
+				@change="onChange">
+				<LoginAuth @on-popup="onPopup"></LoginAuth>
 			</uni-popup>
 			
 		</scroll-view>
@@ -177,20 +179,29 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
+import LoginAuth from './components/LoginAuth.vue'
+import mittBus from '@/bus/mittBus'
 
-const loginAuthPopup = ref()
+const loginAuthPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+const onLogin = () => {
+	loginAuthPopup.value?.open()
+}
+
+const onPopup = () => {
+	loginAuthPopup.value?.close()
+}
+
+const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
+	e.show? uni.hideTabBar(): uni.showTabBar()
+}
 
 </script>
 
 <style lang="scss">
-::-webkit-scrollbar {  
-    display: none;  
-    width: 0 !important;  
-    height: 0 !important;  
-    -webkit-appearance: none;  
-    background: transparent;  
-}
-
 .org-container, .children-container, .account-container, .other-container {
 	margin-top: $uni-spacing-col-lg;
 	.uni-list {
@@ -208,8 +219,9 @@ const loginAuthPopup = ref()
 		flex-direction: row;
 		align-items: center;
 		.slot-text {
-			margin-left: $uni-padding-base;
+			margin-left: $uni-padding-normal;
 			font-size: $uni-font-size-base;
+			color: $wk-text-color;
 			font-weight: 400;
 		}
 		uni-icons {
