@@ -13,15 +13,37 @@
 		</view>
 		<view class="body">
 			<UploadPortrait class="portrait"></UploadPortrait>
+			<input 
+				class="input" 
+				type="text" 
+				placeholder="输入昵称,不超过16个字" 
+				placeholder-style="color:#c6c8cf; font-size:12px"
+				maxlength="16"
+				@tap="onTapInput"/>
+			<view class="protocol" @tap="onTapProtocol">
+				<text class="normal">同意</text>
+				<text class="link-text">《微课用户服务协议》</text>
+				<text class="normal">后再登录（可点击阅读）</text>
+			</view>
+			<button class="btn" type="default">我已同意</button>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
 import UploadPortrait from './UploadPortrait.vue'
+
 const emit = defineEmits(['onPopup'])
 const onClose = () => {
 	emit('onPopup')
+}
+
+const onTapProtocol = () => {
+	uni.$emit('showWkProtcol')
+}
+
+const onTapInput = () => {
+	uni.$emit('requestWxNickname')
 }
 	
 </script>
@@ -58,12 +80,42 @@ const onClose = () => {
 	}
 	.body {
 		flex: 1;
+		position: relative;
 		background-color: white;
 		display:flex;
 		flex-direction: column;
 		align-items: center;
 		.portrait {
 			margin-top: 60rpx;
+		}
+		.input {
+			background-color: $wk-bg-color-grey;
+			height: 80rpx;
+			padding: 0 40rpx;
+			border-radius: $uni-border-radius-lg;
+			margin-top: 60rpx;
+			caret-color: $wk-theme-color;
+			text-align: center;
+			color: $wk-text-color;
+		}
+		.protocol {
+			position: fixed;
+			bottom: 180rpx;
+			font-size: $uni-font-size-sm;
+			.link-text {
+				color: $wk-theme-color;
+			}
+			.normal {
+				color: $uni-text-color-placeholder;
+			}
+		}
+		.btn {
+			position: fixed;
+			bottom: 80rpx;
+			background-color: $wk-theme-color;
+			color: white;
+			font-size: $uni-font-size-base;
+			width: 90%;
 		}
 	}
 }

@@ -172,6 +172,18 @@
 				<LoginAuth @on-popup="onPopup"></LoginAuth>
 			</uni-popup>
 			
+			<!-- popup 头像授权 -->
+			<uni-popup 
+				ref="portraitPopup" 
+				type="bottom"
+				background-color="white">
+				<view class="">
+					<view class="">1</view>
+					<view class="">2</view>
+					<view class="">3</view>
+				</view>
+			</uni-popup>
+			
 		</scroll-view>
 	</view>
 </template>
@@ -180,9 +192,13 @@
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
-import mittBus from '@/bus/mittBus'
 
 const loginAuthPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+const portraitPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
@@ -198,6 +214,19 @@ const onPopup = () => {
 const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
 }
+
+uni.$on('uploadPortrait', () => {
+	portraitPopup.value?.open()
+	console.log('uploadPortrait')
+})
+
+uni.$on('showWkProtcol', () => {
+	console.log('showWkProtcol')
+})
+
+uni.$on('requestWxNickname', () => {
+	console.log('requestWxNickname')
+})
 
 </script>
 

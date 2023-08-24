@@ -1,11 +1,15 @@
 <template>
-	<view class="circle">
+	<view class="circle" @tap="onTap">
 		<uni-icons class="icon" type="plusempty" color="#c6c8cf"></uni-icons>
 		<text>上传头像</text>
 	</view>
 </template>
 
 <script setup lang="ts">
+
+const onTap = () => {
+	uni.$emit('uploadPortrait')
+}
 </script>
 
 <style lang="scss">
