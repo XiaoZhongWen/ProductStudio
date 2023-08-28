@@ -25,7 +25,7 @@
 				<text class="link-text">《微课用户服务协议》</text>
 				<text class="normal">后再登录（可点击阅读）</text>
 			</view>
-			<button class="btn" type="default">我已同意</button>
+			<button class="btn" type="default" @tap="onTapAgree">我已同意</button>
 		</view>
 	</view>
 </template>
@@ -44,6 +44,10 @@ const onTapProtocol = () => {
 
 const onTapInput = () => {
 	uni.$emit('requestWxNickname')
+}
+
+const onTapAgree = () => {
+	uni.$emit('login')
 }
 	
 </script>
