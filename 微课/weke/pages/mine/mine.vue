@@ -192,6 +192,10 @@
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
+import { useUsersStore } from "@/store/users"
+
+const users = uniCloud.importObject('users')
+const usersStore = useUsersStore()
 
 const loginAuthPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -226,6 +230,21 @@ uni.$on('showWkProtcol', () => {
 
 uni.$on('requestWxNickname', () => {
 	console.log('requestWxNickname')
+})
+
+uni.$on('login', () => {
+	uni.login({
+		provider: 'weixin',
+		success: async (res) => {
+			if (res.code) {
+				const session = await users.code2Session(res.code)
+				console.log(session)
+			}
+		},
+		fail: () => {
+			
+		}
+	})
 })
 
 </script>

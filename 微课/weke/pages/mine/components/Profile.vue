@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import WkTag from './WkTag.vue'
-import { useUsersStore } from '../../../store/users'
+import { useUsersStore } from '@/store/users'
 
 const usersStore = useUsersStore()
 const emit = defineEmits(['login'])
