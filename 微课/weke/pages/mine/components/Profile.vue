@@ -13,7 +13,7 @@
 			<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
 		</view>
 		<view class="right-container">
-			<template v-if="usersStore.isLogin">
+			<template v-if="usersStore.owner.isLogin">
 				<view class="top">
 					<!-- 昵称 -->
 					<text class="nickname">Julien</text>

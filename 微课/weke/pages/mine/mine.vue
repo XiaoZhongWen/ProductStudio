@@ -177,11 +177,7 @@
 				ref="portraitPopup" 
 				type="bottom"
 				background-color="white">
-				<view class="">
-					<view class="">1</view>
-					<view class="">2</view>
-					<view class="">3</view>
-				</view>
+				<PortraitSheet />
 			</uni-popup>
 			
 		</scroll-view>
@@ -192,9 +188,13 @@
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
+import PortraitSheet from './components/PortraitSheet.vue'
 import { useUsersStore } from "@/store/users"
+import config from '@/config'
 
-const users = uniCloud.importObject('users')
+const users = uniCloud.importObject('users', {
+	customUI: true
+})
 const usersStore = useUsersStore()
 
 const loginAuthPopup = ref<{
@@ -220,8 +220,22 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 }
 
 uni.$on('uploadPortrait', () => {
-	portraitPopup.value?.open()
-	console.log('uploadPortrait')
+	uni.getUserProfile({
+		desc: config.user_info_request_auth,
+		success: (res) => {
+			const {avatarUrl, nickName} = res.userInfo
+			console.log(avatarUrl)
+			usersStore.updateAvatarUrl(avatarUrl)
+			usersStore.updateNickname(nickName)
+			portraitPopup.value?.open()
+		},
+		fail: (error) => {
+			uni.showToast({
+				title:config.auth_request_failure_toast,
+				duration: config.duration_toast
+			})
+		}
+	})
 })
 
 uni.$on('showWkProtcol', () => {
@@ -237,8 +251,15 @@ uni.$on('login', () => {
 		provider: 'weixin',
 		success: async (res) => {
 			if (res.code) {
-				const session = await users.code2Session(res.code)
-				console.log(session)
+				try {
+					const session = await users.code2Session(res.code)
+					console.log(session)
+				} catch (e) {
+					uni.showToast({
+						title:config.login_failure_toast,
+						duration: config.duration_toast
+					})
+				}
 			}
 		},
 		fail: () => {
