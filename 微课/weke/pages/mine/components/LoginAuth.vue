@@ -13,13 +13,13 @@
 		</view>
 		<view class="body">
 			<UploadPortrait class="portrait"></UploadPortrait>
-			<input 
+			<input
+				v-model="usersStore.owner.nickName"
 				class="input" 
-				type="text" 
+				type="nickname" 
 				placeholder="输入昵称,不超过16个字" 
 				placeholder-style="color:#c6c8cf; font-size:12px"
-				maxlength="16"
-				@tap="onTapInput"/>
+				maxlength="16"/>
 			<view class="protocol" @tap="onTapProtocol">
 				<text class="normal">同意</text>
 				<text class="link-text">《微课用户服务协议》</text>
@@ -32,6 +32,8 @@
 
 <script setup lang="ts">
 import UploadPortrait from './UploadPortrait.vue'
+import { useUsersStore } from "@/store/users"
+const usersStore = useUsersStore()
 
 const emit = defineEmits(['onPopup'])
 const onClose = () => {
@@ -40,10 +42,6 @@ const onClose = () => {
 
 const onTapProtocol = () => {
 	uni.$emit('showWkProtcol')
-}
-
-const onTapInput = () => {
-	uni.$emit('requestWxNickname')
 }
 
 const onTapAgree = () => {

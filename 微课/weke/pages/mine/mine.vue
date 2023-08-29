@@ -171,15 +171,6 @@
 				@change="onChange">
 				<LoginAuth @on-popup="onPopup"></LoginAuth>
 			</uni-popup>
-			
-			<!-- popup 头像授权 -->
-			<uni-popup 
-				ref="portraitPopup" 
-				type="bottom"
-				background-color="white">
-				<PortraitSheet />
-			</uni-popup>
-			
 		</scroll-view>
 	</view>
 </template>
@@ -188,21 +179,15 @@
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
-import PortraitSheet from './components/PortraitSheet.vue'
-import { useUsersStore } from "@/store/users"
 import config from '@/config'
+import { useUsersStore } from "@/store/users"
+const usersStore = useUsersStore()
 
 const users = uniCloud.importObject('users', {
 	customUI: true
 })
-const usersStore = useUsersStore()
 
 const loginAuthPopup = ref<{
-	open: (type?: UniHelper.UniPopupType) => void
-	close: () => void
-}>()
-
-const portraitPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
@@ -219,34 +204,31 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
 }
 
-uni.$on('uploadPortrait', () => {
-	uni.getUserProfile({
-		desc: config.user_info_request_auth,
-		success: (res) => {
-			const {avatarUrl, nickName} = res.userInfo
-			console.log(avatarUrl)
-			usersStore.updateAvatarUrl(avatarUrl)
-			usersStore.updateNickname(nickName)
-			portraitPopup.value?.open()
-		},
-		fail: (error) => {
-			uni.showToast({
-				title:config.auth_request_failure_toast,
-				duration: config.duration_toast
-			})
-		}
-	})
-})
-
 uni.$on('showWkProtcol', () => {
 	console.log('showWkProtcol')
 })
 
-uni.$on('requestWxNickname', () => {
-	console.log('requestWxNickname')
-})
-
 uni.$on('login', () => {
+	// 1. 验证头像
+	const url = usersStore.owner.avatarUrl.trim()
+	if (!url.length) {
+		uni.showToast({
+			title:"请设置头像",
+			duration:config.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	// 2. 验证昵称
+	const nickname = usersStore.owner.nickName.trim()
+	if (!nickname.length) {
+		uni.showToast({
+			title:"请设置昵称",
+			duration:config.duration_toast,
+			icon:"error"
+		})
+		return
+	}
 	uni.login({
 		provider: 'weixin',
 		success: async (res) => {
@@ -257,7 +239,8 @@ uni.$on('login', () => {
 				} catch (e) {
 					uni.showToast({
 						title:config.login_failure_toast,
-						duration: config.duration_toast
+						duration: config.duration_toast,
+						icon:"error"
 					})
 				}
 			}
