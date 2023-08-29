@@ -234,8 +234,16 @@ uni.$on('login', () => {
 		success: async (res) => {
 			if (res.code) {
 				try {
-					const session = await users.code2Session(res.code)
-					console.log(session)
+					const session = await users.code2Session(res.code) as UniCloudNamespace.RequestResult
+					const {openid, unionid} = session.data
+					const status = session.status
+					if (status === 200) {
+						usersStore.updateIdentity(openid, unionid)
+						usersStore.saveUserInfo()
+					} else {
+						const {statusMessage} = session.res
+						console.log(statusMessage)
+					}
 				} catch (e) {
 					uni.showToast({
 						title:config.login_failure_toast,

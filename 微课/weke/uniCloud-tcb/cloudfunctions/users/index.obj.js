@@ -43,4 +43,20 @@ module.exports = {
 	   })
 	   return session
    }
+   
+   /**
+	* 保存|更新用户通过微信注册的信息
+	*/
+   saveUserInfo(info: {
+	   unionid: string,
+	   openid: string,
+	   nickname: string,
+	   avatarUrl: string
+   }) {
+	   const db = uniCloud.database({
+	   	provider: 'tencent',
+	   	spaceId: 'tcb-pwxt7mejf8zs8rb-1cwte216d53a'
+	   })
+	   // db.collection('wk-users').get()
+   }
 }
