@@ -179,9 +179,10 @@
 import { ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
-import config from '@/config'
 import { useUsersStore } from "@/store/users"
+
 const usersStore = useUsersStore()
+const global = getApp().globalData!
 
 const users = uniCloud.importObject('users', {
 	customUI: true
@@ -214,7 +215,7 @@ uni.$on('login', () => {
 	if (!url.length) {
 		uni.showToast({
 			title:"请设置头像",
-			duration:config.duration_toast,
+			duration:global.duration_toast,
 			icon:"error"
 		})
 		return
@@ -224,7 +225,7 @@ uni.$on('login', () => {
 	if (!nickname.length) {
 		uni.showToast({
 			title:"请设置昵称",
-			duration:config.duration_toast,
+			duration:global.duration_toast,
 			icon:"error"
 		})
 		return
@@ -246,8 +247,8 @@ uni.$on('login', () => {
 					}
 				} catch (e) {
 					uni.showToast({
-						title:config.login_failure_toast,
-						duration: config.duration_toast,
+						title:global.login_failure_toast,
+						duration: global.duration_toast,
 						icon:"error"
 					})
 				}

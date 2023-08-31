@@ -27,6 +27,20 @@ export const useUsersStore = defineStore('users', {
 	getters: {},
 	
 	actions: {
+		async login() {
+			try {
+				// 1. 获取openid、unionid
+				const res = await uni.login({
+					provider: 'weixin'
+				})
+				const session = await users.code2Session(res.code)
+				const {session_key, openid, unionid} = session.data
+				// 2. 云端验证openid、unionid
+				// 3. 通过验证则返回用户信息
+			} catch (e) {
+				console.log(e)
+			}
+		},
 		// 更新头像url
 		updateAvatarUrl(avatarUrl:string) {
 			this.owner.avatarUrl = avatarUrl
@@ -52,12 +66,12 @@ export const useUsersStore = defineStore('users', {
 				identityId.length === 0) {
 				return
 			}
-			users.saveUserInfo({
-				unionid: this.owner.unionid,
-				openid: this.owner.openid,
-				nickname: this.owner.nickName,
-				avatarUrl: this.owner.avatarUrl
-			})
+		// 	users.saveUserInfo({
+		// 		unionid: this.owner.unionid,
+		// 		openid: this.owner.openid,
+		// 		nickname: this.owner.nickName,
+		// 		avatarUrl: this.owner.avatarUrl
+		// 	})
 		}
 	}
 })
