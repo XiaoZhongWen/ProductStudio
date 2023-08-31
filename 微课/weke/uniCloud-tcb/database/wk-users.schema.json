@@ -3,7 +3,7 @@
 	"bsonType": "object",
 	"required": ["registerDate", "expireDate"],
 	"permission": {
-		"read": false,
+		"read": true,
 		"create": false,
 		"update": false,
 		"delete": false
@@ -96,7 +96,7 @@
 			"description": "家长的id集合",
 			"maxLength": 5
 		},
-		"tag": {
+		"signature": {
 			"bsonType": "string",
 			"description": "标签",
 			"maxLength": 50

@@ -8,6 +8,11 @@ module.exports = {
 	_before: function () { // 通用预处理器
 
 	},
+	
+	/**
+	 * 获取openid、unionid, session_key
+	 * @param {string} code wx.login的返回值
+	 */
     async code2Session(code) {
 	   const session = await uniCloud.httpclient.request('https://api.weixin.qq.com/sns/jscode2session', {
 		   method:"GET",
@@ -20,5 +25,32 @@ module.exports = {
 		   dataType:"json"
 	   })
 	   return session
+   },
+   
+   /**
+	* 身份验证
+	* @param {unionid, openid, type}
+	* type: wx_unionid | wx_openid
+	* @returns userId
+	*/
+   async authIdentity(identity) {
+	   const { unionid, openid, type } = identity
+	   let condition = {
+		   wx_unionid: unionid
+	   }
+	   if (type === 'wx_openid') {
+		   condition = {
+			   wx_openid: openid
+		   }
+	   }
+	   const db = uniCloud.databaseForJQL()
+	   const wx = db.collection('wk-wx').field('userId').getTemp()
+	   const users = db.collection('wk-users').field('_id, nickName, avatarUrl, birthday, roles, mobile, orgIds, expireDate, inputCount, status, parentIds, signature').getTemp()
+	   const res = db.collection(wx, users).where(condition).get()
+	   let user = {}
+	   // if (res.data.length === 1) {
+		  //  user = res.data[0]
+	   // }
+	   return user
    }
 }

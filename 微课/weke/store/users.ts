@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { User, WxIdentity } from '@/types/user'
 
 enum IdentityType {
 	UseUnionId = 'unionid',
@@ -14,13 +15,14 @@ export const useUsersStore = defineStore('users', {
 	state: () => {
 		return {
 			owner: {
-				isLogin: false,
-				avatarUrl: '',
-				nickName: '',
-				session_key: '',
+				_id: '',
+				expireDate: 0,
+				inputCount: 0,
 				unionid: '',
-				openid: ''
-			}
+				openid: '',
+				session_key: '',
+				isLogin: false
+			} as User & WxIdentity
 		}
 	},
 	
@@ -29,14 +31,22 @@ export const useUsersStore = defineStore('users', {
 	actions: {
 		async login() {
 			try {
-				// 1. 获取openid、unionid
+				// 1. 获取openid、unionid, session_key
 				const res = await uni.login({
 					provider: 'weixin'
 				})
 				const session = await users.code2Session(res.code)
-				const {session_key, openid, unionid} = session.data
+				const { session_key, openid, unionid } = session.data
 				// 2. 云端验证openid、unionid
+				const user = await users.authIdentity({
+					openid: openid,
+					unionid: (typeof(unionid) !== 'undefined')? unionid: "",
+					type: (typeof(unionid) !== 'undefined')? 'wx_unionid': 'wx_openid'
+				})
 				// 3. 通过验证则返回用户信息
+				if (JSON.stringify(user) !== '{}') {
+					
+				}
 			} catch (e) {
 				console.log(e)
 			}

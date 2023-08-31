@@ -211,7 +211,7 @@ uni.$on('showWkProtcol', () => {
 
 uni.$on('login', () => {
 	// 1. 验证头像
-	const url = usersStore.owner.avatarUrl.trim()
+	const url = usersStore.owner.avatarUrl?.trim() ?? ""
 	if (!url.length) {
 		uni.showToast({
 			title:"请设置头像",
@@ -221,7 +221,7 @@ uni.$on('login', () => {
 		return
 	}
 	// 2. 验证昵称
-	const nickname = usersStore.owner.nickName.trim()
+	const nickname = usersStore.owner.nickName?.trim() ?? ""
 	if (!nickname.length) {
 		uni.showToast({
 			title:"请设置昵称",
