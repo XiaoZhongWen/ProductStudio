@@ -43,14 +43,63 @@ module.exports = {
 			   wx_openid: openid
 		   }
 	   }
-	   const db = uniCloud.databaseForJQL()
-	   const wx = db.collection('wk-wx').field('userId').getTemp()
-	   const users = db.collection('wk-users').field('_id, nickName, avatarUrl, birthday, roles, mobile, orgIds, expireDate, inputCount, status, parentIds, signature').getTemp()
-	   const res = db.collection(wx, users).where(condition).get()
 	   let user = {}
-	   // if (res.data.length === 1) {
-		  //  user = res.data[0]
-	   // }
+	   const db = uniCloud.database()
+	   let res = await db.collection('wk-wx').where(condition).field('userId').get()
+	   console.log(res)
+	   if (res.data.length === 1) {
+		   const userId = res.data[0]
+		   res = await db.collection('wk-users').where({
+			   _id: userId
+		   }).get()
+		   console.log(res)
+		   if (res.data.length === 1) {
+			   user = res.data[0]
+		   }
+	   }
 	   return user
+   },
+   
+   /**
+	* 更新用户信息
+	* @param {Object} user
+	*/
+   async updateUser(user) {
+	   const { unionid, openid, nickName, avatarUrl } = user
+	   let condition = {
+			wx_unionid: unionid
+	   }
+	   if (unionid.length === 0) {
+	   		condition = {
+	   		   wx_openid: openid
+		   }
+	   }
+	   // 判断用户是否存在
+	   const db = uniCloud.database()
+	   let res = await db.collection('wk-wx').get()
+	   if (res.data.length === 0) {
+		   const timestamp = Date.now()
+		   const freeDuration = 1000 * 60 * 60 * 24 * 15
+		   res = await db.collection('wk-users').add({
+			   nickName: nickName,
+			   avatarUrl: avatarUrl,
+			   registerDate: timestamp,
+			   lastLoginDate: timestamp,
+			   orgExpireDate: timestamp + freeDuration,
+			   familyExpireDate: timestamp + freeDuration
+		   })
+		   console.log(res)
+	   } else {
+		   const wx = res.data[0]
+		   // 用户存在
+		   res = await db.collection('wk-users').where({
+			   _id: wx.userId
+		   }).update({
+			   nickName: nickName,
+			   avatarUrl: avatarUrl
+		   })
+		   console.log(res)
+	   }
+	   return {}
    }
 }

@@ -21,6 +21,7 @@ export type User = {
 }
 
 export type WxIdentity = {
-	unionid: string,
-	openid: string
+	unionid?: string,
+	openid: string,
+	session_key: string
 }

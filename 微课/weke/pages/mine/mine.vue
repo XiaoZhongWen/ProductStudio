@@ -209,7 +209,7 @@ uni.$on('showWkProtcol', () => {
 	console.log('showWkProtcol')
 })
 
-uni.$on('login', () => {
+uni.$on('login', async () => {
 	// 1. 验证头像
 	const url = usersStore.owner.avatarUrl?.trim() ?? ""
 	if (!url.length) {
@@ -230,34 +230,7 @@ uni.$on('login', () => {
 		})
 		return
 	}
-	uni.login({
-		provider: 'weixin',
-		success: async (res) => {
-			if (res.code) {
-				try {
-					const session = await users.code2Session(res.code) as UniCloudNamespace.RequestResult
-					const {openid, unionid} = session.data
-					const status = session.status
-					if (status === 200) {
-						usersStore.updateIdentity(openid, unionid)
-						usersStore.saveUserInfo()
-					} else {
-						const {statusMessage} = session.res
-						console.log(statusMessage)
-					}
-				} catch (e) {
-					uni.showToast({
-						title:global.login_failure_toast,
-						duration: global.duration_toast,
-						icon:"error"
-					})
-				}
-			}
-		},
-		fail: () => {
-			
-		}
-	})
+	await usersStore.login(true)
 })
 
 </script>
