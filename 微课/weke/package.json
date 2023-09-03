@@ -2,6 +2,7 @@
   "dependencies": {
     "@dcloudio/uni-ui": "^1.4.28",
     "@types/wechat-miniprogram": "^3.4.1",
+    "js-md5": "^0.7.3",
     "pinia": "^2.1.6"
   },
   "devDependencies": {

@@ -14,7 +14,8 @@
 		<view class="body">
 			<UploadPortrait class="portrait"></UploadPortrait>
 			<input
-				v-model="usersStore.owner.nickName"
+				:value="usersStore.owner.nickName"
+				@input="onValueChange"
 				class="input" 
 				type="nickname" 
 				placeholder="输入昵称,不超过16个字" 
@@ -34,18 +35,26 @@
 import UploadPortrait from './UploadPortrait.vue'
 import { useUsersStore } from "@/store/users"
 const usersStore = useUsersStore()
+const global = getApp().globalData!
+let inputValue = ''
 
 const emit = defineEmits(['onPopup'])
+
+const onValueChange = (event: Event) => {
+	// @ts-ignore
+	inputValue = event.detail.value
+}
+
 const onClose = () => {
 	emit('onPopup')
 }
 
 const onTapProtocol = () => {
-	uni.$emit('showWkProtcol')
+	uni.$emit(global.event_name.showWkProtocol)
 }
 
 const onTapAgree = () => {
-	uni.$emit('login')
+	uni.$emit(global.event_name.login, {inputValue})
 }
 	
 </script>

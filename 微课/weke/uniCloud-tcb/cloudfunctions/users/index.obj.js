@@ -45,14 +45,12 @@ module.exports = {
 	   }
 	   let user = {}
 	   const db = uniCloud.database()
-	   let res = await db.collection('wk-wx').where(condition).field('userId').get()
-	   console.log(res)
+	   let res = await db.collection('wk-wx').where(condition).field({'userId':true}).get()
 	   if (res.data.length === 1) {
-		   const userId = res.data[0]
+		   const { userId } = res.data[0]
 		   res = await db.collection('wk-users').where({
 			   _id: userId
 		   }).get()
-		   console.log(res)
 		   if (res.data.length === 1) {
 			   user = res.data[0]
 		   }
@@ -65,41 +63,64 @@ module.exports = {
 	* @param {Object} user
 	*/
    async updateUser(user) {
-	   const { unionid, openid, nickName, avatarUrl } = user
+	   const { unionid, openid, nickName, avatarId, type } = user
 	   let condition = {
 			wx_unionid: unionid
 	   }
-	   if (unionid.length === 0) {
+	   if (type === 'wx_openid') {
 	   		condition = {
 	   		   wx_openid: openid
 		   }
 	   }
 	   // 判断用户是否存在
+	   let userId = ''
 	   const db = uniCloud.database()
-	   let res = await db.collection('wk-wx').get()
+	   let res = await db.collection('wk-wx').where(condition).get()
 	   if (res.data.length === 0) {
+		   // 用户不存在
 		   const timestamp = Date.now()
 		   const freeDuration = 1000 * 60 * 60 * 24 * 15
 		   res = await db.collection('wk-users').add({
 			   nickName: nickName,
-			   avatarUrl: avatarUrl,
+			   avatarId: avatarId,
 			   registerDate: timestamp,
 			   lastLoginDate: timestamp,
 			   orgExpireDate: timestamp + freeDuration,
 			   familyExpireDate: timestamp + freeDuration
 		   })
-		   console.log(res)
+		   const { id } = res
+		   if (typeof(id) !== 'undefined' && id.length > 0) {
+			   res = await db.collection('wk-wx').add({
+				   wx_unionid: unionid,
+				   wx_openid: openid,
+				   userId: id
+			   })
+			   if (typeof(res.id) !== 'undefined' && res.id.length > 0) {
+				   userId = id
+			   }
+		   }
 	   } else {
-		   const wx = res.data[0]
 		   // 用户存在
+		   const wx = res.data[0]
+		   userId = wx.userId
 		   res = await db.collection('wk-users').where({
-			   _id: wx.userId
+		   		_id: userId
 		   }).update({
-			   nickName: nickName,
-			   avatarUrl: avatarUrl
+		   		nickName: nickName,
+		   		avatarId: avatarId
 		   })
-		   console.log(res)
 	   }
-	   return {}
+	   let userInfo = {}
+	   if (userId.length > 0) {
+		   res = await db.collection('wk-users').where({
+			   _id: userId
+		   }).get()
+		   userInfo = {
+			   ...res.data[0],
+			   unionid: unionid,
+			   openid: openid
+		   }
+	   }
+	   return userInfo
    }
 }

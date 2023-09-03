@@ -18,9 +18,9 @@
 			"trim": "both",
 			"maxLength": 50
 		},
-		"avatarUrl": {
+		"avatarId": {
 			"bsonType": "string",
-			"description": "用户头像图片的 URL",
+			"description": "用户头像图片的 云存储id",
 			"trim": "both",
 			"maxLength": 100
 		},

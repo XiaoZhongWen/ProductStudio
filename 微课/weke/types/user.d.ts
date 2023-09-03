@@ -8,6 +8,7 @@ enum Role {
 export type User = {
 	_id: string,
 	nickName?: string,
+	avatarId?: string,
 	avatarUrl?: string,
 	birthday?: number,
 	roles?: Role[],
@@ -23,5 +24,8 @@ export type User = {
 export type WxIdentity = {
 	unionid?: string,
 	openid: string,
-	session_key: string
+	session_key: string,
+	nickName?: string,
+	tempFileUrl?: string,
+	isLogin: boolean
 }

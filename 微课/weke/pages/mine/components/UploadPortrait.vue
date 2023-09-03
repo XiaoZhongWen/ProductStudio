@@ -6,9 +6,9 @@
 			plain="true"
 			open-type="chooseAvatar"
 			@chooseavatar="onChooseAvatar">
-			<template v-if="usersStore.owner.avatarUrl.length">
+			<template v-if="usersStore.owner.tempFileUrl.length">
 				<view class="imgContainer">
-					<image class="img" :src="usersStore.owner.avatarUrl" mode="aspectFill"></image>
+					<image class="img" :src="usersStore.owner.tempFileUrl" mode="aspectFill"></image>
 					<text class="text">修改头像</text>
 				</view>
 			</template>
@@ -25,7 +25,7 @@ import { useUsersStore } from "@/store/users"
 const usersStore = useUsersStore()
 
 const onChooseAvatar = (res:UniHelper.ButtonOnChooseavatarEvent) => {
-	usersStore.updateAvatarUrl(res.detail.avatarUrl)
+	usersStore.updateTempFileUrl(res.detail.avatarUrl)
 }
 </script>
 

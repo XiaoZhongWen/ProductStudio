@@ -1,22 +1,26 @@
 <!-- 用户信息组件 -->
 <template>
 	<view class="profile-container">
-		<view class="left-container">
+		<view class="left-container" @tap="onLoginTap">
 			<!-- 会员头像 -->
-			<!-- <image class="icon" src="@/static/icon/profile.png" mode="aspectFill"></image> -->
-			<image 
-				class="icon" 
-				src="https://img1.baidu.com/it/u=506645129,3151761344&fm=253&fmt=auto&app=138&f=PNG?w=500&h=773" 
-				mode="aspectFill">
-			</image>
-			<!-- 会员标识 -->
-			<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
+			<template v-if="usersStore.owner.isLogin">
+				<image
+					class="icon" 
+					:src="usersStore.owner.avatarUrl" 
+					mode="aspectFill">
+				</image>
+				<!-- 会员标识 -->
+				<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
+			</template>
+			<template v-else>
+				<image class="icon" src="@/static/icon/profile.png" mode="aspectFill"></image>
+			</template>
 		</view>
 		<view class="right-container">
 			<template v-if="usersStore.owner.isLogin">
 				<view class="top">
 					<!-- 昵称 -->
-					<text class="nickname">Julien</text>
+					<text class="nickname">{{usersStore.owner.nickName}}</text>
 					<!-- 角色 -->
 					<view class="tags">
 						<WkTag class="tag" content="机构负责人"></WkTag>
@@ -47,6 +51,10 @@ const usersStore = useUsersStore()
 const emit = defineEmits(['login'])
 
 const onLoginTap = () => {
+	const tempFileUrl = usersStore.owner.tempFileUrl ?? ''
+	if (tempFileUrl.length === 0) {
+		usersStore.updateTempFileUrl(usersStore.owner.avatarUrl ?? '')
+	}
 	emit('login')
 }
 

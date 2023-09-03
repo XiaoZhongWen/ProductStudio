@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { User, WxIdentity } from '@/types/user'
+// @ts-ignore
+import md5 from 'js-md5'
 
 enum IdentityType {
 	UseUnionId = 'unionid',
 	UseOpenId = 'openid'
 }
 
-var identityType = IdentityType.UseOpenId
+let identityType = IdentityType.UseOpenId
 const users = uniCloud.importObject('users', {
 	customUI: true
 })
@@ -21,20 +23,29 @@ export const useUsersStore = defineStore('users', {
 				unionid: '',
 				openid: '',
 				session_key: '',
+				avatarId: '',
 				avatarUrl: '',
+				tempFileUrl: '',
 				nickName: '',
 				isLogin: false
-			} as User & WxIdentity
+			} as User & WxIdentity,
+			lastLoginInfo: {
+				unionid: '',
+				openid: '',
+				nickName: '',
+				tempFileUrl: ''
+			}
 		}
 	},
 	
 	getters: {},
 	
 	actions: {
-		async login(save = false) {
-			if (this.owner.unionid?.length === 0 && this.owner.openid.length === 0) {
+		async login() {
+			if (this.owner.isLogin === false) {
 				try {
 					// 1. 获取openid、unionid, session_key
+					console.info("开始微信登录")
 					const res = await uni.login({
 						provider: 'weixin'
 					})
@@ -43,51 +54,128 @@ export const useUsersStore = defineStore('users', {
 					// 2. 云端验证openid、unionid
 					const userInfo = await users.authIdentity({
 						openid: openid,
-						unionid: (typeof(unionid) !== 'undefined')? unionid: "",
-						type: (typeof(unionid) !== 'undefined')? 'wx_unionid': 'wx_openid'
+						unionid: (identityType === IdentityType.UseUnionId)? unionid: "",
+						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 					})
 					// 3. 通过验证则返回用户信息
 					if (JSON.stringify(userInfo) !== '{}') {
+						console.info("微信用户存在:" + userInfo)
 						// 更新owner对象
-						this.updateIdentity(openid, unionid, session_key)
 						this.owner = {
 							...this.owner,
-							...userInfo
+							...userInfo,
+							openid: openid,
+							unionid: unionid,
+							session_key: session_key,
+							isLogin: true
 						}
+						// 更新lastLoginInfo对象
+						this.lastLoginInfo = {
+							...this.lastLoginInfo,
+							unionid: unionid,
+							openid: openid,
+							nickName: this.owner.nickName ?? ''
+						}
+						const result = await uniCloud.getTempFileURL({
+							fileList:[this.owner.avatarId]
+						})
+						const { tempFileURL } = result.fileList[0]
+						this.updateAvatarUrl(tempFileURL)
 					} else {
-						if (save) {
-							// 1. 更新owner对象
-							this.updateIdentity(openid, unionid, session_key)
-							// 2. 保存用户信息到云端
-							const userInfo = await users.updateUser(this.owner)
-							// this.owner = {
-							// 	...this.owner,
-							// 	...userInfo
-							// }
+						console.info("微信用户不存在")
+						this.owner = {
+							...this.owner,
+							openid: openid,
+							unionid: unionid,
+							session_key: session_key
 						}
 					}
 				} catch (e) {
-					console.log(e)
+					console.error("登录报错: " + e)
 				}
 			} else {
-				if (save) {
-					// 1. 更新用户信息到云端 
-					const userInfo = await users.updateUser(this.owner)
-					// 2. 更新owner对象
-					// this.owner = {
-					// 	...this.owner,
-					// 	...userInfo
-					// }
-				}
+				console.info("用户是已登录状态")
 			}
+		},
+		async uploadPortrait() {
+			const lastAvatarUrl = this.lastLoginInfo.tempFileUrl ?? ''
+			const avatarUrl = this.owner.tempFileUrl ?? ''
+			let result = false
+			if (lastAvatarUrl !== avatarUrl || avatarUrl.length === 0) {
+				console.info("开始更新头像...")
+				console.info("当前头像url: " + lastAvatarUrl)
+				console.info("更新头像url: " + avatarUrl)
+				const url = this.owner.tempFileUrl?.trim() ?? ""
+				const prefix = "ddkb/header/"
+				const oldFileId = this.owner.avatarId ?? ''
+				console.info("待删除头像文件id: " + oldFileId)
+				// @ts-ignore
+				const res = await uniCloud.uploadFile({
+					filePath: url,
+					cloudPath: prefix + md5(url)
+				})
+				const { fileID } = res
+				this.updateAvatarId(fileID)
+				try {
+					const response = await uniCloud.getTempFileURL({
+						fileList:[fileID]
+					})
+					const { tempFileURL } = response.fileList[0]
+					this.updateAvatarUrl(tempFileURL)
+					console.info("更新头像成功, url: " + tempFileURL)
+					result = true
+					if (oldFileId.length > 0) {
+						// 删除旧头像
+						uniCloud.deleteFile({
+							fileList:[oldFileId]
+						}).then((res)=>{
+							console.info("删除头像文件成功: " + res)
+						}).catch(() => {
+							console.error("删除头像文件失败: " + oldFileId)
+						})
+					}
+				} catch (error) {
+					console.error("获取头像临时url失败, " + error)
+				}
+			} else {
+				console.info("头像未修改")
+				console.info("原头像url: " + lastAvatarUrl)
+				console.info("更新头像url: " + avatarUrl)
+			}
+			return result
+		},
+		// 更新云端用户信息
+		async updateCloudUser() {
+			let result = false
+			try {
+				 await users.updateUser({
+					...this.owner,
+					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
+				})
+				this.owner.isLogin = true
+				console.info("更新云端用户信息成功, " + this.owner)
+				result = true
+			} catch (e) {
+				console.error("更新云端用户信息失败, " + e)
+			}
+			return result
 		},
 		// 更新头像url
 		updateAvatarUrl(avatarUrl:string) {
 			this.owner.avatarUrl = avatarUrl
+			this.lastLoginInfo.tempFileUrl = avatarUrl
+		},
+		updateTempFileUrl(tempFileUrl:string) {
+			this.owner.tempFileUrl = tempFileUrl
+		},
+		updateAvatarId(fileId: string) {
+			this.owner.avatarId = fileId
 		},
 		// 更新昵称
 		updateNickname(nickName:string) {
+			const result = nickName !== this.lastLoginInfo.nickName
 			this.owner.nickName = nickName
+			return result;
 		},
 		// 更新身份id
 		updateIdentity(openid:string = '', unionid:string = '', session_key:string = '') {
@@ -100,21 +188,6 @@ export const useUsersStore = defineStore('users', {
 			if (typeof(session_key) !== 'undefined') {
 				this.owner.session_key = session_key
 			}
-		},
-		// 保存|更新用户信息
-		saveUserInfo() {
-			// const identityId = identityType === IdentityType.UseUnionId? this.owner.unionid: this.owner.openid
-			// if (this.owner.avatarUrl.length === 0 ||
-			// 	this.owner.nickName.length === 0 ||
-			// 	identityId.length === 0) {
-			// 	return
-			// }
-		// 	users.saveUserInfo({
-		// 		unionid: this.owner.unionid,
-		// 		openid: this.owner.openid,
-		// 		nickname: this.owner.nickName,
-		// 		avatarUrl: this.owner.avatarUrl
-		// 	})
 		}
 	}
 })

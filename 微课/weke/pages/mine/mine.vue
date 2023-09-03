@@ -171,27 +171,49 @@
 				@change="onChange">
 				<LoginAuth @on-popup="onPopup"></LoginAuth>
 			</uni-popup>
+			
+			<!-- popup 选择角色 -->
+			<uni-popup
+				ref="selectRolePopup"
+				type="center"
+				:is-mask-click="is_mask_click"
+				@change="onSelectRoleChange"
+				background-color="transparent">
+				<SelectRole/>
+			</uni-popup>
 		</scroll-view>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
+import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
 
+const is_mask_click = ref(false)
 const usersStore = useUsersStore()
 const global = getApp().globalData!
-
-const users = uniCloud.importObject('users', {
-	customUI: true
-})
 
 const loginAuthPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
+
+const selectRolePopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+onMounted(() => {
+	const roles = usersStore.owner.roles ?? []
+	is_mask_click.value = !(usersStore.owner.isLogin && roles.length === 0)
+	if (usersStore.owner.isLogin && roles.length === 0) {
+		selectRolePopup.value?.open()
+		uni.hideTabBar()
+	}
+})
 
 const onLogin = () => {
 	loginAuthPopup.value?.open()
@@ -205,14 +227,22 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
 }
 
-uni.$on('showWkProtcol', () => {
-	console.log('showWkProtcol')
+const onSelectRoleChange = (e: UniHelper.UniPopupOnChangeEvent) => {
+	e.show? uni.hideTabBar(): uni.showTabBar()
+}
+
+uni.$on(global.event_name.showWkProtocol, () => {
+	console.info('showWkProtcol')
 })
 
-uni.$on('login', async () => {
+uni.$on(global.event_name.login, async (data) => {
 	// 1. 验证头像
-	const url = usersStore.owner.avatarUrl?.trim() ?? ""
-	if (!url.length) {
+	let url = usersStore.owner.tempFileUrl?.trim() ?? ""
+	if (url.length === 0) {
+		url = usersStore.owner.avatarUrl?.trim() ?? ""
+		usersStore.updateTempFileUrl(url)
+	}
+	if (url.length === 0) {
 		uni.showToast({
 			title:"请设置头像",
 			duration:global.duration_toast,
@@ -220,9 +250,13 @@ uni.$on('login', async () => {
 		})
 		return
 	}
+	console.info("验证头像通过")
 	// 2. 验证昵称
-	const nickname = usersStore.owner.nickName?.trim() ?? ""
-	if (!nickname.length) {
+	let nickname = data.inputValue ?? ""
+	if (nickname.length === 0) {
+		nickname = usersStore.owner.nickName ?? ""
+	}
+	if (nickname.length === 0) {
 		uni.showToast({
 			title:"请设置昵称",
 			duration:global.duration_toast,
@@ -230,7 +264,42 @@ uni.$on('login', async () => {
 		})
 		return
 	}
-	await usersStore.login(true)
+	console.info("验证昵称通过")
+	try {
+		// 3. 登录
+		await usersStore.login()
+		// 4. 上传头像
+		const isUpdatedPortrait = await usersStore.uploadPortrait()
+		// 5. 更新昵称
+		const isUpdatedNickname = usersStore.updateNickname(nickname)
+		const unionid = usersStore.owner.unionid ?? ''
+		const openid = usersStore.owner.openid ?? ''
+		// 6. 更新云端用户信息
+		if (isUpdatedPortrait || 
+			isUpdatedNickname &&
+			(unionid.length > 0 || openid.length > 0)) {
+			const isUpdated = await usersStore.updateCloudUser()
+			if (isUpdated) {
+				// 7. 退出界面
+				onPopup()
+			} else {
+				uni.showToast({
+					title:"用户信息更新失败",
+					duration:global.duration_toast,
+					icon:"error"
+				})
+			}
+		} else {
+			onPopup()
+			console.info("头像及昵称均未变更")
+		}
+	} catch(e) {
+		console.error(e)
+	}
+})
+
+uni.$on(global.event_name.didSelectedRole, (data) => {
+	selectRolePopup.value?.close()
 })
 
 </script>
