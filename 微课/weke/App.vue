@@ -34,18 +34,16 @@
     -webkit-appearance: none;  
     background: transparent;  
 }
-radio .wx-radio-input.wx-radio-input-disabled {
-  border : 2rpx solid #999999;
-  border-radius: 100%;
-  background : $wk-theme-color;
+checkbox .wx-checkbox-input.wx-checkbox-input-disabled {
+  border : 2rpx solid $wk-bg-color-grey;
+  background : $wk-bg-color-grey;
 }
-radio .wx-radio-input.wx-radio-input-checked {
+checkbox .wx-checkbox-input.wx-checkbox-input-checked {
   border-color: $wk-theme-color !important;
   background : $wk-theme-color !important;
   }
   
-  radio .wx-radio-input.wx-radio-input-checked::before {
-  border-radius : 50%;
+  checkbox .wx-checkbox-input.wx-checkbox-input-checked::before {
   width : 20px;
   height : 20px;
   line-height : 20px;
