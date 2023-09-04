@@ -54,6 +54,10 @@ module.exports = {
 		   if (res.data.length === 1) {
 			   user = res.data[0]
 		   }
+		   const { inputCount } = user
+		   if (typeof(inputCount) === 'undefined') {
+			   user.inputCount = 0
+		   }
 	   }
 	   return user
    },

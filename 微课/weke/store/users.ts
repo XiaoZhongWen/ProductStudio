@@ -18,7 +18,8 @@ export const useUsersStore = defineStore('users', {
 		return {
 			owner: {
 				_id: '',
-				expireDate: 0,
+				familyExpireDate: 0,
+				orgExpireDate: 0,
 				inputCount: 0,
 				unionid: '',
 				openid: '',
@@ -59,36 +60,54 @@ export const useUsersStore = defineStore('users', {
 					})
 					// 3. 通过验证则返回用户信息
 					if (JSON.stringify(userInfo) !== '{}') {
-						console.info("微信用户存在:" + userInfo)
 						// 更新owner对象
-						this.owner = {
-							...this.owner,
-							...userInfo,
-							openid: openid,
-							unionid: unionid,
-							session_key: session_key,
-							isLogin: true
+						this.owner.openid = openid
+						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
+						this.owner.session_key = session_key
+						this.owner.isLogin = true
+						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, orgIds, status, parentIds, signature } = userInfo as User & WxIdentity
+						this.owner._id = _id
+						this.owner.nickName = nickName
+						this.owner.familyExpireDate = familyExpireDate
+						this.owner.orgExpireDate = orgExpireDate
+						this.owner.inputCount = inputCount
+						this.owner.avatarId = avatarId
+						if (typeof(birthday) !== 'undefined') {
+							this.owner.birthday = birthday
+						}
+						if (typeof(roles) !== 'undefined') {
+							this.owner.roles = roles
+						}
+						if (typeof(mobile) !== 'undefined') {
+							this.owner.mobile = mobile
+						}
+						if (typeof(orgIds) !== 'undefined') {
+							this.owner.orgIds = orgIds
+						}
+						if (typeof(status) !== 'undefined') {
+							this.owner.status = status
+						}
+						if (typeof(parentIds) !== 'undefined') {
+							this.owner.parentIds = parentIds
+						}
+						if (typeof(signature) !== 'undefined') {
+							this.owner.signature = signature
 						}
 						// 更新lastLoginInfo对象
-						this.lastLoginInfo = {
-							...this.lastLoginInfo,
-							unionid: unionid,
-							openid: openid,
-							nickName: this.owner.nickName ?? ''
-						}
+						this.lastLoginInfo.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
+						this.lastLoginInfo.openid = openid
+						this.lastLoginInfo.nickName = this.owner.nickName ?? ''
 						const result = await uniCloud.getTempFileURL({
 							fileList:[this.owner.avatarId]
 						})
 						const { tempFileURL } = result.fileList[0]
 						this.updateAvatarUrl(tempFileURL)
+						console.info("微信用户存在:" + this.owner)
 					} else {
+						this.owner.openid = openid
+						this.owner.unionid = unionid
+						this.owner.session_key = session_key
 						console.info("微信用户不存在")
-						this.owner = {
-							...this.owner,
-							openid: openid,
-							unionid: unionid,
-							session_key: session_key
-						}
 					}
 				} catch (e) {
 					console.error("登录报错: " + e)
