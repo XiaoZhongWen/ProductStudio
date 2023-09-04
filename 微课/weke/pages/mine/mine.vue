@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
@@ -206,9 +206,16 @@ const selectRolePopup = ref<{
 	close: () => void
 }>()
 
-// @ts-ignore
-watch(usersStore.owner, (newValue) => {
-	if (newValue.isLogin) {
+onMounted(() => {
+	selectRole()
+})
+
+watch(usersStore.owner, () => {
+	selectRole()
+})
+
+const selectRole = () => {
+	if (usersStore.owner.isLogin) {
 		const roles = usersStore.owner.roles ?? []
 		is_mask_click.value = !(usersStore.owner.isLogin && roles.length === 0)
 		if (roles.length === 0) {
@@ -216,9 +223,7 @@ watch(usersStore.owner, (newValue) => {
 			uni.hideTabBar()
 		}
 	}
-}, {
-	immediate: true
-})
+}
 
 const onLogin = () => {
 	loginAuthPopup.value?.open()

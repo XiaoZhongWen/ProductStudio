@@ -1,8 +1,14 @@
-enum Role {
+enum RoleId {
 	Org = 1,
 	Teacher = 2,
 	Student = 3,
 	Parents = 4
+}
+
+export type Role = {
+	id: number,
+	name: string,
+	checked: boolean
 }
 
 export type User = {
@@ -11,7 +17,7 @@ export type User = {
 	avatarId?: string,
 	avatarUrl?: string,
 	birthday?: number,
-	roles?: Role[],
+	roles?: RoleId[],
 	mobile?: string,
 	orgIds?: string[],
 	familyExpireDate: number,
