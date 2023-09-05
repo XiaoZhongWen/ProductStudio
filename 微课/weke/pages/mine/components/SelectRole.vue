@@ -27,7 +27,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-const selectedId = ref([1])
+import { useUsersStore } from "@/store/users"
+import { RoleId } from '@/types/user'
+
+const usersStore = useUsersStore()
+const selectedId = ref<RoleId[]>([])
 const roles = ref([
 	{
 		value: 1,
@@ -48,12 +52,56 @@ const student = ref([
 	{
 		value: 3,
 		text: '学生',
-	},
+	}
 ])
+
+const roleIds = usersStore.owner.roles ?? []
+if (roleIds.length) {
+	let set = new Set(roleIds)
+	if (set.has(3)) {
+		studentId.value = 3
+	} else {
+		selectedId.value.push(...roleIds)
+	}
+}
 
 const global = getApp().globalData!
 const onConfirm = () => {
-	uni.$emit(global.event_name.didSelectedRole)
+	if (studentId.value === 3) {
+		let set = new Set(roleIds)
+		if (!set.has(studentId.value)) {
+			// 更新角色数据
+			usersStore.updateRoles([studentId.value])
+			console.info("角色变更为: " + studentId.value)
+		} else {
+			console.info("角色未变更")
+		}
+		uni.$emit(global.event_name.didSelectedRole)
+		return
+	}
+	if (selectedId.value.length) {
+		let flag = roleIds.length !== selectedId.value.length
+		if (!flag) {
+			const set = new Set(roleIds)
+			const res = selectedId.value.filter(item => !set.has(item))
+			flag = res.length !== 0
+		}
+		if (flag) {
+			// 更新角色数据
+			usersStore.updateRoles(selectedId.value)
+			console.info("角色变更为: " + selectedId.value)
+		} else {
+			console.info("角色未变更")
+		}
+		uni.$emit(global.event_name.didSelectedRole)
+	} else {
+		// 提示选择角色
+		uni.showToast({
+			title: '请选择角色',
+			duration: global.duration_toast,
+			icon: "error"
+		})
+	}
 }
 
 const onValueChange = () => {

@@ -45,6 +45,16 @@
 				"backgroundColor": "#F2F4FD"
             }
         }
+        ,{
+            "path" : "pages/signature/signature",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "设置个性签名",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

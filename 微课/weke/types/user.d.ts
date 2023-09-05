@@ -1,14 +1,8 @@
-enum RoleId {
+export enum RoleId {
 	Org = 1,
 	Teacher = 2,
 	Student = 3,
 	Parents = 4
-}
-
-export type Role = {
-	id: number,
-	name: string,
-	checked: boolean
 }
 
 export type User = {

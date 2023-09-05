@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { User, WxIdentity } from '@/types/user'
+import { RoleId, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
 
@@ -28,6 +28,7 @@ export const useUsersStore = defineStore('users', {
 				avatarUrl: '',
 				tempFileUrl: '',
 				nickName: '',
+				roles: [],
 				isLogin: false
 			} as User & WxIdentity,
 			lastLoginInfo: {
@@ -39,7 +40,28 @@ export const useUsersStore = defineStore('users', {
 		}
 	},
 	
-	getters: {},
+	getters: {
+		roleNames(state) {
+			return state.owner.roles?.map((roleId:RoleId) => {
+				let name = ''
+				switch(roleId) {
+					case 1:
+						name = "机构负责人"
+						break
+					case 2:
+						name = "老师"
+						break
+					case 3:
+						name = "学生"
+						break
+					case 4:
+						name = "家长"
+						break
+				}
+				return name
+			})
+		}
+	},
 	
 	actions: {
 		async login() {
@@ -207,6 +229,15 @@ export const useUsersStore = defineStore('users', {
 			if (typeof(session_key) !== 'undefined') {
 				this.owner.session_key = session_key
 			}
+		},
+		// 更新角色
+		updateRoles(roleIds: RoleId[]) {
+			const length = this.owner.roles?.length
+			if (length) {
+				this.owner.roles?.splice(0, length)
+			}
+			this.owner.roles?.push(...roleIds)
+			users.updateRoles(this.owner._id, roleIds)
 		}
 	}
 })

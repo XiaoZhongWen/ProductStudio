@@ -20,6 +20,7 @@
 				showWkProtocol: "Protocol",
 				login: "login",
 				loginSuccess: "loginSuccess",
+				selectRole: "selectRole",
 				didSelectedRole: "didSelectedRole"
 			}
 		}

@@ -126,5 +126,24 @@ module.exports = {
 		   }
 	   }
 	   return userInfo
+   },
+   
+   /**
+	* 更新角色
+	* @param {Object} userId
+	* @param {Object} roleIds
+	*/
+   updateRoles(userId, roleIds) {
+	   let s = new Set(roleIds)
+	   // roleId为3表示学生, 不允许学生角色被重叠
+	   if (s.length > 1 && s.has(3)) {
+		   return
+	   }
+	   const db = uniCloud.database()
+	   db.collection('wk-users').where({
+		   _id: userId
+	   }).update({
+		   roles: roleIds
+	   })
    }
 }

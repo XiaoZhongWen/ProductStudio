@@ -11,7 +11,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="shop-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="shop-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">机构</text>
 							</view>
 						</template>
@@ -20,7 +20,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="person-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="person-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">老师</text>
 							</view>
 						</template>
@@ -29,7 +29,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="staff-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="staff-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">学员</text>
 							</view>
 						</template>
@@ -38,7 +38,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="chatboxes-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="chatboxes-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">班级</text>
 							</view>
 						</template>
@@ -47,7 +47,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="wallet-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="wallet-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">课程</text>
 							</view>
 						</template>
@@ -56,7 +56,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="gear-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="gear-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">设置</text>
 							</view>
 						</template>
@@ -71,7 +71,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="contact-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="contact-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">大宝</text>
 							</view>
 						</template>
@@ -80,7 +80,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="contact-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="contact-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">二宝</text>
 							</view>
 						</template>
@@ -95,7 +95,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="phone-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="phone-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">绑定手机号</text>
 							</view>
 						</template>
@@ -104,7 +104,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="weixin" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="weixin" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">绑定微信</text>
 							</view>
 						</template>
@@ -113,7 +113,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="upload-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="upload-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">分享</text>
 							</view>
 						</template>
@@ -122,7 +122,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="vip-filled" color="#007aff" size=22></uni-icons>
+								<uni-icons class="icon" type="vip-filled" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">会员中心</text>
 							</view>
 						</template>
@@ -137,7 +137,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="navigate-filled" color="#fcaf2c" size=22></uni-icons>
+								<uni-icons class="icon" type="navigate-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">新手指南</text>
 							</view>
 						</template>
@@ -146,7 +146,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="chatboxes-filled" color="#fcaf2c" size=22></uni-icons>
+								<uni-icons class="icon" type="chatboxes-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">反馈意见</text>
 							</view>
 						</template>
@@ -155,7 +155,7 @@
 						<!-- 自定义 header -->
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons type="heart-filled" color="#fcaf2c" size=22></uni-icons>
+								<uni-icons class="icon" type="heart-filled" color="#fcaf2c" size=22></uni-icons>
 								<text class="slot-text">关于我们</text>
 							</view>
 						</template>
@@ -308,8 +308,13 @@ uni.$on(global.event_name.login, async (data) => {
 	}
 })
 
-uni.$on(global.event_name.didSelectedRole, (data) => {
+uni.$on(global.event_name.didSelectedRole, () => {
 	selectRolePopup.value?.close()
+})
+
+uni.$on(global.event_name.selectRole, () => {
+	selectRolePopup.value?.open()
+	uni.hideTabBar()
 })
 
 </script>
@@ -337,7 +342,7 @@ uni.$on(global.event_name.didSelectedRole, (data) => {
 			color: $wk-text-color;
 			font-weight: 400;
 		}
-		uni-icons {
+		.icon {
 			position: relative;
 			top: 3px;
 		}

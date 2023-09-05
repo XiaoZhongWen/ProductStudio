@@ -22,14 +22,14 @@
 					<!-- 昵称 -->
 					<text class="nickname">{{usersStore.owner.nickName}}</text>
 					<!-- 角色 -->
-					<view class="tags">
-						<WkTag class="tag" content="机构负责人"></WkTag>
-						<WkTag class="tag" content="老师"></WkTag>
-						<WkTag class="tag" content="家长"></WkTag>
+					<view class="tags" @tap="onTagTap">
+						<template v-for="roleName in usersStore.roleNames" :key="roleName">
+							<WkTag class="tag" :content="roleName"></WkTag>
+						</template>
 					</view>
 				</view>
 				<!-- 个性签名 -->
-				<view class="">
+				<view class="" @tap="onSignatureTap">
 					<text class="sign">个性签名</text>
 					<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
 				</view>
@@ -47,15 +47,25 @@
 import WkTag from './WkTag.vue'
 import { useUsersStore } from '@/store/users'
 
+const global = getApp().globalData!
 const usersStore = useUsersStore()
-const emit = defineEmits(['login'])
 
 const onLoginTap = () => {
 	const tempFileUrl = usersStore.owner.tempFileUrl ?? ''
 	if (tempFileUrl.length === 0) {
 		usersStore.updateTempFileUrl(usersStore.owner.avatarUrl ?? '')
 	}
-	emit('login')
+	uni.$emit(global.event_name.login)
+}
+
+const onTagTap = () => {
+	uni.$emit(global.event_name.selectRole)
+}
+
+const onSignatureTap = () => {
+	uni.navigateTo({
+		url: "/pages/signature/signature"
+	})
 }
 
 </script>
