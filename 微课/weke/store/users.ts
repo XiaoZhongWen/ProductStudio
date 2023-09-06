@@ -36,7 +36,8 @@ export const useUsersStore = defineStore('users', {
 				openid: '',
 				nickName: '',
 				tempFileUrl: ''
-			}
+			},
+			children: [] as User[]
 		}
 	},
 	
@@ -60,6 +61,30 @@ export const useUsersStore = defineStore('users', {
 				}
 				return name
 			})
+		},
+		signature(state) {
+			return state.owner.signature ?? '个性签名'
+		},
+		isExpired(state) {
+			let date = state.owner.orgExpireDate
+			const set = new Set(state.owner.roles)
+			// 角色为学生或者角色为家长且不叠加机构负责人和老师
+			if (set.has(3) || 
+				(set.has(4) && !set.has(1) && !set.has(2))) {
+				date = state.owner.familyExpireDate
+			}
+			const current = Date.now()
+			return current > date
+		},
+		expiredDate(state) {
+			let date = state.owner.orgExpireDate
+			const set = new Set(state.owner.roles)
+			// 角色为学生或者角色为家长且不叠加机构负责人和老师
+			if (set.has(3) || 
+				(set.has(4) && !set.has(1) && !set.has(2))) {
+				date = state.owner.familyExpireDate
+			}
+			return date
 		}
 	},
 	
@@ -124,6 +149,7 @@ export const useUsersStore = defineStore('users', {
 						})
 						const { tempFileURL } = result.fileList[0]
 						this.updateAvatarUrl(tempFileURL)
+						this.fetchChildren()
 						console.info("微信用户存在:" + this.owner)
 					} else {
 						this.owner.openid = openid
@@ -194,6 +220,7 @@ export const useUsersStore = defineStore('users', {
 					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 				})
 				this.owner.isLogin = true
+				this.fetchChildren()
 				console.info("更新云端用户信息成功, " + this.owner)
 				result = true
 			} catch (e) {
@@ -238,6 +265,27 @@ export const useUsersStore = defineStore('users', {
 			}
 			this.owner.roles?.push(...roleIds)
 			users.updateRoles(this.owner._id, roleIds)
+		},
+		// 更新个性签名
+		updateSignature(signature: string) {
+			this.owner.signature = signature
+			users.updateSignature(this.owner._id, signature)
+		},
+		// 获取children信息
+		async fetchChildren() {
+			const roles = new Set(this.owner.roles)
+			if (roles.has(4)) {
+				// 家长
+				const result = await users.fetchChildren(this.owner._id)
+				for (let item of result) {
+					const res = await uniCloud.getTempFileURL({
+						fileList:[item.avatarId]
+					})
+					const { tempFileURL } = res.fileList[0]
+					item.avatarUrl = tempFileURL
+					this.children.push(item)
+				}
+			}
 		}
 	}
 })

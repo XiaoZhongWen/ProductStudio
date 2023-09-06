@@ -145,5 +145,33 @@ module.exports = {
 	   }).update({
 		   roles: roleIds
 	   })
+   },
+   
+   /**
+	* 更新个性签名
+	* @param {Object} userId
+	* @param {Object} signature
+	*/
+   updateSignature(userId, signature) {
+	   if (signature.length <= 50) {
+		   const db = uniCloud.database()
+		   db.collection('wk-users').where({
+		   		_id: userId
+		   }).update({
+		   	   signature: signature
+		   })
+	   }
+   },
+   
+   /**
+	* 获取孩子信息
+	* @param {Object} userId
+	*/
+   async fetchChildren(userId) {
+	   const db = uniCloud.database()
+	   let res = await db.collection('wk-users').where({
+		   parentIds: userId
+	   }).get()
+	   return res.data
    }
 }

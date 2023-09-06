@@ -7,57 +7,11 @@
 			<!-- 机构相关 -->
 			<view class="org-container">
 				<uni-list>
-					<uni-list-item link>
-						<!-- 自定义 header -->
+					<uni-list-item link v-for="item in org">
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons class="icon" type="shop-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">机构</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="person-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">老师</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="staff-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">学员</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="chatboxes-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">班级</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="wallet-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">课程</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="gear-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">设置</text>
+								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
+								<text class="slot-text">{{item.name}}</text>
 							</view>
 						</template>
 					</uni-list-item>
@@ -67,21 +21,12 @@
 			<!-- 孩子相关 -->
 			<view class="children-container">
 				<uni-list>
-					<uni-list-item link>
-						<!-- 自定义 header -->
+					<uni-list-item link v-for="child in children">
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons class="icon" type="contact-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">大宝</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="contact-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">二宝</text>
+								<image class="icon" :src="child.avatarUrl" mode="aspectFill"></image>
+								<!-- <uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons> -->
+								<text class="nickName">{{child.nickName}}</text>
 							</view>
 						</template>
 					</uni-list-item>
@@ -91,39 +36,11 @@
 			<!-- 账号相关 -->
 			<view class="account-container">
 				<uni-list>
-					<uni-list-item link>
-						<!-- 自定义 header -->
+					<uni-list-item link v-for="item in account">
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons class="icon" type="phone-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">绑定手机号</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="weixin" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">绑定微信</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="upload-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">分享</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="vip-filled" color="#007aff" size=22></uni-icons>
-								<text class="slot-text">会员中心</text>
+								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
+								<text class="slot-text">{{item.name}}</text>
 							</view>
 						</template>
 					</uni-list-item>
@@ -133,30 +50,11 @@
 			<!-- 其他 -->
 			<view class="other-container">
 				<uni-list>
-					<uni-list-item link>
-						<!-- 自定义 header -->
+					<uni-list-item link v-for="item in other">
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons class="icon" type="navigate-filled" color="#fcaf2c" size=22></uni-icons>
-								<text class="slot-text">新手指南</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="chatboxes-filled" color="#fcaf2c" size=22></uni-icons>
-								<text class="slot-text">反馈意见</text>
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item link>
-						<!-- 自定义 header -->
-						<template v-slot:header>
-							<view class="slot-box">
-								<uni-icons class="icon" type="heart-filled" color="#fcaf2c" size=22></uni-icons>
-								<text class="slot-text">关于我们</text>
+								<uni-icons class="icon" :type="item.type" color="#fcaf2c" size=22></uni-icons>
+								<text class="slot-text">{{item.name}}</text>
 							</view>
 						</template>
 					</uni-list-item>
@@ -186,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
@@ -205,6 +103,119 @@ const selectRolePopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
+
+type ListItem = {
+	type: string,
+	name: string
+}
+
+// @ts-ignore
+const org:ListItem[] = computed({
+	get() {
+		let org = [
+			{
+				type: "shop-filled",
+				name: "机构"
+			},
+			{
+				type: "person-filled",
+				name: "老师"
+			},
+			{
+				type: "staff-filled",
+				name: "学员"
+			},
+			{
+				type: "chatboxes-filled",
+				name: "班级"
+			},
+			{
+				type: "wallet-filled",
+				name: "课程"
+			},
+			{
+				type: "gear-filled",
+				name: "设置"
+			}
+		]
+		const roles = new Set(usersStore.owner.roles)
+		if (roles.size === 0) {
+			org = []
+		} else {
+			if (roles.has(3)) {
+				// 学生
+				org.splice(2, 1)
+				org.pop()
+			} else {
+				if (roles.has(4) && roles.size === 1) {
+					// 家长
+					org = []
+				} else {
+					if (!roles.has(1)) {
+						org.splice(1, 1)
+					}
+				}
+			}
+		}
+		return org
+	}
+})
+
+// @ts-ignore
+const account:ListItem[] = computed({
+	get() {
+		let account = [
+			{
+				type: "phone-filled",
+				name: "绑定手机号"
+			},
+			{
+				type: "upload-filled",
+				name: "邀请"
+			},
+			{
+				type: "vip-filled",
+				name: "会员中心"
+			}
+		]
+		const roles = new Set(usersStore.owner.roles)
+		if (roles.size === 0) {
+			account = []
+		} else {
+			if (!roles.has(3)) {
+				account[1].name = "分享"
+			}
+		}
+		return account
+	}
+})
+
+ // @ts-ignore
+ const children:User[] = computed({
+	 get() {
+		 const roles = new Set(usersStore.owner.roles)
+		 if (roles.size === 0 || !roles.has(4)) {
+		 	return []
+		 } else {
+			 return usersStore.children
+		 }
+	 }
+ })
+ 
+ const other:ListItem[] = [
+	 {
+	 	type: "navigate-filled",
+	 	name: "新手指南"
+	 },
+	 {
+	 	type: "chatboxes-filled",
+	 	name: "反馈意见"
+	 },
+	 {
+	 	type: "heart-filled",
+	 	name: "关于我们"
+	 }
+ ]
 
 onMounted(() => {
 	selectRole()
@@ -336,13 +347,20 @@ uni.$on(global.event_name.selectRole, () => {
 	.slot-box {
 		flex-direction: row;
 		align-items: center;
-		.slot-text {
+		.slot-text, .nickName {
 			margin-left: $uni-padding-normal;
 			font-size: $uni-font-size-base;
 			color: $wk-text-color;
 			font-weight: 400;
 		}
+		.nickName {
+			position: relative;
+			top: -6px;
+		}
 		.icon {
+			width: 30px;
+			height: 30px;
+			border-radius: $uni-border-radius-circle;
 			position: relative;
 			top: 3px;
 		}

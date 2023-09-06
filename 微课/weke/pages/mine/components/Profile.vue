@@ -30,11 +30,22 @@
 				</view>
 				<!-- 个性签名 -->
 				<view class="" @tap="onSignatureTap">
-					<text class="sign">个性签名</text>
+					<text class="sign">{{ usersStore.signature }}</text>
 					<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
 				</view>
 				<!-- 有效期 -->
-				<text class="expired">有效期至2023年9月22日</text>
+				<template v-if="usersStore.isExpired">
+					<text class="expired">{{usersStore}}</text>
+				</template>
+				<template v-else>
+					<view class="expired">
+						<text>有效期至:</text>
+						<uni-dateformat 
+							style="display: inline;" 
+							:date="usersStore.expiredDate" 
+							format="yyyy/MM/dd" />
+					</view>
+				</template>
 			</template>
 			<template v-else>
 				<view class="login" @tap="onLoginTap">点击登录</view>
@@ -63,6 +74,7 @@ const onTagTap = () => {
 }
 
 const onSignatureTap = () => {
+	console.info("onSignatureTap...")
 	uni.navigateTo({
 		url: "/pages/signature/signature"
 	})
