@@ -7,7 +7,7 @@
 			<!-- 机构相关 -->
 			<view class="org-container">
 				<uni-list>
-					<uni-list-item link v-for="item in org">
+					<uni-list-item link v-for="item in org" :key="item.name">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
@@ -21,7 +21,7 @@
 			<!-- 孩子相关 -->
 			<view class="children-container">
 				<uni-list>
-					<uni-list-item link v-for="child in children">
+					<uni-list-item link v-for="child in children" :key="child._id">
 						<template v-slot:header>
 							<view class="slot-box">
 								<image class="icon" :src="child.avatarUrl" mode="aspectFill"></image>
@@ -36,7 +36,7 @@
 			<!-- 账号相关 -->
 			<view class="account-container">
 				<uni-list>
-					<uni-list-item link v-for="item in account">
+					<uni-list-item link v-for="item in account" :key="item.name">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
@@ -50,7 +50,7 @@
 			<!-- 其他 -->
 			<view class="other-container">
 				<uni-list>
-					<uni-list-item link v-for="item in other">
+					<uni-list-item link v-for="item in other" :key="item.name">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#fcaf2c" size=22></uni-icons>
@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
@@ -221,14 +222,16 @@ onMounted(() => {
 	selectRole()
 })
 
-watch(usersStore.owner, () => {
+// @ts-ignore
+const { isLogin } = storeToRefs(usersStore)
+watch(isLogin, () => {
 	selectRole()
 })
 
 const selectRole = () => {
-	if (usersStore.owner.isLogin) {
+	if (usersStore.isLogin) {
 		const roles = usersStore.owner.roles ?? []
-		is_mask_click.value = !(usersStore.owner.isLogin && roles.length === 0)
+		is_mask_click.value = !(usersStore.isLogin && roles.length === 0)
 		if (roles.length === 0) {
 			selectRolePopup.value?.open()
 			uni.hideTabBar()

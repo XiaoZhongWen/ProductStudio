@@ -27,6 +27,5 @@ export type WxIdentity = {
 	openid: string,
 	session_key: string,
 	nickName?: string,
-	tempFileUrl?: string,
-	isLogin: boolean
+	tempFileUrl?: string
 }

@@ -1,6 +1,6 @@
 <template>
 	<view>
-		
+		学员
 	</view>
 </template>
 

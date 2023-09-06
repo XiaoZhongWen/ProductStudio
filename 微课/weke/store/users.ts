@@ -16,6 +16,7 @@ const users = uniCloud.importObject('users', {
 export const useUsersStore = defineStore('users', {
 	state: () => {
 		return {
+			isLogin: false,
 			owner: {
 				_id: '',
 				familyExpireDate: 0,
@@ -28,8 +29,7 @@ export const useUsersStore = defineStore('users', {
 				avatarUrl: '',
 				tempFileUrl: '',
 				nickName: '',
-				roles: [],
-				isLogin: false
+				roles: []
 			} as User & WxIdentity,
 			lastLoginInfo: {
 				unionid: '',
@@ -85,12 +85,15 @@ export const useUsersStore = defineStore('users', {
 				date = state.owner.familyExpireDate
 			}
 			return date
+		},
+		roles(state) {
+			return state.owner.roles
 		}
 	},
 	
 	actions: {
 		async login() {
-			if (this.owner.isLogin === false) {
+			if (this.isLogin === false) {
 				try {
 					// 1. 获取openid、unionid, session_key
 					console.info("开始微信登录")
@@ -111,7 +114,7 @@ export const useUsersStore = defineStore('users', {
 						this.owner.openid = openid
 						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 						this.owner.session_key = session_key
-						this.owner.isLogin = true
+						this.isLogin = true
 						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, orgIds, status, parentIds, signature } = userInfo as User & WxIdentity
 						this.owner._id = _id
 						this.owner.nickName = nickName
@@ -219,7 +222,7 @@ export const useUsersStore = defineStore('users', {
 					...this.owner,
 					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 				})
-				this.owner.isLogin = true
+				this.isLogin = true
 				this.fetchChildren()
 				console.info("更新云端用户信息成功, " + this.owner)
 				result = true
@@ -259,11 +262,7 @@ export const useUsersStore = defineStore('users', {
 		},
 		// 更新角色
 		updateRoles(roleIds: RoleId[]) {
-			const length = this.owner.roles?.length
-			if (length) {
-				this.owner.roles?.splice(0, length)
-			}
-			this.owner.roles?.push(...roleIds)
+			this.owner.roles = roleIds
 			users.updateRoles(this.owner._id, roleIds)
 		},
 		// 更新个性签名

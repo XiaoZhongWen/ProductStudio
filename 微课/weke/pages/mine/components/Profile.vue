@@ -3,7 +3,7 @@
 	<view class="profile-container">
 		<view class="left-container" @tap="onLoginTap">
 			<!-- 会员头像 -->
-			<template v-if="usersStore.owner.isLogin">
+			<template v-if="usersStore.isLogin">
 				<image
 					class="icon" 
 					:src="usersStore.owner.avatarUrl" 
@@ -17,7 +17,7 @@
 			</template>
 		</view>
 		<view class="right-container">
-			<template v-if="usersStore.owner.isLogin">
+			<template v-if="usersStore.isLogin">
 				<view class="top">
 					<!-- 昵称 -->
 					<text class="nickname">{{usersStore.owner.nickName}}</text>
@@ -60,13 +60,15 @@ import { useUsersStore } from '@/store/users'
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
+const emit = defineEmits(['login'])
 
 const onLoginTap = () => {
 	const tempFileUrl = usersStore.owner.tempFileUrl ?? ''
 	if (tempFileUrl.length === 0) {
 		usersStore.updateTempFileUrl(usersStore.owner.avatarUrl ?? '')
 	}
-	uni.$emit(global.event_name.login)
+	// 子组件向父组件传递事件
+	emit('login')
 }
 
 const onTagTap = () => {

@@ -1,12 +1,19 @@
 <script>
 	import { useUsersStore } from "@/store/users"
+	import { watch } from 'vue'
+	import { storeToRefs } from 'pinia'
 	export default {
+		data() {
+			const usersStore = useUsersStore()
+			return {
+				usersStore
+			}
+		},
 		onLaunch: function() {
 			console.log('App Launch')
 		},
 		onShow: function() {
-			const usersStore = useUsersStore()
-			usersStore.login()
+			this.usersStore.login()
 		},
 		onHide: function() {
 			console.log('App Hide')

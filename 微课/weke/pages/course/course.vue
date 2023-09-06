@@ -1,6 +1,6 @@
 <template>
 	<view>
-		
+		课程
 	</view>
 </template>
 
