@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name", "createTime"],
+	"required": ["name", "createTime", "color"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -31,14 +31,19 @@
 			"description": "机构简介",
 			"maxLength": 1000
 		},
-		"logo": {
+		"logoId": {
 			"bsonType": "string",
-			"description": "机构字体图标",
-			"maxLength": 50
+			"description": "机构图标云存储id",
+			"maxLength": 100
 		},
 		"createTime": {
 			"bsonType": "timestamp",
 			"description": "机构创建时间"
+		},
+		"color": {
+			"bsonType": "string",
+			"description": "颜色",
+			"defaultValue": "#5073D6"
 		}
 	}
 }

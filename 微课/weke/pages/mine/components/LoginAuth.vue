@@ -12,7 +12,12 @@
 			<text class="subTitle">相关操作涉及用户信息</text>
 		</view>
 		<view class="body">
-			<UploadPortrait class="portrait"></UploadPortrait>
+			<upload-image
+				class="portrait"
+				:url="usersStore.owner.tempFileUrl"
+				prompt="头像"
+				@onChooseAvatar="onChooseAvatar">
+			</upload-image>
 			<input
 				:value="usersStore.owner.nickName"
 				@input="onValueChange"
@@ -32,7 +37,6 @@
 </template>
 
 <script setup lang="ts">
-import UploadPortrait from './UploadPortrait.vue'
 import { useUsersStore } from "@/store/users"
 const usersStore = useUsersStore()
 const global = getApp().globalData!
@@ -55,6 +59,11 @@ const onTapProtocol = () => {
 
 const onTapAgree = () => {
 	uni.$emit(global.event_name.login, {inputValue})
+}
+
+const onChooseAvatar = (data:{url:string}) => {
+	const url = data.url ?? ""
+	usersStore.updateTempFileUrl(url)
 }
 	
 </script>

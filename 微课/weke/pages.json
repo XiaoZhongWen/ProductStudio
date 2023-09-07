@@ -7,6 +7,15 @@
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+		    "path" : "pages/addOrganization/addOrganization",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "添加机构",
+		        "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+		    }
+		},
+		{
             "path" : "pages/calendar/calendar",
             "style" :                                                                                    
             {
@@ -14,7 +23,6 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-            
         }
         ,{
             "path" : "pages/student/student",
@@ -23,8 +31,7 @@
                 "navigationBarTitleText": "学员",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
-            }
-            
+            }   
         }
         ,{
             "path" : "pages/course/course",
@@ -34,7 +41,6 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-            
         }
         ,{
             "path" : "pages/mine/mine",
@@ -53,7 +59,93 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-            
+        }
+        ,{
+            "path" : "pages/organization/organization",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "机构",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/teacher/teacher",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "老师",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/grade/grade",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "班级",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/setting/setting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "设置",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/guider/guider",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "新手指南",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/feedback/feedback",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "意见反馈",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/about/about",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "关于我们",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/bindphone/bindphone",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "绑定手机号",
+                "enablePullDownRefresh": false
+            }
+        }
+        ,{
+            "path" : "pages/share/share",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "分享",
+                "enablePullDownRefresh": false
+            }
+        }
+        ,{
+            "path" : "pages/memberCenter/memberCenter",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "会员中心",
+                "enablePullDownRefresh": false
+            }
         }
     ],
 	"globalStyle": {

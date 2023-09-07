@@ -1,0 +1,7 @@
+{
+  "name": "orgs",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

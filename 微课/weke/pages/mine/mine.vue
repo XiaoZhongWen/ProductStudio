@@ -7,7 +7,7 @@
 			<!-- 机构相关 -->
 			<view class="org-container">
 				<uni-list>
-					<uni-list-item link v-for="item in org" :key="item.name">
+					<uni-list-item link v-for="item in org" :key="item.name" :to="item.to">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
@@ -36,7 +36,7 @@
 			<!-- 账号相关 -->
 			<view class="account-container">
 				<uni-list>
-					<uni-list-item link v-for="item in account" :key="item.name">
+					<uni-list-item link v-for="item in account" :key="item.name" :to="item.to">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
@@ -50,7 +50,7 @@
 			<!-- 其他 -->
 			<view class="other-container">
 				<uni-list>
-					<uni-list-item link v-for="item in other" :key="item.name">
+					<uni-list-item link v-for="item in other" :key="item.name" :to="item.to">
 						<template v-slot:header>
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#fcaf2c" size=22></uni-icons>
@@ -108,6 +108,7 @@ const selectRolePopup = ref<{
 type ListItem = {
 	type: string,
 	name: string
+	to: string
 }
 
 // @ts-ignore
@@ -116,46 +117,34 @@ const org:ListItem[] = computed({
 		let org = [
 			{
 				type: "shop-filled",
-				name: "机构"
+				name: "机构",
+				to: "/pages/organization/organization",
 			},
 			{
 				type: "person-filled",
-				name: "老师"
-			},
-			{
-				type: "staff-filled",
-				name: "学员"
+				name: "老师",
+				to: "/pages/teacher/teacher"
 			},
 			{
 				type: "chatboxes-filled",
-				name: "班级"
-			},
-			{
-				type: "wallet-filled",
-				name: "课程"
+				name: "班级",
+				to: "/pages/grade/grade"
 			},
 			{
 				type: "gear-filled",
-				name: "设置"
+				name: "设置",
+				to: "/pages/setting/setting"
 			}
 		]
 		const roles = new Set(usersStore.owner.roles)
 		if (roles.size === 0) {
 			org = []
 		} else {
-			if (roles.has(3)) {
-				// 学生
-				org.splice(2, 1)
-				org.pop()
-			} else {
-				if (roles.has(4) && roles.size === 1) {
-					// 家长
-					org = []
-				} else {
-					if (!roles.has(1)) {
-						org.splice(1, 1)
-					}
-				}
+			if (roles.has(4) && roles.size === 1) {
+				// 家长
+				org = []
+			} else if (!roles.has(1)) {
+				org.splice(1, 1)
 			}
 		}
 		return org
@@ -168,15 +157,18 @@ const account:ListItem[] = computed({
 		let account = [
 			{
 				type: "phone-filled",
-				name: "绑定手机号"
+				name: "绑定手机号",
+				to: "/pages/bindphone/bindphone"
 			},
 			{
 				type: "upload-filled",
-				name: "邀请"
+				name: "邀请",
+				to: "/pages/share/share"
 			},
 			{
 				type: "vip-filled",
-				name: "会员中心"
+				name: "会员中心",
+				to: "/pages/memberCenter/memberCenter"
 			}
 		]
 		const roles = new Set(usersStore.owner.roles)
@@ -206,15 +198,18 @@ const account:ListItem[] = computed({
  const other:ListItem[] = [
 	 {
 	 	type: "navigate-filled",
-	 	name: "新手指南"
+	 	name: "新手指南",
+		to: "/pages/guider/guider"
 	 },
 	 {
 	 	type: "chatboxes-filled",
-	 	name: "反馈意见"
+	 	name: "反馈意见",
+		to: "/pages/feedback/feedback"
 	 },
 	 {
 	 	type: "heart-filled",
-	 	name: "关于我们"
+	 	name: "关于我们",
+		to: "/pages/about/about"
 	 }
  ]
 
