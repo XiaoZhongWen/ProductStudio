@@ -14,8 +14,8 @@
 		        "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
 		    }
-		},
-		{
+		}
+		,{
             "path" : "pages/calendar/calendar",
             "style" :                                                                                    
             {
@@ -128,7 +128,8 @@
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "绑定手机号",
-                "enablePullDownRefresh": false
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
         }
         ,{
@@ -136,7 +137,8 @@
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "分享",
-                "enablePullDownRefresh": false
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
         }
         ,{
@@ -144,7 +146,8 @@
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "会员中心",
-                "enablePullDownRefresh": false
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
         }
     ],

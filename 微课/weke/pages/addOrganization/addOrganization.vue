@@ -7,11 +7,11 @@
 			</view>
 			<view class="body">
 				<uni-list>
-					<uni-list-item link class="item">
+					<uni-list-item class="item">
 						<template v-slot:header>
-							<view class="slot-box">
-								<text class="slot-text">外观</text>
-								<view class="color"></view>
+							<view class="decoration">
+								<text class="text">外观</text>
+								<color-card></color-card>
 							</view>
 						</template>
 					</uni-list-item>
@@ -68,7 +68,40 @@
 			</view>
 		</view>
 		<view class="org-member-container">
-			
+			<uni-list>
+				<uni-list-item class="item" clickable>
+					<template v-slot:header>
+						<view class="slot-box">
+							<text class="slot-text">添加老师</text>
+							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+						</view>
+					</template>
+				</uni-list-item>
+				<uni-list-item class="item" clickable>
+					<template v-slot:header>
+						<view class="slot-box">
+							<text class="slot-text">添加学员</text>
+							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+						</view>
+					</template>
+				</uni-list-item>
+				<uni-list-item class="item" clickable>
+					<template v-slot:header>
+						<view class="slot-box">
+							<text class="slot-text">添加课程</text>
+							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+						</view>
+					</template>
+				</uni-list-item>
+				<uni-list-item class="item" clickable>
+					<template v-slot:header>
+						<view class="slot-box">
+							<text class="slot-text">添加班级</text>
+							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+						</view>
+					</template>
+				</uni-list-item>
+			</uni-list>
 		</view>
 	</view>
 </template>
@@ -133,9 +166,34 @@ const onChooseAvatar = (data:{url: string}) => {
 		}
 		.body {
 			width: 100%;
-			background-color: white;
 			border-top: $uni-spacing-col-sm solid $wk-bg-color-grey;
+			.uni-list {
+				border-radius: $uni-border-radius-lg;
+				background-color: white;
+				.uni-list--border-top, .uni-list--border-bottom {
+					height: 0px;
+				}
+				.uni-list-item {
+					border-radius: $uni-border-radius-lg;
+					.uni-list-item__content {
+						padding: 0;
+					}
+				}
+			}
 			.item {
+				.decoration {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					width: 100%;
+					height: 100%;
+					.text {
+						font-size: $uni-font-size-base;
+						color: $wk-text-color;
+						font-weight: 400;
+					}
+				}
 				.slot-box {
 					position: relative;
 					flex-direction: row;
@@ -161,18 +219,6 @@ const onChooseAvatar = (data:{url: string}) => {
 						font-size: $uni-font-size-base;
 						color: $uni-text-color-placeholder;
 					}
-					.color {
-						position: absolute;
-						width: 16px;
-						height: 16px;
-						right: -8px;
-						bottom: 3px;
-						background-color: $wk-theme-color;
-						border-radius: $uni-border-radius-circle
-					}
-				}
-				.uni-icon-wrapper {
-					padding: 0 $uni-spacing-row-base 0 0;
 				}
 			}
 		}
@@ -182,6 +228,37 @@ const onChooseAvatar = (data:{url: string}) => {
 		flex-direction: column;
 		width: 90%;
 		margin-top: $uni-spacing-col-base;
+		.uni-list {
+			border-radius: $uni-border-radius-lg;
+			background-color: white;
+			.uni-list--border-top, .uni-list--border-bottom {
+				height: 0px;
+			}
+			.uni-list-item {
+				border-radius: $uni-border-radius-lg;
+				.uni-list-item__content {
+					padding: 0;
+				}
+			}
+		}
+		.item {
+			.slot-box {
+				position: relative;
+				flex-direction: row;
+				align-items: center;
+				width: 100%;
+				.slot-text {
+					font-size: $uni-font-size-base;
+					color: $wk-text-color;
+					font-weight: 400;
+				}
+				.right-arrow {
+					position: absolute;
+					right: -4px;
+					bottom: -2px;
+				}
+			}
+		}
 	}
 }
 </style>
