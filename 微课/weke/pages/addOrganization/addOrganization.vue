@@ -1,8 +1,10 @@
 <template>
 	<view class="add-org-container">
-		<view class="card-container"></view>
+		<view class="card-container">
+			<org-card :org="org"></org-card>
+		</view>
 		<view class="org-edit-container">
-			<view class="header" @tap="onTap">
+			<view class="header">
 				<upload-image :url="org.logoUrl" prompt="图标" @onChooseAvatar="onChooseAvatar"></upload-image>
 			</view>
 			<view class="body">
@@ -11,7 +13,7 @@
 						<template v-slot:header>
 							<view class="decoration">
 								<text class="text">外观</text>
-								<color-card></color-card>
+								<color-card @onColorChanged="onColorChanged"></color-card>
 							</view>
 						</template>
 					</uni-list-item>
@@ -19,11 +21,12 @@
 						<template v-slot:header>
 							<view class="slot-box">
 								<text class="slot-text">机构名称</text>
-								<input 
+								<input
+									v-model="org.name"
 									class="input" 
 									placeholder-style="color: #808080" 
-									type="text" value="" 
-									maxlength="15"
+									type="text"
+									maxlength="10"
 									placeholder="请输入名称" />
 							</view>
 						</template>
@@ -33,9 +36,10 @@
 							<view class="slot-box">
 								<text class="slot-text">地址</text>
 								<input 
+									v-model="org.addr"
 									class="input" 
 									placeholder-style="color: #808080" 
-									type="text" value="" 
+									type="text"
 									maxlength="20"
 									placeholder="请输入地址" />
 							</view>
@@ -45,11 +49,12 @@
 						<template v-slot:header>
 							<view class="slot-box">
 								<text class="slot-text">简介</text>
-								<input 
+								<input
+									v-model="org.desc"
 									class="input" 
 									placeholder-style="color: #808080" 
-									type="text" value="" 
-									maxlength="30"
+									type="text"
+									maxlength="300"
 									placeholder="请输入简介" />
 							</view>
 						</template>
@@ -58,8 +63,12 @@
 						<template v-slot:header>
 							<view class="slot-box">
 								<text class="slot-text">创建日期</text>
-								<picker class="picker" mode="date" value="2023-09-07">
-									<view class="uni-input">设置创建日期</view>
+								<picker 
+									class="picker" 
+									mode="date" 
+									:value="org.createDate" 
+									@change="onDateChanged">
+									<view class="uni-input">{{didSelectedDate?org.createDate:"创建日期"}}</view>
 								</picker>
 							</view>
 						</template>
@@ -110,26 +119,42 @@
 import { ref } from 'vue' 
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
+import { useUsersStore } from "@/store/users"
 
 const useOrgs = useOrgsStore()
-const org = ref<Org>({
+const usersStore = useUsersStore()
+
+let didSelectedDate = false
+const date = new Date(Date.now())
+const month = date.getMonth() + 1
+const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
+
+const org = ref<Org & {nickname?: string}>({
 	_id: '',
 	name: '',
-	tel: '',
-	addr: '',
+	nickname: usersStore.owner.nickName,
+	tel: usersStore.owner.mobile ?? '13545118725',
+	addr: '武汉市洪山区光谷步行街',
 	desc: '',
 	logoUrl: 'https://img2.baidu.com/it/u=2749970253,3556501208&fm=253&fmt=auto&app=138&f=JPG?w=800&h=500',
-	createTime: 0,
-	color: '#5073D6'
+	createDate: createDate,
+	gradient: ["#4e54c8", "#8f94fb"]
 })
-
-const onTap = () => {
-	org.value.logoUrl = "https://img0.baidu.com/it/u=1242941133,368144607&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1046"
-}
 
 const onChooseAvatar = (data:{url: string}) => {
 	const url = data.url ?? ""
 	org.value.logoUrl = url
+}
+
+const onColorChanged = (data:{gradient: string[]}) => {
+	const gradient = data.gradient
+	org.value.gradient = gradient
+}
+
+// @ts-ignore
+const onDateChanged = (e) => {
+	didSelectedDate = true
+	org.value.createDate = e.detail.value
 }
 	
 </script>
@@ -139,13 +164,20 @@ const onChooseAvatar = (data:{url: string}) => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	.test {
+		width: 90%;
+		height: 100px;
+		background-color: $wk-bg-color-grey;
+	}
 	.card-container {
 		width: 90%;
-		height: 120px;
+		height: 200px;
 		border-style: dashed;
 		border-color: $wk-text-color-grey;
 		border-width: 1px;
 		border-radius: $uni-border-radius-lg;
+		padding: $uni-padding-base;
+		box-sizing: border-box;
 	}
 	.org-edit-container {
 		display: flex;
@@ -211,6 +243,7 @@ const onChooseAvatar = (data:{url: string}) => {
 						text-align: right;
 						font-size: $uni-font-size-base;
 						caret-color: $wk-theme-color;
+						width: 70%;
 					}
 					.picker {
 						position: absolute;

@@ -6,6 +6,6 @@ export type Org = {
 	desc?: string,
 	logoId?: string,
 	logoUrl?: string,
-	createTime: number,
-	color: string
+	createDate: string,
+	gradient: string[]
 }
