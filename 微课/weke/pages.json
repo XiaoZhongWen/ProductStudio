@@ -7,15 +7,6 @@
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-		    "path" : "pages/addOrganization/addOrganization",
-		    "style" :                                                                                    
-		    {
-		        "navigationBarTitleText": "添加机构",
-		        "enablePullDownRefresh": false,
-				"backgroundColor": "#F2F4FD"
-		    }
-		}
-		,{
             "path" : "pages/calendar/calendar",
             "style" :                                                                                    
             {
@@ -149,7 +140,16 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-        }
+        },
+		{
+		    "path" : "pages/addOrganization/addOrganization",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "添加机构",
+		        "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+		    }
+		}
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

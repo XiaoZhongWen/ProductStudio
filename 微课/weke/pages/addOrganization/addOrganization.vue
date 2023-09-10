@@ -54,7 +54,7 @@
 									class="input" 
 									placeholder-style="color: #808080" 
 									type="text"
-									maxlength="300"
+									maxlength="30"
 									placeholder="请输入简介" />
 							</view>
 						</template>
@@ -112,17 +112,19 @@
 				</uni-list-item>
 			</uni-list>
 		</view>
+		<button class="btn" type="default" @tap="onTapAdd">添加</button>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue' 
+import { ref } from 'vue'
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
+const global = getApp().globalData!
 
 let didSelectedDate = false
 const date = new Date(Date.now())
@@ -134,9 +136,9 @@ const org = ref<Org & {nickname?: string}>({
 	name: '',
 	nickname: usersStore.owner.nickName,
 	tel: usersStore.owner.mobile ?? '13545118725',
-	addr: '武汉市洪山区光谷步行街',
+	addr: '',
 	desc: '',
-	logoUrl: 'https://img2.baidu.com/it/u=2749970253,3556501208&fm=253&fmt=auto&app=138&f=JPG?w=800&h=500',
+	logoUrl: '',
 	createDate: createDate,
 	gradient: ["#4e54c8", "#8f94fb"]
 })
@@ -156,6 +158,33 @@ const onDateChanged = (e) => {
 	didSelectedDate = true
 	org.value.createDate = e.detail.value
 }
+
+const onTapAdd = () => {
+	// 1. 验证机构名称
+	if (org.value.name.length === 0) {
+		uni.showToast({
+			title: "请填写机构名称",
+			duration: global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	// 2. 验证机构创建时间
+	if (didSelectedDate === false) {
+		uni.showToast({
+			title: "请填写机构创建时间",
+			duration: global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	if (org.value.desc?.length === 0) {
+		org.value.desc = "简介"
+	}
+	
+	// 3. 创建机构
+	useOrgs.createOrg(org.value)
+}
 	
 </script>
 
@@ -164,11 +193,6 @@ const onDateChanged = (e) => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	.test {
-		width: 90%;
-		height: 100px;
-		background-color: $wk-bg-color-grey;
-	}
 	.card-container {
 		width: 90%;
 		height: 200px;
@@ -292,6 +316,13 @@ const onDateChanged = (e) => {
 				}
 			}
 		}
+	}
+	.btn {
+		margin: 20px 0 40px 0;
+		background-color: $wk-theme-color;
+		font-size: $uni-font-size-base;
+		color: white;
+		width: 90%;
 	}
 }
 </style>

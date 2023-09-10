@@ -22,12 +22,11 @@ const colors = ref([
 	{id:1, gradient: ["#2193b0", "#6dd5ed"], selected: false}, 
 	{id:2, gradient: ["#1f4037", "#99f2c8"], selected: false}, 
 	{id:3, gradient: ["#f953c6", "#b91d73"], selected: false}, 
-	{id:4, gradient: ["#f12711", "#f5af19"], selected: false},
-	{id:5, gradient: ["#ee9ca7", "#ffdde1"], selected: false}, 
-	{id:6, gradient: ["#3c3b3f", "#605c3c"], selected: false}, 
-	{id:7, gradient: ["#396afc", "#2948ff"], selected: false},
-	{id:8, gradient: ["#642b73", "#c6426e"], selected: false},
-	{id:9, gradient: ["#4b6cb7", "#182848"], selected: false}
+	{id:4, gradient: ["#f12711", "#f5af19"], selected: false}, 
+	{id:5, gradient: ["#3c3b3f", "#605c3c"], selected: false}, 
+	{id:6, gradient: ["#396afc", "#2948ff"], selected: false},
+	{id:7, gradient: ["#642b73", "#c6426e"], selected: false},
+	{id:8, gradient: ["#4b6cb7", "#182848"], selected: false}
 ])
 
 // @ts-ignore
