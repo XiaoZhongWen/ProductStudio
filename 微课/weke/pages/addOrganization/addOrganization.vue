@@ -159,7 +159,7 @@ const onDateChanged = (e) => {
 	org.value.createDate = e.detail.value
 }
 
-const onTapAdd = () => {
+const onTapAdd = async () => {
 	// 1. 验证机构名称
 	if (org.value.name.length === 0) {
 		uni.showToast({
@@ -182,8 +182,41 @@ const onTapAdd = () => {
 		org.value.desc = "简介"
 	}
 	
-	// 3. 创建机构
-	useOrgs.createOrg(org.value)
+	// 3. 上传图标
+	const logoUrl = org.value.logoUrl ?? ""
+	if (logoUrl.length > 0) {
+		const fileId:string = await useOrgs.uploadIcon(org.value._id, logoUrl) ?? ""
+		if (fileId.length === 0) {
+			uni.showToast({
+				title:"机构图标上传失败",
+				duration:global.duration_toast,
+				icon:"error"
+			})
+			return
+		} else {
+			org.value.logoId = fileId
+		}
+	}
+	
+	// 4. 创建|更新机构
+	uni.showLoading({
+		title: "创建中..."
+	})
+	const result:boolean = await useOrgs.createOrg(org.value)
+	uni.hideLoading()
+	if (result) {
+		uni.showToast({
+			title:"机构创建成功",
+			duration:global.duration_toast
+		})
+		uni.navigateBack()
+	} else {
+		uni.showToast({
+			title:"机构创建失败",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+	}
 }
 	
 </script>

@@ -2,6 +2,7 @@
 	import { useUsersStore } from "@/store/users"
 	import { watch } from 'vue'
 	import { storeToRefs } from 'pinia'
+	import navigateInterceptor from './libs/interceptor/navigateInterceptor'
 	export default {
 		data() {
 			const usersStore = useUsersStore()
@@ -11,6 +12,7 @@
 		},
 		onLaunch: function() {
 			console.log('App Launch')
+			navigateInterceptor()
 		},
 		onShow: function() {
 			this.usersStore.login()

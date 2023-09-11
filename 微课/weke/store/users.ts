@@ -29,7 +29,8 @@ export const useUsersStore = defineStore('users', {
 				avatarUrl: '',
 				tempFileUrl: '',
 				nickName: '',
-				roles: []
+				roles: [],
+				orgIds: []
 			} as User & WxIdentity,
 			lastLoginInfo: {
 				unionid: '',
@@ -284,6 +285,14 @@ export const useUsersStore = defineStore('users', {
 					item.avatarUrl = tempFileURL
 					this.children.push(item)
 				}
+			}
+		},
+		// 更新机构信息
+		updateOrgs(orgId: string) {
+			const orgIds = this.owner.orgIds ?? []
+			if (orgId.length > 0 && !orgIds.includes(orgId)) {
+				this.owner.orgIds?.push(orgId)
+				users.updateOrgIds(this.owner._id, this.owner.orgIds ?? [])
 			}
 		}
 	}

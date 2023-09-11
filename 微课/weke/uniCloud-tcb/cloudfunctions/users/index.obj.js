@@ -148,6 +148,20 @@ module.exports = {
    },
    
    /**
+	* 更新所属机构
+	* @param {Object} userId
+	* @param {Object} orgIds
+	*/
+   updateOrgIds(userId, orgIds) {
+	   const db = uniCloud.database()
+	   db.collection('wk-users').where({
+	   		_id: userId
+	   }).update({
+	   	   orgIds: orgIds
+	   })
+   },
+   
+   /**
 	* 更新个性签名
 	* @param {Object} userId
 	* @param {Object} signature

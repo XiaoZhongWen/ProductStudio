@@ -7,11 +7,26 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from "vue";
+import { useOrgsStore } from '@/store/orgs'
+import { useUsersStore } from "@/store/users"
+
+const useOrgs = useOrgsStore()
+const usersStore = useUsersStore()
+
 const onAddTap = () => {
 	uni.navigateTo({
 		url: "/pages/addOrganization/addOrganization"
 	})
 }
+
+onMounted(async () => {
+	console.info("organization page...")
+	if (usersStore.isLogin) {
+		useOrgs.loadOrgData()
+	}
+})
+
 </script>
 
 <style lang="scss" scoped>
