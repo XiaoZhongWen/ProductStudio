@@ -77,7 +77,7 @@ export const useOrgsStore = defineStore('orgs', {
 					result = id.length > 0
 					if (result) {
 						org._id = id
-						this.orgs.push(org)
+						this.orgs.unshift(org)
 						usersStore.updateOrgsByCreate(id)
 					}
 				} catch(e) {
@@ -152,6 +152,12 @@ export const useOrgsStore = defineStore('orgs', {
 				if (needToLoadOrgIds.length > 0) {
 					const orgs = await orgs_co.fetchOrgs(needToLoadOrgIds)
 					this.orgs.push(...orgs)
+					// 按创建时间降序排序
+					this.orgs.sort((a, b) => {
+						const date1 = new Date(a.createDate)
+						const date2 = new Date(b.createDate)
+						return date2.getTime() - date1.getTime()
+					})
 					this.fetchOrgIconUrl()
 					this.fetchOrgCreator()
 				}
