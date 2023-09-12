@@ -112,12 +112,18 @@
 				</uni-list-item>
 			</uni-list>
 		</view>
-		<button class="btn" type="default" @tap="onTapAdd">添加</button>
+		<button 
+			class="btn" 
+			type="default" 
+			@tap="onTapAdd">
+			{{orgId.length === 0? "添加": "更新"}}
+		</button>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
@@ -131,16 +137,48 @@ const date = new Date(Date.now())
 const month = date.getMonth() + 1
 const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
 
-const org = ref<Org & {nickname?: string}>({
-	_id: '',
-	name: '',
-	nickname: usersStore.owner.nickName,
-	tel: usersStore.owner.mobile ?? '13545118725',
-	addr: '',
-	desc: '',
-	logoUrl: '',
-	createDate: createDate,
-	gradient: ["#4e54c8", "#8f94fb"]
+const orgId = ref("")
+
+// @ts-ignore
+const org = computed<Org & {nickname?: string}>({
+	get() {
+		if (orgId.value.length === 0) {
+			return {
+				_id: '',
+				name: '',
+				nickname: usersStore.owner.nickName,
+				tel: usersStore.owner.mobile ?? '',
+				addr: '',
+				desc: '',
+				logoUrl: '',
+				createDate: createDate,
+				gradient: ["#4e54c8", "#8f94fb"]
+			}
+		} else {
+			didSelectedDate = true
+			const data:Org & {nickname?: string} = useOrgs.fetchOrgById(orgId.value)
+			const { _id, name, tel, addr, desc, logoUrl, createDate, gradient } = data
+			return {
+				_id: _id,
+				name: name,
+				nickname: usersStore.owner.nickName,
+				tel: tel ?? '',
+				addr: addr ?? '',
+				desc: desc ?? '',
+				logoUrl: logoUrl ?? '',
+				createDate: createDate,
+				gradient: gradient
+			}
+		}
+	}
+})
+
+//@ts-ignore
+onLoad((option) => {
+	const id = option!.orgId
+	if (typeof(id) !== 'undefined') {
+		orgId.value = id
+	}
 })
 
 const onChooseAvatar = (data:{url: string}) => {
@@ -200,19 +238,19 @@ const onTapAdd = async () => {
 	
 	// 4. 创建|更新机构
 	uni.showLoading({
-		title: "创建中..."
+		title: orgId.value.length === 0? "创建中...": "更新中..."
 	})
 	const result:boolean = await useOrgs.createOrg(org.value)
 	uni.hideLoading()
 	if (result) {
 		uni.showToast({
-			title:"机构创建成功",
+			title: orgId.value.length === 0? "机构创建成功": "机构更新成功",
 			duration:global.duration_toast
 		})
 		uni.navigateBack()
 	} else {
 		uni.showToast({
-			title:"机构创建失败",
+			title: orgId.value.length === 0? "机构创建失败": "机构更新失败",
 			duration:global.duration_toast,
 			icon:"error"
 		})

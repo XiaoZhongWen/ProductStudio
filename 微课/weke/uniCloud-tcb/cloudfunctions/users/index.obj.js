@@ -148,7 +148,7 @@ module.exports = {
    },
    
    /**
-	* 更新所属机构
+	* 更新创建机构的信息
 	* @param {Object} userId
 	* @param {Object} orgIds
 	*/
@@ -157,7 +157,7 @@ module.exports = {
 	   db.collection('wk-users').where({
 	   		_id: userId
 	   }).update({
-	   	   orgIds: orgIds
+	   	   orgIdsByCreate: orgIds
 	   })
    },
    

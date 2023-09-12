@@ -30,7 +30,8 @@ export const useUsersStore = defineStore('users', {
 				tempFileUrl: '',
 				nickName: '',
 				roles: [],
-				orgIds: []
+				orgIdsByCreate: [],
+				orgIdsByJoin: []
 			} as User & WxIdentity,
 			lastLoginInfo: {
 				unionid: '',
@@ -116,7 +117,7 @@ export const useUsersStore = defineStore('users', {
 						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 						this.owner.session_key = session_key
 						this.isLogin = true
-						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, orgIds, status, parentIds, signature } = userInfo as User & WxIdentity
+						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, orgIdsByCreate, orgIdsByJoin, status, parentIds, signature } = userInfo as User & WxIdentity
 						this.owner._id = _id
 						this.owner.nickName = nickName
 						this.owner.familyExpireDate = familyExpireDate
@@ -132,8 +133,11 @@ export const useUsersStore = defineStore('users', {
 						if (typeof(mobile) !== 'undefined') {
 							this.owner.mobile = mobile
 						}
-						if (typeof(orgIds) !== 'undefined') {
-							this.owner.orgIds = orgIds
+						if (typeof(orgIdsByCreate) !== 'undefined') {
+							this.owner.orgIdsByCreate = orgIdsByCreate
+						}
+						if (typeof(orgIdsByJoin) !== 'undefined') {
+							this.owner.orgIdsByJoin = orgIdsByJoin
 						}
 						if (typeof(status) !== 'undefined') {
 							this.owner.status = status
@@ -287,12 +291,12 @@ export const useUsersStore = defineStore('users', {
 				}
 			}
 		},
-		// 更新机构信息
-		updateOrgs(orgId: string) {
-			const orgIds = this.owner.orgIds ?? []
+		// 更新用户创建机构的信息
+		updateOrgsByCreate(orgId: string) {
+			const orgIds = this.owner.orgIdsByCreate ?? []
 			if (orgId.length > 0 && !orgIds.includes(orgId)) {
-				this.owner.orgIds?.push(orgId)
-				users.updateOrgIds(this.owner._id, this.owner.orgIds ?? [])
+				this.owner.orgIdsByCreate?.push(orgId)
+				users.updateOrgIds(this.owner._id, this.owner.orgIdsByCreate ?? [])
 			}
 		}
 	}

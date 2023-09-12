@@ -1,5 +1,12 @@
 <template>
 	<view class="org-container">
+		<view 
+			class="card-container" 
+			v-for="org in useOrgs.orgs" 
+			:key="org._id" 
+			@tap="onOrgCardTap(org._id)">
+			<org-card :org="org"></org-card>
+		</view>
 		<view class="add-container" @tap="onAddTap">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 		</view>
@@ -20,10 +27,20 @@ const onAddTap = () => {
 	})
 }
 
+const onOrgCardTap = (orgId:string) => {
+	uni.navigateTo({
+		url: "/pages/addOrganization/addOrganization?orgId="+orgId
+	})
+}
+
 onMounted(async () => {
 	console.info("organization page...")
 	if (usersStore.isLogin) {
-		useOrgs.loadOrgData()
+		uni.showLoading({
+			title:"加载中"
+		})
+		await useOrgs.loadOrgData()
+		uni.hideLoading()
 	}
 })
 
@@ -31,6 +48,14 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .org-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	.card-container {
+		width: 90%;
+		height: 180px;
+		margin: $uni-spacing-col-base 0;
+	}
 	.add-container {
 		display: flex;
 		position: fixed;

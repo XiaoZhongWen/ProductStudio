@@ -17,6 +17,7 @@ export const useOrgsStore = defineStore('orgs', {
 		}
 	},
 	actions: {
+		// 创建或更新机构
 		async createOrg(org: Org) {
 			let result = false
 			const orgId = org._id
@@ -41,8 +42,10 @@ export const useOrgsStore = defineStore('orgs', {
 						} else {
 							try {
 								const id = await orgs_co.createOrg(org)
-								result = id === curOrg._id
+								const index = this.orgs.findIndex((org) => org._id === id)
+								result = id === curOrg._id && index !== -1
 								if (result) {
+									this.orgs.splice(index, 1, org)
 									console.info("update org data success.")
 								} else {
 									console.error("update org data failure.")
@@ -61,7 +64,7 @@ export const useOrgsStore = defineStore('orgs', {
 					if (result) {
 						org._id = id
 						this.orgs.push(org)
-						usersStore.updateOrgs(id)
+						usersStore.updateOrgsByCreate(id)
 					}
 				} catch(e) {
 					console.error("create org failure.")
@@ -74,6 +77,7 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 			return result
 		},
+		// 上传机构图标
 		async uploadIcon(orgId: string, logoUrl:string) {
 			if (logoUrl.length === 0) {
 				return ""
@@ -87,12 +91,20 @@ export const useOrgsStore = defineStore('orgs', {
 				if (result.length === 0) {
 					console.error("org data [" + orgId + "] not in orgs store, modify org icon failure.")
 				} else {
-					const org = result[0]
+					const org:Org = result[0]
 					if (org.logoUrl === logoUrl) {
-						fileId = org._id
+						fileId = org.logoId ?? ''
 						console.info("org icon not change.")
 					} else {
 						flag = true
+						// 删除旧图标
+						uniCloud.deleteFile({
+							fileList:[org.logoId]
+						}).then((res)=>{
+							console.info("删除机构图标文件成功: " + res)
+						}).catch(() => {
+							console.error("删除机构图标文件失败: " + org.logoId)
+						})
 						console.info("start modify org icon")
 					}
 				}
@@ -114,25 +126,43 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 			return fileId
 		},
+		// 获取用户所有相关机构信息
 		async loadOrgData() {
-			// 1. 获取用户关联的机构id集合
-			const orgIds = usersStore.owner.orgIds ?? []
-			// 2. 获取已经添加到orgs中的机构数据
-			const orgs = this.orgs.filter(org => orgIds.includes(org._id))
-			// 3. 获取还未添加到orgs中的机构数据
-			const s = orgs.map(org => org._id)
-			const others = orgIds.filter(id => !s.includes(id))
-			let array = []
-			for (let orgId of others) {
-				const org = await orgs_co.fetchOrg(orgId)
-				if (JSON.stringify(org) !== "{}") {
-					array.push(org)
+			let result = true
+			const orgIdsByCreate = usersStore.owner.orgIdsByCreate ?? []
+			const orgIdsByJoin = usersStore.owner.orgIdsByJoin ?? []
+			const orgIds = [...orgIdsByCreate, ...orgIdsByJoin]
+			const didLoadedOrgIds = this.orgs.map(org => org._id)
+			const needToLoadOrgIds = orgIds.filter(orgId => !didLoadedOrgIds.includes(orgId))
+			try {
+				if (needToLoadOrgIds.length > 0) {
+					const orgs = await orgs_co.fetchOrgs(needToLoadOrgIds)
+					this.orgs.push(...orgs)
+					this.fetchOrgIconUrl()
+				}
+			} catch(e) {
+				result = false
+			}
+			return result
+		},
+		// 获取机构图标url
+		async fetchOrgIconUrl() {
+			for (let org of this.orgs) {
+				const checkUrl = typeof(org.logoUrl) === 'undefined' || 
+					org.logoUrl.length === 0
+				const checkFileId = typeof(org.logoId) !== 'undefined' && org.logoId.length > 0
+				if (checkUrl && checkFileId) {
+					const response = await uniCloud.getTempFileURL({
+						fileList:[org.logoId]
+					})
+					const { tempFileURL } = response.fileList[0]
+					org.logoUrl = tempFileURL
 				}
 			}
-			// 4. 将array中的数据添加到orgs中
-			this.orgs.push(...array)
-			// 5. 返回相关机构数据
-			return [...orgs, ...array]
+		},
+		fetchOrgById(orgId:string) {
+			const result = this.orgs.filter(org => org._id === orgId)
+			return result[0]
 		}
 	}
 })

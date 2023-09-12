@@ -69,5 +69,20 @@ module.exports = {
 			_id: orgId
 		}).get()
 		return res.data[0];
-	}
+	},
+	/**
+	 * 获取机构信息
+	 * @param {orgIds} 机构id
+	 */
+	async fetchOrgs(orgIds) {
+		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
+			return {}
+		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const res = await db.collection("wk-orgs").where({
+			_id: dbCmd.in(orgIds)
+		}).get()
+		return res.data;
+	},
 }
