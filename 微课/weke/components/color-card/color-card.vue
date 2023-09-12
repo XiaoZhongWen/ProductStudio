@@ -29,6 +29,12 @@ const colors = ref([
 	{id:8, gradient: ["#4b6cb7", "#182848"], selected: false}
 ])
 
+uni.$on("onGradientChanged", function (data) {
+	colors.value.forEach((color) => {
+		color.selected = color.gradient.toString() === data.gradient.toString()
+	})
+})
+
 // @ts-ignore
 const onTap = (e) => {
 	const id = e.target.dataset.id
@@ -43,6 +49,7 @@ const onTap = (e) => {
 		emit('onColorChanged', { gradient: colors.value[id].gradient })
 	}
 }
+
 </script>
 
 <style lang="scss" scoped>

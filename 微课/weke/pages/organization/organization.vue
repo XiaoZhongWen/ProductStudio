@@ -54,7 +54,7 @@ onMounted(async () => {
 	.card-container {
 		width: 90%;
 		height: 180px;
-		margin: $uni-spacing-col-base 0;
+		margin: $uni-spacing-col-sm 0;
 	}
 	.add-container {
 		display: flex;

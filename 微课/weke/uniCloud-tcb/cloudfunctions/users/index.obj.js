@@ -162,6 +162,28 @@ module.exports = {
    },
    
    /**
+	* 获取机构创建者信息
+	* @param {Object} orgIds
+	*/
+   async fetchOrgCreator(orgIds) {
+	   const db = uniCloud.database()
+	   let data = []
+	   for (let orgId of orgIds) {
+		   let res = await db.collection('wk-users').where({
+			   orgIdsByCreate:orgId
+		   }).field({'nickName':true}).get()
+		   if (res.data.length !== 0) {
+			   const { nickName } = res.data[0]
+			   data.push({
+				   "orgId": orgId,
+				   "nickName": nickName
+			   })
+		   }
+	   }
+	   return data
+   },
+   
+   /**
 	* 更新个性签名
 	* @param {Object} userId
 	* @param {Object} signature

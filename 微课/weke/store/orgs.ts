@@ -9,6 +9,9 @@ const usersStore = useUsersStore()
 const orgs_co = uniCloud.importObject('orgs', {
 	customUI: true
 })
+const users_co = uniCloud.importObject('users', {
+	customUI: true
+})
 
 export const useOrgsStore = defineStore('orgs', {
 	state: () => {
@@ -23,20 +26,31 @@ export const useOrgsStore = defineStore('orgs', {
 			const orgId = org._id
 			if (orgId.length > 0) {
 				// modify
-				console.info("modify org data, orgId: ", + orgId)
+				console.info("modify org data, orgId: " + orgId)
 				const arr = this.orgs.filter(org => org._id === orgId)
 				if (arr.length === 0) {
 					console.error("org data [" + orgId + "] not in orgs store, modify org icon failure.")
 					result = false
 				} else {
 					const curOrg = arr[0]
+					let gradientDidChanged = false
+					if (org.gradient.length === curOrg.gradient.length) {
+						for (let item of org.gradient) {
+							if (!curOrg.gradient.includes(item)) {
+								gradientDidChanged = true
+								break
+							}
+						}
+					} else {
+						gradientDidChanged = true
+					}
+					org.gradient.filter(item => curOrg.gradient.includes(item))
 					if (org.name === curOrg.name &&
 						org.tel === curOrg.tel &&
 						org.desc === curOrg.desc &&
 						org.logoId === curOrg.logoId &&
 						org.createDate === curOrg.createDate &&
-						org.gradient.length === curOrg.gradient.length &&
-						org.gradient.filter(item => curOrg.gradient.includes(item))) {
+						!gradientDidChanged) {
 							result = true
 							console.info("org data not change.")
 						} else {
@@ -139,6 +153,7 @@ export const useOrgsStore = defineStore('orgs', {
 					const orgs = await orgs_co.fetchOrgs(needToLoadOrgIds)
 					this.orgs.push(...orgs)
 					this.fetchOrgIconUrl()
+					this.fetchOrgCreator()
 				}
 			} catch(e) {
 				result = false
@@ -158,6 +173,31 @@ export const useOrgsStore = defineStore('orgs', {
 					const { tempFileURL } = response.fileList[0]
 					org.logoUrl = tempFileURL
 				}
+			}
+		},
+		// 获取机构的创建者信息
+		async fetchOrgCreator() {
+			const orgIdsByCreate = usersStore.owner.orgIdsByCreate ?? []
+			const other:string[] = []
+			for (let org of this.orgs) {
+				if (orgIdsByCreate.includes(org._id)) {
+					org.nickname = usersStore.owner.nickName
+				} else {
+					other.push(org._id)
+				}
+			}
+			if (other.length) {
+				const res:{orgId: string, nickName:string}[] = await users_co.fetchOrgCreator(other)
+				console.info(res)
+				this.orgs.forEach(org => {
+					if (other.includes(org._id)) {
+						res.forEach(item => {
+							if (item.orgId === org._id) {
+								org.nickname = item.nickName
+							}
+						})
+					}
+				})
 			}
 		},
 		fetchOrgById(orgId:string) {

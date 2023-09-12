@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
@@ -138,12 +138,7 @@ const month = date.getMonth() + 1
 const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
 
 const orgId = ref("")
-
-// @ts-ignore
-const org = computed<Org & {nickname?: string}>({
-	get() {
-		if (orgId.value.length === 0) {
-			return {
+const org = ref<Org>({
 				_id: '',
 				name: '',
 				nickname: usersStore.owner.nickName,
@@ -153,32 +148,27 @@ const org = computed<Org & {nickname?: string}>({
 				logoUrl: '',
 				createDate: createDate,
 				gradient: ["#4e54c8", "#8f94fb"]
-			}
-		} else {
-			didSelectedDate = true
-			const data:Org & {nickname?: string} = useOrgs.fetchOrgById(orgId.value)
-			const { _id, name, tel, addr, desc, logoUrl, createDate, gradient } = data
-			return {
-				_id: _id,
-				name: name,
-				nickname: usersStore.owner.nickName,
-				tel: tel ?? '',
-				addr: addr ?? '',
-				desc: desc ?? '',
-				logoUrl: logoUrl ?? '',
-				createDate: createDate,
-				gradient: gradient
-			}
-		}
-	}
-})
+			})
 
 //@ts-ignore
 onLoad((option) => {
 	const id = option!.orgId
 	if (typeof(id) !== 'undefined') {
 		orgId.value = id
+		didSelectedDate = true
+		const data:Org = useOrgs.fetchOrgById(id)
+		const { _id, name, tel, addr, desc, logoId, logoUrl, createDate, gradient } = data
+		org.value._id = _id
+		org.value.name = name
+		org.value.tel = tel ?? ''
+		org.value.addr = addr ?? ''
+		org.value.desc = desc ?? ''
+		org.value.logoUrl = logoUrl ?? ''
+		org.value.logoId = logoId ?? ''
+		org.value.createDate = createDate
+		org.value.gradient = gradient
 	}
+	uni.$emit("onGradientChanged", {gradient:org.value.gradient})
 })
 
 const onChooseAvatar = (data:{url: string}) => {

@@ -51,7 +51,7 @@ import { Org } from '@/types/org'
 import { computed } from "vue";
 
 const props:Readonly<{
-    org?: Org & {nickname?: string}
+    org?: Org
 }>	= defineProps(['org'])
 
 // @ts-ignore
