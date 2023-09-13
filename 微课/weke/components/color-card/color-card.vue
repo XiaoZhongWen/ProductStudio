@@ -16,6 +16,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const global = getApp().globalData!
+const props:Readonly<{
+    disabled?: boolean
+}>	= defineProps(['disabled'])
+
 const emit = defineEmits(['onColorChanged'])
 const colors = ref([
 	{id:0, gradient: ["#4e54c8", "#8f94fb"], selected: true},
@@ -29,7 +34,7 @@ const colors = ref([
 	{id:8, gradient: ["#4b6cb7", "#182848"], selected: false}
 ])
 
-uni.$on("onGradientChanged", function (data) {
+uni.$on(global.event_name.onGradientChanged, function (data) {
 	colors.value.forEach((color) => {
 		color.selected = color.gradient.toString() === data.gradient.toString()
 	})
@@ -37,6 +42,10 @@ uni.$on("onGradientChanged", function (data) {
 
 // @ts-ignore
 const onTap = (e) => {
+	const disabled = props.disabled ?? false
+	if (disabled) {
+		return
+	}
 	const id = e.target.dataset.id
 	if (typeof(id) !== 'undefined') {
 		colors.value.forEach((color) => {

@@ -20,7 +20,7 @@ export const useOrgsStore = defineStore('orgs', {
 		}
 	},
 	actions: {
-		// 创建或更新机构
+		// 创建或更新机构 TODO
 		async createOrg(org: Org) {
 			let result = false
 			const orgId = org._id
@@ -33,24 +33,14 @@ export const useOrgsStore = defineStore('orgs', {
 					result = false
 				} else {
 					const curOrg = arr[0]
-					let gradientDidChanged = false
-					if (org.gradient.length === curOrg.gradient.length) {
-						for (let item of org.gradient) {
-							if (!curOrg.gradient.includes(item)) {
-								gradientDidChanged = true
-								break
-							}
-						}
-					} else {
-						gradientDidChanged = true
-					}
 					org.gradient.filter(item => curOrg.gradient.includes(item))
+					// TODO: 后期添加老师、学员、课程、班级验证
 					if (org.name === curOrg.name &&
 						org.tel === curOrg.tel &&
 						org.desc === curOrg.desc &&
 						org.logoId === curOrg.logoId &&
 						org.createDate === curOrg.createDate &&
-						!gradientDidChanged) {
+						org.gradient.toString() === curOrg.gradient.toString()) {
 							result = true
 							console.info("org data not change.")
 						} else {
@@ -78,7 +68,6 @@ export const useOrgsStore = defineStore('orgs', {
 					if (result) {
 						org._id = id
 						this.orgs.unshift(org)
-						usersStore.updateOrgsByCreate(id)
 					}
 				} catch(e) {
 					console.error("create org failure.")
@@ -143,24 +132,18 @@ export const useOrgsStore = defineStore('orgs', {
 		// 获取用户所有相关机构信息
 		async loadOrgData() {
 			let result = true
-			const orgIdsByCreate = usersStore.owner.orgIdsByCreate ?? []
-			const orgIdsByJoin = usersStore.owner.orgIdsByJoin ?? []
-			const orgIds = [...orgIdsByCreate, ...orgIdsByJoin]
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
-			const needToLoadOrgIds = orgIds.filter(orgId => !didLoadedOrgIds.includes(orgId))
 			try {
-				if (needToLoadOrgIds.length > 0) {
-					const orgs = await orgs_co.fetchOrgs(needToLoadOrgIds)
-					this.orgs.push(...orgs)
-					// 按创建时间降序排序
-					this.orgs.sort((a, b) => {
-						const date1 = new Date(a.createDate)
-						const date2 = new Date(b.createDate)
-						return date2.getTime() - date1.getTime()
-					})
-					this.fetchOrgIconUrl()
-					this.fetchOrgCreator()
-				}
+				const orgs = await orgs_co.fetchOrgs(usersStore.owner._id, didLoadedOrgIds)
+				this.orgs.push(...orgs)
+				// 按创建时间降序排序
+				this.orgs.sort((a, b) => {
+					const date1 = new Date(a.createDate)
+					const date2 = new Date(b.createDate)
+					return date2.getTime() - date1.getTime()
+				})
+				this.fetchOrgIconUrl()
+				this.fetchOrgCreator()
 			} catch(e) {
 				result = false
 			}
@@ -181,29 +164,17 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 		},
-		// 获取机构的创建者信息
+		// 获取机构的创建者信息 TODO
 		async fetchOrgCreator() {
-			const orgIdsByCreate = usersStore.owner.orgIdsByCreate ?? []
-			const other:string[] = []
 			for (let org of this.orgs) {
-				if (orgIdsByCreate.includes(org._id)) {
-					org.nickname = usersStore.owner.nickName
-				} else {
-					other.push(org._id)
-				}
-			}
-			if (other.length) {
-				const res:{orgId: string, nickName:string}[] = await users_co.fetchOrgCreator(other)
-				console.info(res)
-				this.orgs.forEach(org => {
-					if (other.includes(org._id)) {
-						res.forEach(item => {
-							if (item.orgId === org._id) {
-								org.nickname = item.nickName
-							}
-						})
+				const nickname = org.nickname ?? ''
+				if (nickname.length === 0) {
+					if (org.creatorId === usersStore.owner._id) {
+						org.nickname = usersStore.owner.nickName
+					} else {
+						// 获取
 					}
-				})
+				}
 			}
 		},
 		fetchOrgById(orgId:string) {

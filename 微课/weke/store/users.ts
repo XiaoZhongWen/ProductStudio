@@ -29,9 +29,7 @@ export const useUsersStore = defineStore('users', {
 				avatarUrl: '',
 				tempFileUrl: '',
 				nickName: '',
-				roles: [],
-				orgIdsByCreate: [],
-				orgIdsByJoin: []
+				roles: []
 			} as User & WxIdentity,
 			lastLoginInfo: {
 				unionid: '',
@@ -117,7 +115,7 @@ export const useUsersStore = defineStore('users', {
 						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 						this.owner.session_key = session_key
 						this.isLogin = true
-						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, orgIdsByCreate, orgIdsByJoin, status, parentIds, signature } = userInfo as User & WxIdentity
+						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, status, parentIds, signature } = userInfo as User & WxIdentity
 						this.owner._id = _id
 						this.owner.nickName = nickName
 						this.owner.familyExpireDate = familyExpireDate
@@ -132,12 +130,6 @@ export const useUsersStore = defineStore('users', {
 						}
 						if (typeof(mobile) !== 'undefined') {
 							this.owner.mobile = mobile
-						}
-						if (typeof(orgIdsByCreate) !== 'undefined') {
-							this.owner.orgIdsByCreate = orgIdsByCreate
-						}
-						if (typeof(orgIdsByJoin) !== 'undefined') {
-							this.owner.orgIdsByJoin = orgIdsByJoin
 						}
 						if (typeof(status) !== 'undefined') {
 							this.owner.status = status
@@ -277,26 +269,14 @@ export const useUsersStore = defineStore('users', {
 		},
 		// 获取children信息
 		async fetchChildren() {
-			const roles = new Set(this.owner.roles)
-			if (roles.has(4)) {
-				// 家长
-				const result = await users.fetchChildren(this.owner._id)
-				for (let item of result) {
-					const res = await uniCloud.getTempFileURL({
-						fileList:[item.avatarId]
-					})
-					const { tempFileURL } = res.fileList[0]
-					item.avatarUrl = tempFileURL
-					this.children.push(item)
-				}
-			}
-		},
-		// 更新用户创建机构的信息
-		updateOrgsByCreate(orgId: string) {
-			const orgIds = this.owner.orgIdsByCreate ?? []
-			if (orgId.length > 0 && !orgIds.includes(orgId)) {
-				this.owner.orgIdsByCreate?.push(orgId)
-				users.updateOrgIds(this.owner._id, this.owner.orgIdsByCreate ?? [])
+			const result = await users.fetchChildren(this.owner._id)
+			for (let item of result) {
+				const res = await uniCloud.getTempFileURL({
+					fileList:[item.avatarId]
+				})
+				const { tempFileURL } = res.fileList[0]
+				item.avatarUrl = tempFileURL
+				this.children.push(item)
 			}
 		}
 	}

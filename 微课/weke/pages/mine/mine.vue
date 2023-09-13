@@ -186,10 +186,12 @@ const account:ListItem[] = computed({
  // @ts-ignore
  const children:User[] = computed({
 	 get() {
-		 const roles = new Set(usersStore.owner.roles)
-		 if (roles.size === 0 || !roles.has(4)) {
+		 const roles = usersStore.owner.roles ?? []
+		 if (roles.length === 0 || !roles.includes(4)) {
+			 console.info("onChildren: " + roles)
 		 	return []
 		 } else {
+			 console.info("onChildren: " + usersStore.children)
 			 return usersStore.children
 		 }
 	 }
@@ -228,7 +230,7 @@ const selectRole = () => {
 		const roles = usersStore.owner.roles ?? []
 		is_mask_click.value = !(usersStore.isLogin && roles.length === 0)
 		if (roles.length === 0) {
-			selectRolePopup.value?.open()
+			showSelectRole()
 			uni.hideTabBar()
 		}
 	}
@@ -248,6 +250,13 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 
 const onSelectRoleChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
+}
+
+const showSelectRole = () => {
+	// selectRole数据重置
+	uni.$emit(global.event_name.showSelectRole)
+	// open
+	selectRolePopup.value?.open()
 }
 
 uni.$on(global.event_name.showWkProtocol, () => {
@@ -322,7 +331,7 @@ uni.$on(global.event_name.didSelectedRole, () => {
 })
 
 uni.$on(global.event_name.selectRole, () => {
-	selectRolePopup.value?.open()
+	showSelectRole()
 	uni.hideTabBar()
 })
 

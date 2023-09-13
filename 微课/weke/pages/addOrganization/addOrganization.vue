@@ -4,7 +4,7 @@
 			<org-card :org="org"></org-card>
 		</view>
 		<view class="org-edit-container">
-			<view class="header">
+			<view v-if="isCreator" class="header">
 				<upload-image :url="org.logoUrl" prompt="图标" @onChooseAvatar="onChooseAvatar"></upload-image>
 			</view>
 			<view class="body">
@@ -13,7 +13,7 @@
 						<template v-slot:header>
 							<view class="decoration">
 								<text class="text">外观</text>
-								<color-card @onColorChanged="onColorChanged"></color-card>
+								<color-card :disabled="!isCreator" @onColorChanged="onColorChanged"></color-card>
 							</view>
 						</template>
 					</uni-list-item>
@@ -23,6 +23,7 @@
 								<text class="slot-text">机构名称</text>
 								<input
 									v-model="org.name"
+									:disabled="!isCreator"
 									class="input" 
 									placeholder-style="color: #808080" 
 									type="text"
@@ -37,6 +38,7 @@
 								<text class="slot-text">地址</text>
 								<input 
 									v-model="org.addr"
+									:disabled="!isCreator"
 									class="input" 
 									placeholder-style="color: #808080" 
 									type="text"
@@ -51,6 +53,7 @@
 								<text class="slot-text">简介</text>
 								<input
 									v-model="org.desc"
+									:disabled="!isCreator"
 									class="input" 
 									placeholder-style="color: #808080" 
 									type="text"
@@ -65,7 +68,8 @@
 								<text class="slot-text">创建日期</text>
 								<picker 
 									class="picker" 
-									mode="date" 
+									mode="date"
+									:disabled="!isCreator"
 									:value="org.createDate" 
 									@change="onDateChanged">
 									<view class="uni-input">{{didSelectedDate?org.createDate:"创建日期"}}</view>
@@ -76,7 +80,7 @@
 				</uni-list>
 			</view>
 		</view>
-		<view class="org-member-container">
+		<view class="org-member-container" v-if="isCreator">
 			<uni-list>
 				<uni-list-item class="item" clickable>
 					<template v-slot:header>
@@ -113,6 +117,7 @@
 			</uni-list>
 		</view>
 		<button 
+			v-if="isCreator"
 			class="btn" 
 			type="default" 
 			@tap="onTapAdd">
@@ -133,6 +138,7 @@ const usersStore = useUsersStore()
 const global = getApp().globalData!
 
 let didSelectedDate = false
+const isCreator = ref(true)
 const date = new Date(Date.now())
 const month = date.getMonth() + 1
 const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
@@ -147,17 +153,38 @@ const org = ref<Org>({
 				desc: '',
 				logoUrl: '',
 				createDate: createDate,
-				gradient: ["#4e54c8", "#8f94fb"]
+				gradient: ["#4e54c8", "#8f94fb"],
+				creatorId: usersStore.owner._id,
+				teacherIds: [],
+				studentIds: [],
+				courseIds: [],
+				classIds: []
 			})
 
 //@ts-ignore
 onLoad((option) => {
+	let title = "添加机构"
 	const id = option!.orgId
 	if (typeof(id) !== 'undefined') {
 		orgId.value = id
 		didSelectedDate = true
 		const data:Org = useOrgs.fetchOrgById(id)
-		const { _id, name, tel, addr, desc, logoId, logoUrl, createDate, gradient } = data
+		const { 
+				_id, 
+				name, 
+				tel, 
+				addr, 
+				desc, 
+				logoId, 
+				logoUrl, 
+				createDate, 
+				gradient, 
+				creatorId,
+				teacherIds,
+				studentIds,
+				courseIds,
+				classIds
+		} = data
 		org.value._id = _id
 		org.value.name = name
 		org.value.tel = tel ?? ''
@@ -167,8 +194,18 @@ onLoad((option) => {
 		org.value.logoId = logoId ?? ''
 		org.value.createDate = createDate
 		org.value.gradient = gradient
+		org.value.creatorId = creatorId
+		org.value.teacherIds = teacherIds ?? []
+		org.value.studentIds = studentIds ?? []
+		org.value.courseIds = courseIds ?? []
+		org.value.classIds = classIds ?? []
+		isCreator.value = creatorId === usersStore.owner._id
+		title = isCreator.value === true? "更新机构": "机构详情"
+		uni.setNavigationBarTitle({
+			title:title
+		})
 	}
-	uni.$emit("onGradientChanged", {gradient:org.value.gradient})
+	uni.$emit(global.event_name.onGradientChanged, {gradient:org.value.gradient})
 })
 
 const onChooseAvatar = (data:{url: string}) => {
@@ -200,14 +237,38 @@ const onTapAdd = async () => {
 	// 2. 验证机构创建时间
 	if (didSelectedDate === false) {
 		uni.showToast({
-			title: "请填写机构创建时间",
+			title: "请填写创建时间",
 			duration: global.duration_toast,
 			icon:"error"
 		})
 		return
 	}
+	const date = new Date(org.value.createDate)
+	const now = Date.now()
+	if (date.getTime() > now) {
+		uni.showToast({
+			title: "创建时间有误",
+			duration: global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	// 3. 验证机构创建者
+	if (org.value.creatorId !== usersStore.owner._id) {
+		uni.showToast({
+			title: "权限错误",
+			duration: global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	
 	if (org.value.desc?.length === 0) {
 		org.value.desc = "简介"
+	}
+	
+	if (org.value.addr?.length === 0) {
+		org.value.addr = "地址"
 	}
 	
 	// 3. 上传图标

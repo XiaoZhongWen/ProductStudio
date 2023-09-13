@@ -32,6 +32,7 @@ import { RoleId } from '@/types/user'
 
 const usersStore = useUsersStore()
 const selectedId = ref<RoleId[]>([])
+const global = getApp().globalData!
 const roles = ref([
 	{
 		value: 1,
@@ -55,18 +56,21 @@ const student = ref([
 	}
 ])
 
-const roleIds = usersStore.owner.roles ?? []
-if (roleIds.length) {
-	let set = new Set(roleIds)
-	if (set.has(3)) {
-		studentId.value = 3
-	} else {
-		selectedId.value.push(...roleIds)
+uni.$on(global.event_name.showSelectRole, () => {
+	const roleIds =  usersStore.owner.roles ?? []
+	if (roleIds.length) {
+		let set = new Set(roleIds)
+		if (set.has(3)) {
+			studentId.value = 3
+		} else {
+			selectedId.value = roleIds
+		}
 	}
-}
+})
 
-const global = getApp().globalData!
 const onConfirm = () => {
+	const roleIds =  usersStore.owner.roles ?? []
+	console.info("roleIds: " + roleIds)
 	if (studentId.value === 3) {
 		let set = new Set(roleIds)
 		if (!set.has(studentId.value)) {

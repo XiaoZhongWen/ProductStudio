@@ -7,7 +7,10 @@
 			@tap="onOrgCardTap(org._id)">
 			<org-card :org="org"></org-card>
 		</view>
-		<view class="add-container" @tap="onAddTap">
+		<view 
+			class="add-container" 
+			@tap="onAddTap" 
+			v-if="usersStore.owner.roles?.includes(1)">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 		</view>
 	</view>

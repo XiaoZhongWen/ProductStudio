@@ -24,6 +24,10 @@ module.exports = {
 		const addr = param.addr ?? ""
 		const desc = param.desc ?? ""
 		const logoId = param.logoId ?? ""
+		const teacherIds = param.teacherIds ?? []
+		const studentIds = param.studentIds ?? []
+		const courseIds = param.courseIds ?? []
+		const classIds = param.classIds ?? []
 		if (isCreate) {
 			// 机构不存在
 			let res = await db.collection('wk-orgs').add({
@@ -33,7 +37,12 @@ module.exports = {
 				desc: desc,
 				logoId: logoId,
 				createDate: param.createDate,
-				gradient: param.gradient
+				gradient: param.gradient,
+				creatorId: param.creatorId,
+				teacherIds: teacherIds,
+				studentIds: studentIds,
+				courseIds: courseIds,
+				classIds: classIds
 			})
 			const { id } = res
 			if (typeof(id) !== 'undefined' && id.length > 0) {
@@ -50,31 +59,22 @@ module.exports = {
 				desc: desc,
 				logoId: logoId,
 				createDate: param.createDate,
-				gradient: param.gradient
+				gradient: param.gradient,
+				teacherIds: teacherIds,
+				studentIds: studentIds,
+				courseIds: courseIds,
+				classIds: classIds
 			})
 			orgId = _id
 		}
 		return orgId
 	},
 	/**
-	 * 获取机构信息
-	 * @param {orgId} 机构id
+	 * 获取所有与用户相关的机构信息
+	 * @param {userId} 机构创建者id
+	 * @param {excludes} 排除的机构id集合
 	 */
-	async fetchOrg(orgId) {
-		if (typeof(orgId) === 'undefined' || orgId.length === 0) {
-			return {}
-		}
-		const db = uniCloud.database()
-		const res = await db.collection("wk-orgs").where({
-			_id: orgId
-		}).get()
-		return res.data[0];
-	},
-	/**
-	 * 获取机构信息
-	 * @param {orgIds} 机构id
-	 */
-	async fetchOrgs(orgIds) {
+	async fetchOrgs(userId, excludes) {
 		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
 			return {}
 		}

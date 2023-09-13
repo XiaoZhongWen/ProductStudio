@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name", "createTime", "gradient"],
+	"required": ["name", "createTime", "gradient", "creatorId"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -42,8 +42,28 @@
 		},
 		"gradient": {
 			"bsonType": "array",
-			"description": "颜色渐变",
-			"defaultValue": "#5073D6"
+			"description": "颜色渐变"
+		},
+		"creatorId": {
+			"bsonType": "string",
+			"description": "机构的创建者id",
+			"foreignKey": "wk-users._id"
+		},
+		"teacherIds": {
+			"bsonType": "array",
+			"description": "机构老师的id集合"
+		},
+		"studentIds": {
+			"bsonType": "array",
+			"description": "机构学员的id集合"
+		},
+		"courseIds": {
+			"bsonType": "array",
+			"description": "机构课程的id集合"
+		},
+		"classIds": {
+			"bsonType": "array",
+			"description": "机构班级的id集合"
 		}
 	}
 }

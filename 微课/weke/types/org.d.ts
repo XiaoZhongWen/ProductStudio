@@ -8,5 +8,10 @@ export type Org = {
 	logoId?: string,
 	logoUrl?: string,
 	createDate: string,
-	gradient: string[]
+	gradient: string[],
+	creatorId: string,
+	teacherIds?: string[],
+	studentIds?: string[],
+	courseIds?: string[],
+	classIds?: string[]
 }

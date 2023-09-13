@@ -30,7 +30,9 @@
 				login: "login",
 				loginSuccess: "loginSuccess",
 				selectRole: "selectRole",
-				didSelectedRole: "didSelectedRole"
+				showSelectRole: "showSelectRole",
+				didSelectedRole: "didSelectedRole",
+				onGradientChanged: "onGradientChanged"
 			}
 		}
 	}

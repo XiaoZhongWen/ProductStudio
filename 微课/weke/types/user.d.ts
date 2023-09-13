@@ -13,8 +13,6 @@ export type User = {
 	birthday?: number,
 	roles?: RoleId[],
 	mobile?: string,
-	orgIdsByCreate?: string[],
-	orgIdsByJoin?: string[],
 	familyExpireDate: number,
 	orgExpireDate: number,
 	inputCount: number,
