@@ -173,5 +173,20 @@ module.exports = {
 		   parentIds: userId
 	   }).get()
 	   return res.data
+   },
+   
+   /**
+	* 获取指定用户
+	* @param {Object} userId
+	*/
+   async fetchUser(userId) {
+	   let user = {}
+	   const res = await db.collection('wk-users').where({
+			_id: userId
+	   }).get()
+	   if (res.data.length === 1) {
+	   		user = res.data[0]
+	   }
+	   return user
    }
 }

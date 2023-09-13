@@ -3,6 +3,7 @@ import { Org } from '@/types/org'
 import { useUsersStore } from "@/store/users"
 // @ts-ignore
 import md5 from 'js-md5'
+import { User } from '../types/user'
 
 const usersStore = useUsersStore()
 
@@ -173,6 +174,10 @@ export const useOrgsStore = defineStore('orgs', {
 						org.nickname = usersStore.owner.nickName
 					} else {
 						// 获取
+						const user = await usersStore.fetchUser(org.creatorId) as User
+						if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
+							org.nickname = user.nickName
+						}
 					}
 				}
 			}

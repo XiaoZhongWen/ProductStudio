@@ -76,13 +76,25 @@ module.exports = {
 	 */
 	async fetchOrgs(userId, excludes) {
 		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
-			return {}
+			return []
 		}
 		const db = uniCloud.database()
 		const dbCmd = db.command
-		const res = await db.collection("wk-orgs").where({
-			_id: dbCmd.in(orgIds)
+		// 1. 创建者
+		const res_creator = await db.collection("wk-orgs").where({
+			_id: dbCmd.nin(excludes),
+			creatorId: userId
 		}).get()
-		return res.data;
+		// 2. 老师
+		const res_teacher = await db.collection("wk-orgs").where({
+			_id: dbCmd.nin(excludes),
+			teacherIds: userId
+		}).get()
+		// 3. 学员
+		const res_student = await db.collection("wk-orgs").where({
+			_id: dbCmd.nin(excludes),
+			studentIds: userId
+		}).get()
+		return [...res_creator.data, ...res_teacher.data, ...res_student.data]
 	},
 }

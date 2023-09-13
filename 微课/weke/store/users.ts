@@ -37,7 +37,8 @@ export const useUsersStore = defineStore('users', {
 				nickName: '',
 				tempFileUrl: ''
 			},
-			children: [] as User[]
+			children: [] as User[],
+			users: [] as User[]
 		}
 	},
 	
@@ -92,6 +93,7 @@ export const useUsersStore = defineStore('users', {
 	},
 	
 	actions: {
+		// 登录
 		async login() {
 			if (this.isLogin === false) {
 				try {
@@ -164,6 +166,7 @@ export const useUsersStore = defineStore('users', {
 				console.info("用户是已登录状态")
 			}
 		},
+		// 上传头像
 		async uploadPortrait() {
 			const lastAvatarUrl = this.lastLoginInfo.tempFileUrl ?? ''
 			const avatarUrl = this.owner.tempFileUrl ?? ''
@@ -233,9 +236,11 @@ export const useUsersStore = defineStore('users', {
 			this.owner.avatarUrl = avatarUrl
 			this.lastLoginInfo.tempFileUrl = avatarUrl
 		},
+		// 更新头像url
 		updateTempFileUrl(tempFileUrl:string) {
 			this.owner.tempFileUrl = tempFileUrl
 		},
+		// 更新头像文件id
 		updateAvatarId(fileId: string) {
 			this.owner.avatarId = fileId
 		},
@@ -277,6 +282,22 @@ export const useUsersStore = defineStore('users', {
 				const { tempFileURL } = res.fileList[0]
 				item.avatarUrl = tempFileURL
 				this.children.push(item)
+			}
+		},
+		// 获取用户信息
+		async fetchUser(userId: string) {
+			if (typeof(userId) === 'undefined' || userId.length === 0) {
+				return {}
+			}
+			const index = this.users.findIndex(user => user._id === userId)
+			if (index !== -1) {
+				return this.users[index]
+			} else {
+				const user = await users.fetchUser(userId) as User
+				if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
+					this.users.push(user)
+				}
+				return user
 			}
 		}
 	}
