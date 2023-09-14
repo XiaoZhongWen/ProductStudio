@@ -53,10 +53,10 @@ module.exports = {
 		   }).get()
 		   if (res.data.length === 1) {
 			   user = res.data[0]
-		   }
-		   const { inputCount } = user
-		   if (typeof(inputCount) === 'undefined') {
-			   user.inputCount = 0
+			   const { inputCount } = user
+			   if (typeof(inputCount) === 'undefined') {
+			   		user.inputCount = 0
+			   }
 		   }
 	   }
 	   return user
@@ -181,6 +181,7 @@ module.exports = {
 	*/
    async fetchUser(userId) {
 	   let user = {}
+	   const db = uniCloud.database()
 	   const res = await db.collection('wk-users').where({
 			_id: userId
 	   }).get()

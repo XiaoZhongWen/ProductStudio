@@ -35,7 +35,7 @@
 				</view>
 				<!-- 有效期 -->
 				<template v-if="usersStore.isExpired">
-					<text class="expired">{{usersStore}}</text>
+					<text class="expired">123</text>
 				</template>
 				<template v-else>
 					<view class="expired">
@@ -68,7 +68,7 @@ const onLoginTap = () => {
 		usersStore.updateTempFileUrl(usersStore.owner.avatarUrl ?? '')
 	}
 	// 子组件向父组件传递事件
-	emit('login')
+	emit(global.event_name.login)
 }
 
 const onTagTap = () => {

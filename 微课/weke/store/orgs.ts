@@ -172,11 +172,13 @@ export const useOrgsStore = defineStore('orgs', {
 				if (nickname.length === 0) {
 					if (org.creatorId === usersStore.owner._id) {
 						org.nickname = usersStore.owner.nickName
+						org.tel = usersStore.owner.mobile ?? ''
 					} else {
 						// 获取
 						const user = await usersStore.fetchUser(org.creatorId) as User
 						if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
 							org.nickname = user.nickName
+							org.tel = user.mobile ?? ''
 						}
 					}
 				}

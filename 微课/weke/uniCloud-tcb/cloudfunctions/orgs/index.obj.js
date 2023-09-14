@@ -75,7 +75,7 @@ module.exports = {
 	 * @param {excludes} 排除的机构id集合
 	 */
 	async fetchOrgs(userId, excludes) {
-		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
+		if (typeof(userId) === 'undefined' || userId.length === 0) {
 			return []
 		}
 		const db = uniCloud.database()

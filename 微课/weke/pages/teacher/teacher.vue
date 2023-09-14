@@ -1,11 +1,11 @@
 <template>
 	<view class="teacher-container">
-		<view
+		<button
+			open-type="share"
 			class="add-container" 
-			@tap="onAddTap" 
 			v-if="usersStore.owner.roles?.includes(1)">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
-		</view>
+		</button>
 	</view>
 </template>
 
@@ -14,10 +14,12 @@ import { useUsersStore } from "@/store/users"
 
 const usersStore = useUsersStore()
 
-const onAddTap = () => {
-	uni.navigateTo({
-		url: "/pages/addOrganization/addOrganization"
-	})
+const onShareAppMessage = () => {
+	console.info("onShareAppMessage...")
+	return {
+		title: "老师邀请",
+		path: '/pages/mine/mine'
+	}
 }
 
 </script>

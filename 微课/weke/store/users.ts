@@ -117,7 +117,20 @@ export const useUsersStore = defineStore('users', {
 						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 						this.owner.session_key = session_key
 						this.isLogin = true
-						const { _id, nickName, familyExpireDate, orgExpireDate, inputCount, avatarId, birthday, roles, mobile, status, parentIds, signature } = userInfo as User & WxIdentity
+						const { 
+							_id, 
+							nickName, 
+							familyExpireDate, 
+							orgExpireDate, 
+							inputCount, 
+							avatarId, 
+							birthday, 
+							roles, 
+							mobile, 
+							status, 
+							parentIds, 
+							signature 
+						} = userInfo as User & WxIdentity
 						this.owner._id = _id
 						this.owner.nickName = nickName
 						this.owner.familyExpireDate = familyExpireDate
@@ -153,6 +166,7 @@ export const useUsersStore = defineStore('users', {
 						this.updateAvatarUrl(tempFileURL)
 						this.fetchChildren()
 						console.info("微信用户存在:" + this.owner)
+						console.info("微信用户头像url:" + tempFileURL)
 					} else {
 						this.owner.openid = openid
 						this.owner.unionid = unionid
