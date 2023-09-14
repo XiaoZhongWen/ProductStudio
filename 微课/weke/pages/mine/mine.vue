@@ -19,7 +19,7 @@
 			</view>
 			
 			<!-- 孩子相关 -->
-			<view class="children-container">
+			<view class="children-container" v-if="children.length > 0">
 				<uni-list>
 					<uni-list-item link v-for="child in children" :key="child._id">
 						<template v-slot:header>
@@ -90,10 +90,16 @@ import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
+import { onLoad } from '@dcloudio/uni-app'
 
 const is_mask_click = ref(false)
 const usersStore = useUsersStore()
 const global = getApp().globalData!
+
+onLoad((option) => {
+	const { id } = option
+	console.info("onLoad: " + id)
+})
 
 const loginAuthPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void

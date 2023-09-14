@@ -165,7 +165,7 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 		},
-		// 获取机构的创建者信息 TODO
+		// 获取机构的创建者信息
 		async fetchOrgCreator() {
 			for (let org of this.orgs) {
 				const nickname = org.nickname ?? ''

@@ -10,17 +10,19 @@
 </template>
 
 <script setup lang="ts">
+import { onShareAppMessage } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 
 const usersStore = useUsersStore()
 
-const onShareAppMessage = () => {
-	console.info("onShareAppMessage...")
+onShareAppMessage(() => {
+	const title = usersStore.owner.nickName + "向你发起老师邀请"
+	const path = "/pages/mine/mine?id=" + usersStore.owner._id
 	return {
-		title: "老师邀请",
-		path: '/pages/mine/mine'
+		title: title,
+		path: path
 	}
-}
+})
 
 </script>
 
