@@ -189,5 +189,18 @@ module.exports = {
 	   		user = res.data[0]
 	   }
 	   return user
+   },
+   
+   /**
+   	* 获取用户
+   	* @param {Object} userId
+   	*/
+   async fetchUsers(userIds) {
+	   const db = uniCloud.database()
+	   const dbCmd = db.command
+	   const res = await db.collection('wk-users').where({
+			_id: dbCmd.in(userIds)
+	   }).get()
+	   return res.data
    }
 }

@@ -9,7 +9,7 @@ enum IdentityType {
 }
 
 let identityType = IdentityType.UseOpenId
-const users = uniCloud.importObject('users', {
+const users_co = uniCloud.importObject('users', {
 	customUI: true
 })
 
@@ -102,10 +102,10 @@ export const useUsersStore = defineStore('users', {
 					const res = await uni.login({
 						provider: 'weixin'
 					})
-					const session = await users.code2Session(res.code)
+					const session = await users_co.code2Session(res.code)
 					const { session_key, openid, unionid } = session.data
 					// 2. 云端验证openid、unionid
-					const userInfo = await users.authIdentity({
+					const userInfo = await users_co.authIdentity({
 						openid: openid,
 						unionid: (identityType === IdentityType.UseUnionId)? unionid: "",
 						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
@@ -232,7 +232,7 @@ export const useUsersStore = defineStore('users', {
 		async updateCloudUser() {
 			let result = false
 			try {
-				 await users.updateUser({
+				 await users_co.updateUser({
 					...this.owner,
 					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 				})
@@ -279,16 +279,16 @@ export const useUsersStore = defineStore('users', {
 		// 更新角色
 		updateRoles(roleIds: RoleId[]) {
 			this.owner.roles = roleIds
-			users.updateRoles(this.owner._id, roleIds)
+			users_co.updateRoles(this.owner._id, roleIds)
 		},
 		// 更新个性签名
 		updateSignature(signature: string) {
 			this.owner.signature = signature
-			users.updateSignature(this.owner._id, signature)
+			users_co.updateSignature(this.owner._id, signature)
 		},
 		// 获取children信息
 		async fetchChildren() {
-			const result = await users.fetchChildren(this.owner._id)
+			const result = await users_co.fetchChildren(this.owner._id)
 			for (let item of result) {
 				const res = await uniCloud.getTempFileURL({
 					fileList:[item.avatarId]
@@ -307,12 +307,41 @@ export const useUsersStore = defineStore('users', {
 			if (index !== -1) {
 				return this.users[index]
 			} else {
-				const user = await users.fetchUser(userId) as User
+				const user = await users_co.fetchUser(userId) as User
 				if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
 					this.users.push(user)
+					const response = await uniCloud.getTempFileURL({
+						fileList:[user.avatarId]
+					})
+					const { tempFileURL } = response.fileList[0]
+					user.avatarUrl = tempFileURL
 				}
 				return user
 			}
+		},
+		async fetchUsers(userIds: string[]) {
+			if (typeof(userIds) === 'undefined' || userIds.length === 0) {
+				return
+			}
+			const loadedUserIds = this.users.map(user => user._id)
+			const s = userIds.filter(userId => !loadedUserIds.includes(userId))
+			if (s.length > 0) {
+				const users = await users_co.fetchUsers(s) as User[]
+				this.users.push(...users)
+				const fileIds = users.map(user => user.avatarId)
+				const response = await uniCloud.getTempFileURL({
+					fileList:fileIds
+				})
+				const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
+				users.forEach(user => {
+					fileList.forEach(item => {
+						if (item.code === "SUCCESS" && item.fileID === user.avatarId) {
+							user.avatarUrl = item.tempFileURL
+						}
+					})
+				})
+			}
+			return this.users.filter(user => userIds.includes(user._id))
 		}
 	}
 })

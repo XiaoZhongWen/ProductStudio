@@ -20,8 +20,13 @@ export const useOrgsStore = defineStore('orgs', {
 			orgs:[] as Org[]
 		}
 	},
+	getters: {
+		myOrgs(state) {
+			return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
+		}
+	},
 	actions: {
-		// 创建或更新机构 TODO
+		// 创建或更新机构
 		async createOrg(org: Org) {
 			let result = false
 			const orgId = org._id

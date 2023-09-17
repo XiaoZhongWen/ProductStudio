@@ -150,6 +150,16 @@
 				"backgroundColor": "#F2F4FD"
 		    }
 		}
+        ,{
+            "path" : "pages/addTeacher/addTeacher",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "添加老师",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

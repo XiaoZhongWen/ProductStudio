@@ -1,7 +1,7 @@
 <template>
 	<view class="teacher-container">
 		<button
-			open-type="share"
+			@tap="onAddTap"
 			class="add-container" 
 			v-if="usersStore.owner.roles?.includes(1)">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
@@ -10,19 +10,15 @@
 </template>
 
 <script setup lang="ts">
-import { onShareAppMessage } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 
 const usersStore = useUsersStore()
 
-onShareAppMessage(() => {
-	const title = usersStore.owner.nickName + "向你发起老师邀请"
-	const path = "/pages/mine/mine?id=" + usersStore.owner._id
-	return {
-		title: title,
-		path: path
-	}
-})
+const onAddTap = () => {
+	uni.navigateTo({
+		url: "/pages/addTeacher/addTeacher"
+	})
+}
 
 </script>
 
