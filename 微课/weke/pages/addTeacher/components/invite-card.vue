@@ -1,9 +1,9 @@
 <template>
 	<view class="invite-card-container">
-		<uni-icons class="icon-minus" type="minus-filled" color="#dd524d" size="24"></uni-icons>
-		<wk-icon class="icon" :text="props.name"></wk-icon>
+		<uni-icons class="icon-minus" type="minus-filled" color="#dd524d" size="24" @tap="onDeleteTap"></uni-icons>
+		<wk-icon class="icon" :text="props.info.name.length > 0?props.info.name.substring(props.info.name.length - 2):props.info.name"></wk-icon>
 		<view class="sub-container">
-			<text class="name">{{props.name}}</text>
+			<text class="name">{{props.info.name}}</text>
 			<text class="status">等待验证</text>
 		</view>
 		<button class="btn" open-type="share">
@@ -15,7 +15,8 @@
 
 <script setup lang="ts">
 import { onShareAppMessage } from '@dcloudio/uni-app'
-const props = defineProps(['name'])
+const props = defineProps(['info'])
+const emit = defineEmits(['onDeleteTap'])
 
 onShareAppMessage(() => {
 	const title = "向你发起老师邀请"
@@ -25,6 +26,11 @@ onShareAppMessage(() => {
 		path: path
 	}
 })
+
+const onDeleteTap = () => {
+	emit("onDeleteTap", {info:props.info})
+}
+
 </script>
 
 <style lang="scss" scoped>

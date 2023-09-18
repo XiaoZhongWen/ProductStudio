@@ -23,17 +23,12 @@
 			</template>
 		</view>
 		<view class="invite-container">
-			<InviteCard name="兮子" />
+			<template v-for="info in inviteInfos" :key="info.phoneNumber">
+				<InviteCard v-if="info.orgId === org._id" :info="info" @onDeleteTap="onDeleteTap" />
+			</template>
 		</view>
 		<view class="edit-container">
-			<EditCard :orgId="org._id" @onValueChange="onValueChange" />
-			<uni-icons 
-				class="icon-add" 
-				type="plus-filled" 
-				color="#5073D6" 
-				size="24"
-				@tap="onAddTap(org._id)">
-			</uni-icons>
+			<EditCard :orgId="org._id" @onAddTap="onAddTap" />
 		</view>
 	</view>
 </template>
@@ -53,10 +48,11 @@ type EditInfo = {
 	phoneNumber:string
 }
 
-const infos:EditInfo[] = []
+const inviteInfos = ref<EditInfo[]>([])
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const teachers = ref<User[]>([])
+const global = getApp().globalData!
 
 onShareAppMessage(() => {
 	// const title = usersStore.owner.nickName + "向你发起老师邀请"
@@ -88,29 +84,57 @@ const fetchUserById = (userId:string) => {
 	return result[0]
 }
 
-const onAddTap = (orgId:string) => {
-	const res = infos.filter(info => info.orgId === orgId)
-	if (res.length > 0) {
-		const info = res[0]
-		
-		console.info(info)
+const onAddTap = async (data:{info:EditInfo}) => {
+	const { orgId, name, phoneNumber } = data.info
+	const index = inviteInfos.value.findIndex(
+		info => info.orgId === orgId && 
+				(info.name === name || info.phoneNumber === phoneNumber)
+	)
+	if (index !== -1) {
+		uni.showToast({
+			title:"已添加",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
 	}
-}
-
-const onValueChange = (e:EditInfo) => {
-	const { orgId, name, phoneNumber } = e;
-	const res = infos.filter(info => info.orgId === orgId)
-	if (res.length === 0) {
-		infos.push({
+	
+	uni.showLoading({
+		title: "加载中..."
+	})
+	
+	const user = await usersStore.fetchUserByPhoneNumber(phoneNumber) as User
+	uni.hideLoading()
+	if (JSON.stringify(user) === '{}') {
+		inviteInfos.value.push({
 			orgId,
 			name,
 			phoneNumber
 		})
+		uni.showToast({
+			title:"该用户还未绑定手机号, 请通过微信邀请",
+			duration:3000,
+			icon:"none"
+		})
 	} else {
-		const info = res[0]
-		info.name = name
-		info.phoneNumber = phoneNumber
+		const org = useOrgs.orgs.filter(org => org._id === orgId)[0]
+		if (!org.teacherIds?.includes(user._id)) {
+			org.teacherIds?.push(user._id)
+			teachers.value.push(user)
+		} else {
+			uni.showToast({
+				title:"已添加",
+				duration:global.duration_toast,
+				icon:"error"
+			})
+		}
 	}
+}
+
+const onDeleteTap = (data:{info:EditInfo}) => {
+	const { orgId, phoneNumber } = data.info
+	const index = inviteInfos.value.findIndex(info => info.orgId === orgId && info.phoneNumber === phoneNumber)
+	inviteInfos.value.splice(index, 1)
 }
 
 </script>
@@ -162,11 +186,6 @@ const onValueChange = (e:EditInfo) => {
 		flex-direction: row;
 		align-items: center;
 		padding: 10px;
-		.icon-add {
-			position: absolute;
-			right: $uni-spacing-row-base;
-			bottom: 15px;
-		}
 	}
 }
 </style>

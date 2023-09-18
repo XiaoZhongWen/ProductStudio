@@ -319,6 +319,35 @@ export const useUsersStore = defineStore('users', {
 				return user
 			}
 		},
+		async fetchUserByPhoneNumber(phoneNumber: string) {
+			console.info("fetchUserByPhoneNumber...")
+			if (typeof(phoneNumber) === 'undefined' || phoneNumber.length === 0) {
+				console.info("fetchUserByPhoneNumber: param phoneNumber error")
+				return {}
+			}
+			const index = this.users.findIndex(user => user.mobile === phoneNumber)
+			console.info("fetchUserByPhoneNumber, fetch from users")
+			if (index !== -1) {
+				console.info("fetchUserByPhoneNumber, be fetched from users")
+				return this.users[index]
+			} else {
+				const user = await users_co.fetchUserByPhoneNumber(phoneNumber) as User
+				console.info("fetchUserByPhoneNumber, fetch from cloud obj")
+				if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
+					console.info("fetchUserByPhoneNumber, be fetched from cloud obj")
+					console.info(user)
+					this.users.push(user)
+					const response = await uniCloud.getTempFileURL({
+						fileList:[user.avatarId]
+					})
+					const { tempFileURL } = response.fileList[0]
+					user.avatarUrl = tempFileURL
+				} else {
+					console.info("fetchUserByPhoneNumber: user is not exist")
+				}
+				return user
+			}
+		},
 		async fetchUsers(userIds: string[]) {
 			if (typeof(userIds) === 'undefined' || userIds.length === 0) {
 				return

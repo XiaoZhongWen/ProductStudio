@@ -5,38 +5,80 @@
 			class="edit name" 
 			type="text" 
 			placeholder="姓名"
-			@input="onValueChange"
+			v-model="name"
 		/>
 		<input 
 			id="phoneNumber"
 			class="edit phoneNumber" 
 			type="text" 
 			placeholder="手机号"
-			@input="onValueChange"
+			v-model="phoneNumber"
 		/>
+		<uni-icons
+			class="icon-add" 
+			type="plus-filled" 
+			color="#5073D6" 
+			size="24"
+			@tap="onAddTap">
+		</uni-icons>
 	</view>
 </template>
 
 <script setup lang="ts">
-const props = defineProps(['orgId'])
-const emit = defineEmits(['onValueChange'])
+import { ref } from "vue";
+import isChinesePhoneNumber from '@/utils/wk_phoneNumber_validate'
+import { useUsersStore } from "@/store/users"
 
-let name = ''
-let phoneNumber = ''
-const onValueChange = (event: Event) => {
-	// @ts-ignore
-	const { id, value } = event.target
-	if (id === "name") {
-		name = value
+const props = defineProps(['orgId'])
+const emit = defineEmits(['onAddTap'])
+const global = getApp().globalData!
+const usersStore = useUsersStore()
+
+const name = ref('')
+const phoneNumber = ref('')
+
+const onAddTap = () => {
+	if (typeof(name.value) === 'undefined' || name.value.length === 0) {
+		uni.showToast({
+			title:"请输入姓名",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
 	}
-	if (id === "phoneNumber") {
-		phoneNumber = value
+	if (typeof(phoneNumber.value) === 'undefined' || phoneNumber.value.length === 0) {
+		uni.showToast({
+			title:"请输入手机号",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
 	}
-	emit('onValueChange', {
-		orgId: props.orgId,
-		name: name,
-		phoneNumber: phoneNumber
+	if (!isChinesePhoneNumber.mobile(phoneNumber.value)) {
+		uni.showToast({
+			title:"手机号格式不正确",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	if (phoneNumber.value === usersStore.owner.mobile) {
+		uni.showToast({
+			title:"不能添加自己",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	emit('onAddTap', {
+		info:{
+			orgId: props.orgId,
+			name: name.value,
+			phoneNumber: phoneNumber.value
+		}
 	})
+	name.value = ''
+	phoneNumber.value = ''
 }
 	
 </script>
@@ -61,6 +103,10 @@ const onValueChange = (event: Event) => {
 	.phoneNumber {
 		width: 180px;
 		margin-left: $uni-spacing-row-base;
+	}
+	.icon-add {
+		position: absolute;
+		right: $uni-spacing-row-base;
 	}
 }
 </style>

@@ -1,6 +1,10 @@
 <template>
 	<view class="wk-portrait-container">
-		<wk-icon class="icon" :url="props.url" :text="props.name"></wk-icon>
+		<wk-icon 
+			class="icon" 
+			:url="props.url"
+			:text="props.name.length > 2?props.name.substring(props.name.length - 2):props.name">
+		</wk-icon>
 		<text class="name">{{props.name}}</text>
 	</view>
 </template>
