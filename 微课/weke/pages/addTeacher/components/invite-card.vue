@@ -1,14 +1,15 @@
 <template>
 	<view class="invite-card-container">
+		<uni-icons class="icon-minus" type="minus-filled" color="#dd524d" size="24"></uni-icons>
 		<wk-icon class="icon" :text="props.name"></wk-icon>
 		<view class="sub-container">
 			<text class="name">{{props.name}}</text>
-			<button class="btn" open-type="share">
-				<text class="invite">邀请</text>
-				<uni-icons class="weixin" type="weixin" color="white" size="16"></uni-icons>
-			</button>
+			<text class="status">等待验证</text>
 		</view>
-		<uni-icons class="icon-minus" type="minus-filled" color="#5073D6" size="24"></uni-icons>
+		<button class="btn" open-type="share">
+			<text class="invite">邀请</text>
+			<uni-icons class="weixin" type="weixin" color="white" size="16"></uni-icons>
+		</button>
 	</view>
 </template>
 
@@ -39,42 +40,46 @@ onShareAppMessage(() => {
 		width: 30px;
 		height: 30px;
 		border-radius: $uni-border-radius-circle;
+		margin-left: $uni-spacing-row-base;
 	}
 	.sub-container {
+		margin-left: $uni-spacing-row-sm;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
-		margin-left: 10px;
-		color: $wk-text-color;
+		justify-content: center;
 		.name {
 			font-size: $uni-font-size-base;
+			color: $wk-text-color;
 		}
-		.btn {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			width: 50px;
-			height: 20px;
-			padding-left: 0;
-			padding-right: 0;
-			background-color: $wk-theme-color;
-			.invite {
-				position: relative;
-				font-size: $uni-font-size-sm;
-				color: white
-			}
-			.weixin {
-				position: relative;
-				left: 2px;
-			}
-		}
-		button::after {
-			border-width: 0;
+		.status {
+			font-size: $uni-font-size-sm;
+			color: $wk-text-color-grey;
 		}
 	}
-	.icon-minus {
+	.btn {
 		position: absolute;
-		right: $uni-spacing-row-base;
-		bottom: 10px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 50px;
+		height: 20px;
+		padding-left: 0;
+		padding-right: 0;
+		background-color: $uni-color-success;
+		right: $uni-spacing-row-lg;
+		.invite {
+			position: relative;
+			font-size: $uni-font-size-sm;
+			color: white
+		}
+		.weixin {
+			position: relative;
+			left: 2px;
+		}
+	}
+	button::after {
+		border-width: 0;
 	}
 }
 </style>

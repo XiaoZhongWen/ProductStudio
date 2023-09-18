@@ -4,7 +4,7 @@
 			<wk-icon 
 				class="icon" 
 				:url="org.logoUrl" 
-				:text="org.name">
+				:text="org.name.length > 2? org.name.substring(0, 2): org.name">
 			</wk-icon>
 			<text class="org-name">{{org.name}}</text>
 		</view>
@@ -26,7 +26,7 @@
 			<InviteCard name="兮子" />
 		</view>
 		<view class="edit-container">
-			<EditCard :value="registerInfo" />
+			<EditCard :orgId="org._id" @onValueChange="onValueChange" />
 			<uni-icons 
 				class="icon-add" 
 				type="plus-filled" 
@@ -47,13 +47,16 @@ import { User } from '../../types/user'
 import EditCard from './components/edit-card'
 import InviteCard from './components/invite-card'
 
+type EditInfo = {
+	orgId:string, 
+	name:string, 
+	phoneNumber:string
+}
+
+const infos:EditInfo[] = []
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const teachers = ref<User[]>([])
-const registerInfo = ref({
-	name: '',
-	phoneNumber: ''
-})
 
 onShareAppMessage(() => {
 	// const title = usersStore.owner.nickName + "向你发起老师邀请"
@@ -86,7 +89,28 @@ const fetchUserById = (userId:string) => {
 }
 
 const onAddTap = (orgId:string) => {
-	console.info(orgId)
+	const res = infos.filter(info => info.orgId === orgId)
+	if (res.length > 0) {
+		const info = res[0]
+		
+		console.info(info)
+	}
+}
+
+const onValueChange = (e:EditInfo) => {
+	const { orgId, name, phoneNumber } = e;
+	const res = infos.filter(info => info.orgId === orgId)
+	if (res.length === 0) {
+		infos.push({
+			orgId,
+			name,
+			phoneNumber
+		})
+	} else {
+		const info = res[0]
+		info.name = name
+		info.phoneNumber = phoneNumber
+	}
 }
 
 </script>

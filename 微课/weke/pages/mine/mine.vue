@@ -86,11 +86,11 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { onLoad } from '@dcloudio/uni-app'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
-import { onLoad } from '@dcloudio/uni-app'
 
 const is_mask_click = ref(false)
 const usersStore = useUsersStore()

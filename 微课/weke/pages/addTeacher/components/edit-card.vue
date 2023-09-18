@@ -1,22 +1,44 @@
 <template>
 	<view class="edit-card-container">
 		<input 
+			id="name"
 			class="edit name" 
 			type="text" 
-			placeholder="姓名" 
-			v-model="props.name"
+			placeholder="姓名"
+			@input="onValueChange"
 		/>
 		<input 
+			id="phoneNumber"
 			class="edit phoneNumber" 
 			type="text" 
 			placeholder="手机号"
-			v-model="props.phoneNumber"
+			@input="onValueChange"
 		/>
 	</view>
 </template>
 
 <script setup lang="ts">
-const props = defineProps(['value'])
+const props = defineProps(['orgId'])
+const emit = defineEmits(['onValueChange'])
+
+let name = ''
+let phoneNumber = ''
+const onValueChange = (event: Event) => {
+	// @ts-ignore
+	const { id, value } = event.target
+	if (id === "name") {
+		name = value
+	}
+	if (id === "phoneNumber") {
+		phoneNumber = value
+	}
+	emit('onValueChange', {
+		orgId: props.orgId,
+		name: name,
+		phoneNumber: phoneNumber
+	})
+}
+	
 </script>
 
 <style lang="scss" scoped>
