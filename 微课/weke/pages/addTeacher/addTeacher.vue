@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { onShareAppMessage } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
@@ -45,7 +45,8 @@ import InviteCard from './components/invite-card'
 type EditInfo = {
 	orgId:string, 
 	name:string, 
-	phoneNumber:string
+	phoneNumber:string,
+	timestamp: number
 }
 
 const inviteInfos = ref<EditInfo[]>([])
@@ -76,7 +77,47 @@ onMounted(async () => {
 			const users:User[] = await usersStore.fetchUsers(org.teacherIds ?? [])
 			teachers.value.push(...users)
 		})
+		
+		uni.getStorage({
+			key: usersStore.owner._id,
+			success: (res) => {
+				console.info("邀请数据获取成功")
+				const data:EditInfo[] = res.data
+				data.forEach(info => {
+					if (info.timestamp > Date.now()) {
+						inviteInfos.value.push(info)
+					} else {
+						console.info("过期数据: " + info)
+					}
+				})
+			},
+			fail: () => {
+				console.info("邀请数据获取失败")
+			}
+		})
 	}
+})
+
+onUnmounted(() => {
+	console.info("onUnmounted organization page...")
+	const data:EditInfo[] = []
+	inviteInfos.value.forEach(info => {
+		if (info.timestamp > Date.now()) {
+			data.push({
+				...info
+			})
+		}
+	})
+	uni.setStorage({
+		key:usersStore.owner._id,
+		data:data,
+		success: () => {
+			console.info("邀请数据保存成功")
+		},
+		fail: () => {
+			console.info("邀请数据保存失败")
+		}
+	})
 })
 
 const fetchUserById = (userId:string) => {
@@ -106,10 +147,12 @@ const onAddTap = async (data:{info:EditInfo}) => {
 	const user = await usersStore.fetchUserByPhoneNumber(phoneNumber) as User
 	uni.hideLoading()
 	if (JSON.stringify(user) === '{}') {
+		const timestamp = Date.now() + 2 * 60 * 60 * 1000
 		inviteInfos.value.push({
 			orgId,
 			name,
-			phoneNumber
+			phoneNumber,
+			timestamp
 		})
 		uni.showToast({
 			title:"该用户还未绑定手机号, 请通过微信邀请",

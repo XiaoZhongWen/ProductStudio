@@ -4,7 +4,7 @@
 		<wk-icon class="icon" :text="props.info.name.length > 0?props.info.name.substring(props.info.name.length - 2):props.info.name"></wk-icon>
 		<view class="sub-container">
 			<text class="name">{{props.info.name}}</text>
-			<text class="status">等待验证</text>
+			<text class="status">等待验证(有效期2小时)</text>
 		</view>
 		<button class="btn" open-type="share">
 			<text class="invite">邀请</text>
@@ -15,12 +15,16 @@
 
 <script setup lang="ts">
 import { onShareAppMessage } from '@dcloudio/uni-app'
+import { useUsersStore } from "@/store/users"
+
 const props = defineProps(['info'])
 const emit = defineEmits(['onDeleteTap'])
+const usersStore = useUsersStore()
 
 onShareAppMessage(() => {
-	const title = "向你发起老师邀请"
-	const path = "/pages/mine/mine"
+	const { orgId, phoneNumber, timestamp } = props.info
+	const title = usersStore.owner.nickName + "向你发起老师邀请"
+	const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
 	return {
 		title: title,
 		path: path
@@ -84,7 +88,7 @@ const onDeleteTap = () => {
 			left: 2px;
 		}
 	}
-	button::after {
+	.btn::after {
 		border-width: 0;
 	}
 }
