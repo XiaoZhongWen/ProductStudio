@@ -97,8 +97,12 @@ const usersStore = useUsersStore()
 const global = getApp().globalData!
 
 onLoad((option) => {
-	const { id } = option
-	console.info("onLoad: " + id)
+	const { orgId, phoneNumber, timestamp } = option as {
+		orgId:string|undefined,
+		phoneNumber: string|undefined,
+		timestamp: number|undefined
+	}
+	console.info("onLoad: " + orgId + "-" + phoneNumber + "-" + timestamp)
 })
 
 const loginAuthPopup = ref<{

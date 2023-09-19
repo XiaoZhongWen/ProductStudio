@@ -6,7 +6,7 @@
 			<text class="name">{{props.info.name}}</text>
 			<text class="status">等待验证(有效期2小时)</text>
 		</view>
-		<button class="btn" open-type="share">
+		<button class="btn" open-type="share" :data-id="props.info.orgId">
 			<text class="invite">邀请</text>
 			<uni-icons class="weixin" type="weixin" color="white" size="16"></uni-icons>
 		</button>
@@ -21,13 +21,20 @@ const props = defineProps(['info'])
 const emit = defineEmits(['onDeleteTap'])
 const usersStore = useUsersStore()
 
-onShareAppMessage(() => {
+onShareAppMessage((option) => {
+	const { from, target } = option
 	const { orgId, phoneNumber, timestamp } = props.info
-	const title = usersStore.owner.nickName + "向你发起老师邀请"
-	const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
-	return {
-		title: title,
-		path: path
+	if (from === "button") {
+		const { dataset } = target
+		if (orgId === dataset.id) {
+			const title = usersStore.owner.nickName + "向你发起老师邀请"
+			const path = `/pages/mine/mine?orgId=${dataset.id}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
+			console.info(path)
+			return {
+				title: title,
+				path: path
+			}
+		}
 	}
 })
 

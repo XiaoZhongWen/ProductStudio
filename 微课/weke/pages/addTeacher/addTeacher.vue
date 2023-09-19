@@ -24,7 +24,11 @@
 		</view>
 		<view class="invite-container">
 			<template v-for="info in inviteInfos" :key="info.phoneNumber">
-				<InviteCard v-if="info.orgId === org._id" :info="info" @onDeleteTap="onDeleteTap" />
+				<InviteCard 
+					v-if="info.orgId === org._id" 
+					:info="info" 
+					@onDeleteTap="onDeleteTap"
+				/>
 			</template>
 		</view>
 		<view class="edit-container">
@@ -56,12 +60,6 @@ const teachers = ref<User[]>([])
 const global = getApp().globalData!
 
 onShareAppMessage(() => {
-	// const title = usersStore.owner.nickName + "向你发起老师邀请"
-	// const path = "/pages/mine/mine?id=" + usersStore.owner._id
-	// return {
-	// 	title: title,
-	// 	path: path
-	// }
 	return {}
 })
 
