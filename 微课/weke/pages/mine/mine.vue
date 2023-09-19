@@ -96,13 +96,21 @@ const is_mask_click = ref(false)
 const usersStore = useUsersStore()
 const global = getApp().globalData!
 
+let inviteOrgId = ''
+let invitePhoneNumber = ''
+
 onLoad((option) => {
 	const { orgId, phoneNumber, timestamp } = option as {
 		orgId:string|undefined,
 		phoneNumber: string|undefined,
 		timestamp: number|undefined
 	}
-	console.info("onLoad: " + orgId + "-" + phoneNumber + "-" + timestamp)
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0 &&
+		typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0 &&
+		typeof(timestamp) !== 'undefined' && timestamp > Date.now()) {
+		inviteOrgId = orgId
+		invitePhoneNumber = phoneNumber
+	}
 })
 
 const loginAuthPopup = ref<{
@@ -242,6 +250,27 @@ const selectRole = () => {
 		if (roles.length === 0) {
 			showSelectRole()
 			uni.hideTabBar()
+		}
+		if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
+			const mobile = usersStore.owner.mobile
+			if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+				uni.showToast({
+					title:"请绑定手机号",
+					duration:global.duration_toast,
+					icon:"none"
+				})
+			} else if (mobile === invitePhoneNumber) {
+				// 1. 添加到机构的老师集合中
+				// 2. 提醒用户加入机构成功
+			}
+		}
+	} else {
+		if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
+			uni.showToast({
+				title:"请登录注册",
+				duration:global.duration_toast,
+				icon:"none"
+			})
 		}
 	}
 }

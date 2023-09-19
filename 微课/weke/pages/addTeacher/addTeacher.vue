@@ -59,8 +59,22 @@ const usersStore = useUsersStore()
 const teachers = ref<User[]>([])
 const global = getApp().globalData!
 
-onShareAppMessage(() => {
-	return {}
+onShareAppMessage((option) => {
+	const { from, target } = option
+	if (from === "button") {
+		const { orgId, phoneNumber, timestamp } = target.dataset.info
+		const title = usersStore.owner.nickName + "向你发起老师邀请"
+		const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
+		console.info(path)
+		return {
+			title: title,
+			path: path
+		}
+	} else {
+		return {
+			path: '/pages/mine/mine'
+		}
+	}
 })
 
 onMounted(async () => {
