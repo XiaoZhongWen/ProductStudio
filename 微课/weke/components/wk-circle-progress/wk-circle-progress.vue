@@ -4,9 +4,9 @@
 			progressColor="#5073D6" 
 			fontColor="#5073D6"
 			bgColor="#f4f5f6"
-			boxWidth="40"
-			boxHeight="40"
-			fontSize=10
+			:boxWidth="40"
+			:boxHeight="40"
+			:fontSize="10"
 			:fontShow="percent > 0"
 			:lineWidth="4" 
 			:percent="percent">

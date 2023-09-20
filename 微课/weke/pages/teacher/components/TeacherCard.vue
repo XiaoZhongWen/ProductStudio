@@ -29,7 +29,7 @@
 	box-sizing: border-box;
 	.top {
 		position: relative;
-		height: 100px;
+		height: 60px;
 		.circle-progress {
 			width: 40px;
 			height: 54px;
