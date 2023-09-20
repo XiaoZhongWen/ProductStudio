@@ -1,5 +1,6 @@
 <template>
 	<view class="teacher-container">
+		<TeacherCard />
 		<button
 			@tap="onAddTap"
 			class="add-container" 
@@ -11,6 +12,7 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
+import TeacherCard from './components/TeacherCard.vue'
 
 const usersStore = useUsersStore()
 
