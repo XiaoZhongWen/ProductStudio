@@ -1,7 +1,9 @@
 <template>
 	<view class="teacher-card-container">
-		<member-info></member-info>
-		<wk-progress-circle></wk-progress-circle>
+		<view class="top">
+			<member-info></member-info>
+			<wk-circle-progress class="circle-progress"></wk-circle-progress>
+		</view>
 		<view class="bottom">
 			<text class="text">兮子英语</text>
 			<view class="icon-container">
@@ -25,6 +27,17 @@
 	border-radius: $uni-border-radius-base;
 	padding: $uni-padding-normal;
 	box-sizing: border-box;
+	.top {
+		position: relative;
+		height: 100px;
+		.circle-progress {
+			width: 40px;
+			height: 54px;
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+	}
 	.bottom {
 		position: relative;
 		height: 30px;
