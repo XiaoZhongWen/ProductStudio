@@ -18,11 +18,19 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
+import { onLoad } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
+
+onLoad(async (option) => {
+	const { id } = option as {id:string}
+	if (typeof(id) !== 'undefined' && id.length > 0) {
+		console.info(id)
+	}
+})
 
 const onAddTap = () => {
 	uni.navigateTo({

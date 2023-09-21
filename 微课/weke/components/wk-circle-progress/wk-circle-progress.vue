@@ -1,24 +1,31 @@
 <template>
 	<view class="wk-circle-container">
-		<l-circularProgress
-			progressColor="#5073D6" 
-			fontColor="#5073D6"
-			bgColor="#f4f5f6"
-			:boxWidth="40"
-			:boxHeight="40"
-			:fontSize="10"
-			:fontShow="percent > 0"
-			:lineWidth="4" 
-			:percent="percent">
-		</l-circularProgress>
+		<l-circle 
+			:percent="percent" 
+			size="34" 
+			strokeWidth="3" 
+			trailWidth="3"
+			trailColor="#f4f5f6"
+			strokeColor="#5073D6">
+			<text class="text" :style="style">{{percent === 0? "未排课":`${percent}%`}}</text>
+		</l-circle>
 		<text class="progress" v-if="percent > 0">60/100</text>
-		<text class="text" v-if="percent === 0">未排课</text>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-const percent = ref(0)
+import { computed, ref } from "vue";
+
+const percent = ref(40)
+
+// @ts-ignore
+const style = computed({
+	get() {
+		return {
+			color: percent.value === 0? "#c6c8cf": "#5073D6"
+		}
+	}
+})
 </script>
 
 <style lang="scss" scoped>
@@ -32,9 +39,6 @@ const percent = ref(0)
 		text-align: center;
 	}
 	.text {
-		position: absolute;
-		top: 14px;
-		left: 8px;
 		color: $wk-text-color-grey;
 		font-size: 8px;
 	}

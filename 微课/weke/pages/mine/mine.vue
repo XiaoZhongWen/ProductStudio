@@ -21,7 +21,7 @@
 			<!-- 孩子相关 -->
 			<view class="children-container" v-if="children.length > 0">
 				<uni-list>
-					<uni-list-item link v-for="child in children" :key="child._id">
+					<uni-list-item link v-for="child in children" :key="child._id" @tap="onChildTap(child._id)">
 						<template v-slot:header>
 							<view class="slot-box">
 								<image class="icon" :src="child.avatarUrl" mode="aspectFill"></image>
@@ -289,6 +289,12 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 
 const onSelectRoleChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
+}
+
+const onChildTap = (id:string) => {
+	uni.navigateTo({
+		url:`/pages/member-student/member-student?id=${id}`
+	})
 }
 
 const showSelectRole = () => {

@@ -72,29 +72,74 @@ module.exports = {
 	/**
 	 * 获取所有与用户相关的机构信息
 	 * @param {userId} 机构创建者id
+	 * @param {roles} 角色id集合
 	 * @param {excludes} 排除的机构id集合
 	 */
-	async fetchOrgs(userId, excludes) {
-		if (typeof(userId) === 'undefined' || userId.length === 0) {
+	async fetchOrgs(userId, roles, excludes) {
+		if (typeof(userId) === 'undefined' || userId.length === 0 ||
+			typeof(roles) === 'undefined' || roles.length === 0) {
 			return []
 		}
 		const db = uniCloud.database()
 		const dbCmd = db.command
+		let res_creator = {data:[]}
+		let res_teacher = {data:[]}
+		let res_student = {data:[]}
+		let res_parents = {data:[]}
+		
 		// 1. 创建者
-		const res_creator = await db.collection("wk-orgs").where({
-			_id: dbCmd.nin(excludes),
-			creatorId: userId
-		}).get()
+		if (roles.includes(1)) {
+			res_creator = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				creatorId: userId
+			}).get()
+		}
+		
 		// 2. 老师
-		const res_teacher = await db.collection("wk-orgs").where({
-			_id: dbCmd.nin(excludes),
-			teacherIds: userId
-		}).get()
+		if (roles.includes(2)) {
+			res_teacher = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				teacherIds: userId
+			}).get()
+		}
+		
 		// 3. 学员
-		const res_student = await db.collection("wk-orgs").where({
-			_id: dbCmd.nin(excludes),
-			studentIds: userId
-		}).get()
-		return [...res_creator.data, ...res_teacher.data, ...res_student.data]
+		if (roles.includes(3)) {
+			res_student = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				studentIds: userId
+			}).get()
+		}
+		
+		// 4. 家长
+		if (roles.includes(4)) {
+			const children = await db.collection('wk-users').where({
+				parentIds: userId
+			}).get()
+			for (let child of children.data) {
+				const res = await db.collection("wk-orgs").where({
+					_id: dbCmd.nin(excludes),
+					studentIds: child._id
+				}).get()
+				res_parents.data.push(...res.data)
+			}
+		}
+		
+		let result = []
+		let orgIds = []
+		let total = [
+			...res_creator.data, 
+			...res_teacher.data, 
+			...res_student.data, 
+			...res_parents.data
+		]
+		total.forEach(org => {
+			if (!orgIds.includes(org._id)) {
+				orgIds.push(org._id)
+				result.push(org)
+			}
+		})
+		
+		return result
 	},
 }

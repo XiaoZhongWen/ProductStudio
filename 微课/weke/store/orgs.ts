@@ -10,9 +10,6 @@ const usersStore = useUsersStore()
 const orgs_co = uniCloud.importObject('orgs', {
 	customUI: true
 })
-const users_co = uniCloud.importObject('users', {
-	customUI: true
-})
 
 export const useOrgsStore = defineStore('orgs', {
 	state: () => {
@@ -22,7 +19,15 @@ export const useOrgsStore = defineStore('orgs', {
 	},
 	getters: {
 		myOrgs(state) {
-			return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
+			if (usersStore.owner.roles?.includes(1)) {
+				// 机构负责人
+				return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
+			}
+			if (usersStore.owner.roles?.includes(3)) {
+				// 学生
+				return state.orgs.filter(org => org.studentIds?.includes(usersStore.owner._id))
+			}
+			return []
 		}
 	},
 	actions: {
@@ -140,7 +145,7 @@ export const useOrgsStore = defineStore('orgs', {
 			let result = true
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
-				const orgs = await orgs_co.fetchOrgs(usersStore.owner._id, didLoadedOrgIds)
+				const orgs = await orgs_co.fetchOrgs(usersStore.owner._id, usersStore.owner.roles, didLoadedOrgIds)
 				this.orgs.push(...orgs)
 				// 按创建时间降序排序
 				this.orgs.sort((a, b) => {

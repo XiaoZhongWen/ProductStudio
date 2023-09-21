@@ -3,19 +3,20 @@
 		<view class="left">
 			<wk-icon 
 				class="icon" 
-				url="https://img1.baidu.com/it/u=506645129,3151761344&fm=253&fmt=auto&app=138&f=PNG?w=500&h=773" 
-				text="兮子">
+				:url="props.url"
+				:text="props.nickname">
 			</wk-icon>
 		</view>
 		<view class="info">
-			<text class="name">肖兮子</text>
-			<text class="number">13545118725</text>
-			<text class="sign">资深英语老师</text>
+			<text class="name">{{props.nickname}}</text>
+			<text class="number">{{props.mobile}}</text>
+			<text class="sign">{{props.signature}}</text>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
+const props = defineProps(['url', 'nickname', 'mobile', 'signature'])
 </script>
 
 <style lang="scss">
