@@ -174,8 +174,9 @@ const onAddTap = async (data:{info:EditInfo}) => {
 	} else {
 		const org = useOrgs.orgs.filter(org => org._id === orgId)[0]
 		if (!org.teacherIds?.includes(user._id)) {
-			org.teacherIds?.push(user._id)
+			useOrgs.addTeachers(org._id, [user._id])
 			teachers.value.push(user)
+			uni.$emit("add-teacher-success")
 		} else {
 			uni.showToast({
 				title:"已添加",

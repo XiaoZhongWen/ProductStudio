@@ -350,7 +350,7 @@ export const useUsersStore = defineStore('users', {
 		},
 		async fetchUsers(userIds: string[]) {
 			if (typeof(userIds) === 'undefined' || userIds.length === 0) {
-				return
+				return []
 			}
 			const loadedUserIds = this.users.map(user => user._id)
 			const s = userIds.filter(userId => !loadedUserIds.includes(userId))

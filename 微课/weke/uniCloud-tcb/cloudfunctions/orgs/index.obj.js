@@ -142,4 +142,29 @@ module.exports = {
 		
 		return result
 	},
+	async addTeachers(orgId, tIds) {
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(tIds) === 'undefined' || tIds.length === 0) {
+			return
+		}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).field({teacherIds:true}).get()
+		const data = res.data
+		let ids = []
+		if (data.length > 0) {
+			ids = data[0].teacherIds
+		}
+		tIds.forEach(teacherId => {
+			if (!ids.includes(teacherId)) {
+				ids.push(teacherId)
+			}
+		})
+		res = db.collection('wk-orgs').where({
+			_id: orgId
+		}).update({
+			teacherIds: ids
+		})
+	}
 }

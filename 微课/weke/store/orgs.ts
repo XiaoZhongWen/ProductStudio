@@ -197,6 +197,20 @@ export const useOrgsStore = defineStore('orgs', {
 		fetchOrgById(orgId:string) {
 			const result = this.orgs.filter(org => org._id === orgId)
 			return result[0]
+		},
+		/**
+		 * 向机构添加老师
+		 */
+		addTeachers(orgId:string, teacherIds:string[]) {
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				const org = res[0]
+				const ids = teacherIds.filter(id => !org.teacherIds?.includes(id))
+				if (ids.length > 0) {
+					org.teacherIds?.push(...ids)
+					orgs_co.addTeachers(orgId, ids)
+				}
+			}
 		}
 	}
 })

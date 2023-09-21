@@ -2,7 +2,7 @@
 	<view class="org-container">
 		<view 
 			class="card-container" 
-			v-for="org in useOrgs.orgs" 
+			v-for="org in orgs" 
 			:key="org._id" 
 			@tap="onOrgCardTap(org._id)">
 			<org-card :org="org"></org-card>
@@ -17,18 +17,45 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
+const userId = ref(usersStore.owner._id)
 
 onLoad(async (option) => {
 	const { id } = option as {id:string}
 	if (typeof(id) !== 'undefined' && id.length > 0) {
-		console.info(id)
+		userId.value = id
+	}
+})
+
+onMounted(async () => {
+	if (usersStore.isLogin) {
+		uni.showLoading({
+			title:"加载中"
+		})
+		await useOrgs.loadOrgData()
+		uni.hideLoading()
+	}
+})
+
+// @ts-ignore
+const orgs = computed({
+	get() {
+		if (userId.value === usersStore.owner._id) {
+			// 与自己相关的org
+			return useOrgs.orgs.filter(org => {
+				return org.creatorId === userId.value ||
+					   org.teacherIds?.includes(userId.value)
+			})
+		} else {
+			// 与孩子相关的org
+			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
+		}
 	}
 })
 
@@ -43,17 +70,6 @@ const onOrgCardTap = (orgId:string) => {
 		url: "/pages/addOrganization/addOrganization?orgId="+orgId
 	})
 }
-
-onMounted(async () => {
-	console.info("organization page...")
-	if (usersStore.isLogin) {
-		uni.showLoading({
-			title:"加载中"
-		})
-		await useOrgs.loadOrgData()
-		uni.hideLoading()
-	}
-})
 
 </script>
 
