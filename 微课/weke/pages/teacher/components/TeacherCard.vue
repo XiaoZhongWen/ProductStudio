@@ -31,7 +31,7 @@ const user = usersStore.users.filter(user => user._id === props.teacherId)[0]
 
 const onCardTap = () => {
 	uni.navigateTo({
-		url: `/pages/member-teacher/member-teacher?orgId=${props.orgId}&teacherId=${props.teacherId}`
+		url: `/pages/teacher-detail/teacher-detail?orgId=${props.orgId}&teacherId=${props.teacherId}`
 	})
 }
 

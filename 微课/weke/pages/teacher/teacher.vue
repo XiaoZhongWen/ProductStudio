@@ -13,11 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import { useUsersStore } from "@/store/users"
-import { useOrgsStore } from '@/store/orgs'
 import { onMounted, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import TeacherCard from './components/TeacherCard.vue'
+import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from '@/store/orgs'
 import { User } from '../../types/user'
 import { Org } from "../../types/org";
 
