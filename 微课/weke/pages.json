@@ -196,6 +196,16 @@
             }
             
         }
+        ,{
+            "path" : "pages/addStudent/addStudent",
+            "style" :                                                                                    
+            {
+				"navigationBarTitleText": "添加学员",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

@@ -101,7 +101,7 @@ const onAddTap = () => {
 		width: 80px;
 	}
 	.phoneNumber {
-		width: 180px;
+		width: 60%;
 		margin-left: $uni-spacing-row-base;
 	}
 	.icon-add {

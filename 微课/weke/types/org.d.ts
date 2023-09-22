@@ -13,5 +13,6 @@ export type Org = {
 	teacherIds?: string[],
 	studentIds?: string[],
 	courseIds?: string[],
-	classIds?: string[]
+	classIds?: string[],
+	type: number
 }

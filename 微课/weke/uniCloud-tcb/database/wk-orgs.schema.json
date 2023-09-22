@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name", "createTime", "gradient", "creatorId"],
+	"required": ["name", "createTime", "gradient", "creatorId", "type"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -64,6 +64,11 @@
 		"classIds": {
 			"bsonType": "array",
 			"description": "机构班级的id集合"
+		},
+		"type": {
+			"bsonType": "int",
+			"description": "机构类型, 0:普通机构, 1:匿名机构",
+			"defaultValue": 0
 		}
 	}
 }

@@ -91,6 +91,14 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 			return result
 		},
+		// 创建匿名机构
+		async createAnonymousOrg() {
+			const userId = usersStore.owner._id
+			const index = this.orgs.findIndex(org => org.creatorId === userId && org.type === 1)
+			if (index === -1) {
+				
+			}
+		},
 		// 上传机构图标
 		async uploadIcon(orgId: string, logoUrl:string) {
 			if (logoUrl.length === 0) {
