@@ -14,7 +14,12 @@ const orgs_co = uniCloud.importObject('orgs', {
 export const useOrgsStore = defineStore('orgs', {
 	state: () => {
 		return {
-			orgs:[] as Org[]
+			orgs:[] as Org[],
+			anonymousOrg: {
+				_id: '',
+				gradient: ["#4e54c8", "#8f94fb"],
+				type: 1
+			} as Org
 		}
 	},
 	getters: {
@@ -94,9 +99,19 @@ export const useOrgsStore = defineStore('orgs', {
 		// 创建匿名机构
 		async createAnonymousOrg() {
 			const userId = usersStore.owner._id
-			const index = this.orgs.findIndex(org => org.creatorId === userId && org.type === 1)
-			if (index === -1) {
-				
+			if (this.anonymousOrg._id.length === 0) {
+				const date = new Date(Date.now())
+				const month = date.getMonth() + 1
+				const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
+				this.anonymousOrg.name = userId
+				this.anonymousOrg.createDate = createDate
+				this.anonymousOrg.creatorId = userId
+				const orgId = await orgs_co.createOrg(this.anonymousOrg)
+				if (orgId.length > 0) {
+					console.info("userId: " + userId + ", 创建机构成功")
+				} else {
+					console.info("userId: " + userId + ", 创建机构失败")
+				}
 			}
 		},
 		// 上传机构图标

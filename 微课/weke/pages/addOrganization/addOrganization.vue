@@ -158,7 +158,8 @@ const org = ref<Org>({
 				teacherIds: [],
 				studentIds: [],
 				courseIds: [],
-				classIds: []
+				classIds: [],
+				type: 0
 			})
 
 //@ts-ignore

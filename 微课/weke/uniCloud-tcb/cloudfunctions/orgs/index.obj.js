@@ -18,7 +18,9 @@ module.exports = {
 			let res = await db.collection("wk-orgs").where({
 				_id: _id
 			}).get()
-			isCreate = res.data.length === 0
+			if (res.data.length === 0) {
+				return orgId
+			}
 		}
 		const tel = param.tel ?? ""
 		const addr = param.addr ?? ""
@@ -28,6 +30,7 @@ module.exports = {
 		const studentIds = param.studentIds ?? []
 		const courseIds = param.courseIds ?? []
 		const classIds = param.classIds ?? []
+		const type = param.type ?? 0
 		if (isCreate) {
 			// 机构不存在
 			let res = await db.collection('wk-orgs').add({
@@ -42,7 +45,8 @@ module.exports = {
 				teacherIds: teacherIds,
 				studentIds: studentIds,
 				courseIds: courseIds,
-				classIds: classIds
+				classIds: classIds,
+				type: type
 			})
 			const { id } = res
 			if (typeof(id) !== 'undefined' && id.length > 0) {
