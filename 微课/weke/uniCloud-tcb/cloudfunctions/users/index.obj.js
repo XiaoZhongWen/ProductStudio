@@ -51,11 +51,7 @@ module.exports = {
 			   _id: userId
 		   }).get()
 		   if (res.data.length === 1) {
-			   user = res.data[0]
-			   const { inputCount } = user
-			   if (typeof(inputCount) === 'undefined') {
-			   		user.inputCount = 0
-			   }
+		   		user = res.data[0]
 		   }
 	   }
 	   return user
@@ -133,11 +129,6 @@ module.exports = {
 	* @param {Object} roleIds
 	*/
    updateRoles(userId, roleIds) {
-	   let s = new Set(roleIds)
-	   // roleId为3表示学生, 不允许学生角色被重叠
-	   if (s.length > 1 && s.has(3)) {
-		   return
-	   }
 	   const db = uniCloud.database()
 	   db.collection('wk-users').where({
 		   _id: userId
@@ -168,7 +159,7 @@ module.exports = {
 	*/
    async fetchChildren(userId) {
 	   const db = uniCloud.database()
-	   let res = await db.collection('wk-users').where({
+	   let res = await db.collection('wk-student').where({
 		   parentIds: userId
 	   }).get()
 	   return res.data

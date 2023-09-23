@@ -109,18 +109,9 @@ module.exports = {
 			}).get()
 		}
 		
-		// 3. 学员
+		// 3. 家长 
 		if (roles.includes(3)) {
-			res_student = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
-				studentIds: userId,
-				type: 0
-			}).get()
-		}
-		
-		// 4. 家长
-		if (roles.includes(4)) {
-			const children = await db.collection('wk-users').where({
+			const children = await db.collection('wk-student').where({
 				parentIds: userId
 			}).get()
 			for (let child of children.data) {
@@ -131,6 +122,15 @@ module.exports = {
 				}).get()
 				res_parents.data.push(...res.data)
 			}
+		}
+		
+		// 4. 学员
+		if (roles.includes(4)) {
+			res_student = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				studentIds: userId,
+				type: 0
+			}).get()
 		}
 		
 		let result = []

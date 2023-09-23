@@ -91,6 +91,7 @@ import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
+import { Student } from '../../types/user'
 
 const is_mask_click = ref(false)
 const usersStore = useUsersStore()
@@ -158,7 +159,7 @@ const org:ListItem[] = computed({
 		if (roles.size === 0) {
 			org = []
 		} else {
-			if (roles.has(4) && roles.size === 1) {
+			if (roles.has(3) && roles.size === 1) {
 				// 家长
 				org = []
 			} else if (!roles.has(1)) {
@@ -171,6 +172,7 @@ const org:ListItem[] = computed({
 
 // @ts-ignore
 const account:ListItem[] = computed({
+	// - todo 非学生用户显示 “分享”
 	get() {
 		let account = [
 			{
@@ -192,20 +194,16 @@ const account:ListItem[] = computed({
 		const roles = new Set(usersStore.owner.roles)
 		if (roles.size === 0) {
 			account = []
-		} else {
-			if (!roles.has(3)) {
-				account[1].name = "分享"
-			}
 		}
 		return account
 	}
 })
 
  // @ts-ignore
- const children:User[] = computed({
+ const children:Student[] = computed({
 	 get() {
 		 const roles = usersStore.owner.roles ?? []
-		 if (roles.length === 0 || !roles.includes(4)) {
+		 if (roles.length === 0 || !roles.includes(3)) {
 			 console.info("onChildren: " + roles)
 		 	return []
 		 } else {

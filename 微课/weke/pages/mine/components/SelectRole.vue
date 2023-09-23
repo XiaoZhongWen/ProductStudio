@@ -43,7 +43,7 @@ const roles = ref([
 		text: '老师',
 	},
 	{
-		value: 4,
+		value: 3,
 		text: '家长',
 	}
 ])
@@ -51,7 +51,7 @@ const roles = ref([
 const studentId = ref(0)
 const student = ref([
 	{
-		value: 3,
+		value: 4,
 		text: '学生',
 	}
 ])
@@ -60,8 +60,8 @@ uni.$on(global.event_name.showSelectRole, () => {
 	const roleIds =  usersStore.owner.roles ?? []
 	if (roleIds.length) {
 		let set = new Set(roleIds)
-		if (set.has(3)) {
-			studentId.value = 3
+		if (set.has(4)) {
+			studentId.value = 4
 		} else {
 			selectedId.value = roleIds
 		}
@@ -71,7 +71,7 @@ uni.$on(global.event_name.showSelectRole, () => {
 const onConfirm = () => {
 	const roleIds =  usersStore.owner.roles ?? []
 	console.info("roleIds: " + roleIds)
-	if (studentId.value === 3) {
+	if (studentId.value === 4) {
 		let set = new Set(roleIds)
 		if (!set.has(studentId.value)) {
 			// 更新角色数据

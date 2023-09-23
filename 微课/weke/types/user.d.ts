@@ -1,24 +1,31 @@
 export enum RoleId {
 	Org = 1,
 	Teacher = 2,
-	Student = 3,
-	Parents = 4
+	Parents = 3,
+	Student = 4
 }
 
 export type User = {
 	_id: string,
-	nickName?: string,
-	avatarId?: string,
+	nickName: string,
+	avatarId: string,
 	avatarUrl?: string,
-	birthday?: number,
 	roles?: RoleId[],
 	mobile?: string,
-	familyExpireDate: number,
-	orgExpireDate: number,
-	inputCount: number,
-	status?: number,
-	parentIds?: string[],
+	expireDate: number,
 	signature?: string
+}
+
+export type Student = {
+	_id: string,
+	studentNo: string,
+	nickName: string,
+	avatarId: string,
+	avatarUrl?: string,
+	mobile?: string,
+	signature?: string,
+	associateIds?: string[]
+	status: number
 }
 
 export type WxIdentity = {

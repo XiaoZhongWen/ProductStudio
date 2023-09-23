@@ -28,10 +28,7 @@ export const useOrgsStore = defineStore('orgs', {
 				// 机构负责人
 				return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
 			}
-			if (usersStore.owner.roles?.includes(3)) {
-				// 学生
-				return state.orgs.filter(org => org.studentIds?.includes(usersStore.owner._id))
-			}
+			// - todo 学生相关的机构数据
 			return []
 		}
 	},
@@ -189,7 +186,15 @@ export const useOrgsStore = defineStore('orgs', {
 			let result = true
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
-				const orgs = await orgs_co.fetchOrgs(usersStore.owner._id, usersStore.owner.roles, didLoadedOrgIds)
+				let orgs = []
+				// - to do
+				// if (usersStore.owner.bindId.length > 0 &&
+				// 	usersStore.student._id.length > 0 &&
+				// 	usersStore.owner.bindId === usersStore.student._id) {
+				// 	orgs = await orgs_co.fetchOrgs(usersStore.owner.bindId, [4], didLoadedOrgIds)
+				// } else {
+				// 	orgs = await orgs_co.fetchOrgs(usersStore.owner._id, usersStore.owner.roles, didLoadedOrgIds)
+				// }
 				this.orgs.push(...orgs)
 				// 按创建时间降序排序
 				this.orgs.sort((a, b) => {

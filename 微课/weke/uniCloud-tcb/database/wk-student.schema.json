@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["nickName", "registerDate", "expireDate"],
+	"required": ["studentNo", "nickName", "registerDate", "status"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -11,6 +11,10 @@
 	"properties": {
 		"_id": {
 			"description": "ID，系统自动生成"
+		},
+		"studentNo": {
+			"bsonType": "string",
+			"description": "学号"
 		},
 		"nickName": {
 			"bsonType": "string",
@@ -24,10 +28,11 @@
 			"trim": "both",
 			"maxLength": 100
 		},
-		"roles": {
-			"bsonType": "array",
-			"description": "角色：1 机构负责人 2 老师 3 家长",
-			"enum": [1, 2, 3]
+		"mobile": {
+			"bsonType": "string",
+			"description": "手机号码",
+			"pattern": "^\\+?[0-9-]{3,20}$",
+			"trim": "both"
 		},
 		"registerDate": {
 			"bsonType": "timestamp",
@@ -37,20 +42,20 @@
 			"bsonType": "timestamp",
 			"description": "最后登录时间"
 		},
-		"mobile": {
-			"bsonType": "string",
-			"description": "手机号码",
-			"pattern": "^\\+?[0-9-]{3,20}$",
-			"trim": "both"
-		},
-		"expireDate": {
-			"bsonType": "timestamp",
-			"description": "机构会员账号过期时间"
-		},
 		"signature": {
 			"bsonType": "string",
 			"description": "标签",
 			"maxLength": 30
+		},
+		"associateIds": {
+			"bsonType": "array",
+			"description": "关联的id集合",
+			"maxLength": 5
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "学生状态：0 在读 1 结课 2 退费",
+			"defaultValue": 0
 		}
 	}
 }

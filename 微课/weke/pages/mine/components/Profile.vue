@@ -42,7 +42,7 @@
 						<text>有效期至:</text>
 						<uni-dateformat 
 							style="display: inline;" 
-							:date="usersStore.expiredDate" 
+							:date="usersStore.owner.expireDate"
 							format="yyyy/MM/dd" />
 					</view>
 				</template>

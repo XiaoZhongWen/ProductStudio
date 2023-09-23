@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { RoleId, User, WxIdentity } from '@/types/user'
+import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
 
@@ -19,9 +19,7 @@ export const useUsersStore = defineStore('users', {
 			isLogin: false,
 			owner: {
 				_id: '',
-				familyExpireDate: 0,
-				orgExpireDate: 0,
-				inputCount: 0,
+				expireDate: 0,
 				unionid: '',
 				openid: '',
 				session_key: '',
@@ -37,8 +35,11 @@ export const useUsersStore = defineStore('users', {
 				nickName: '',
 				tempFileUrl: ''
 			},
-			children: [] as User[],
-			users: [] as User[]
+			children: [] as Student[],
+			users: [] as User[],
+			student: {
+				_id: ''
+			} as Student
 		}
 	},
 	
@@ -54,9 +55,6 @@ export const useUsersStore = defineStore('users', {
 						name = "老师"
 						break
 					case 3:
-						name = "学生"
-						break
-					case 4:
 						name = "家长"
 						break
 				}
@@ -67,25 +65,9 @@ export const useUsersStore = defineStore('users', {
 			return state.owner.signature ?? '个性签名'
 		},
 		isExpired(state) {
-			let date = state.owner.orgExpireDate
-			const set = new Set(state.owner.roles)
-			// 角色为学生或者角色为家长且不叠加机构负责人和老师
-			if (set.has(3) || 
-				(set.has(4) && !set.has(1) && !set.has(2))) {
-				date = state.owner.familyExpireDate
-			}
+			let date = state.owner.expireDate
 			const current = Date.now()
 			return current > date
-		},
-		expiredDate(state) {
-			let date = state.owner.orgExpireDate
-			const set = new Set(state.owner.roles)
-			// 角色为学生或者角色为家长且不叠加机构负责人和老师
-			if (set.has(3) || 
-				(set.has(4) && !set.has(1) && !set.has(2))) {
-				date = state.owner.familyExpireDate
-			}
-			return date
 		},
 		roles(state) {
 			return state.owner.roles
@@ -109,7 +91,7 @@ export const useUsersStore = defineStore('users', {
 						openid: openid,
 						unionid: (identityType === IdentityType.UseUnionId)? unionid: "",
 						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
-					})
+					}) as User & WxIdentity
 					// 3. 通过验证则返回用户信息
 					if (JSON.stringify(userInfo) !== '{}') {
 						// 更新owner对象
@@ -117,40 +99,25 @@ export const useUsersStore = defineStore('users', {
 						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 						this.owner.session_key = session_key
 						this.isLogin = true
+						
 						const { 
 							_id, 
 							nickName, 
-							familyExpireDate, 
-							orgExpireDate, 
-							inputCount, 
+							expireDate,
 							avatarId, 
-							birthday, 
 							roles, 
-							mobile, 
-							status, 
-							parentIds, 
-							signature 
-						} = userInfo as User & WxIdentity
+							mobile,  
+							signature
+						} = userInfo
 						this.owner._id = _id
 						this.owner.nickName = nickName
-						this.owner.familyExpireDate = familyExpireDate
-						this.owner.orgExpireDate = orgExpireDate
-						this.owner.inputCount = inputCount
+						this.owner.expireDate = expireDate
 						this.owner.avatarId = avatarId
-						if (typeof(birthday) !== 'undefined') {
-							this.owner.birthday = birthday
-						}
 						if (typeof(roles) !== 'undefined') {
 							this.owner.roles = roles
 						}
 						if (typeof(mobile) !== 'undefined') {
 							this.owner.mobile = mobile
-						}
-						if (typeof(status) !== 'undefined') {
-							this.owner.status = status
-						}
-						if (typeof(parentIds) !== 'undefined') {
-							this.owner.parentIds = parentIds
 						}
 						if (typeof(signature) !== 'undefined') {
 							this.owner.signature = signature
@@ -236,8 +203,10 @@ export const useUsersStore = defineStore('users', {
 					...this.owner,
 					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 				})
-				this.isLogin = true
-				this.fetchChildren()
+				if (this.isLogin === false) {
+					this.isLogin = true
+					this.fetchChildren()
+				}
 				console.info("更新云端用户信息成功, " + this.owner)
 				result = true
 			} catch (e) {
