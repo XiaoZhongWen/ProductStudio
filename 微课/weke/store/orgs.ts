@@ -98,6 +98,7 @@ export const useOrgsStore = defineStore('orgs', {
 		},
 		// 创建匿名机构
 		async createAnonymousOrg() {
+			console.info("create anonymous org")
 			const userId = usersStore.owner._id
 			if (this.anonymousOrg._id.length === 0) {
 				const date = new Date(Date.now())
@@ -109,9 +110,29 @@ export const useOrgsStore = defineStore('orgs', {
 				const orgId = await orgs_co.createOrg(this.anonymousOrg)
 				if (orgId.length > 0) {
 					console.info("userId: " + userId + ", 创建机构成功")
+					this.anonymousOrg._id = orgId
 				} else {
 					console.info("userId: " + userId + ", 创建机构失败")
 				}
+			}
+		},
+		// 获取匿名机构
+		async fetchAnonymousOrg() {
+			console.info("fetch anonymous org...")
+			const userId = usersStore.owner._id
+			if (this.anonymousOrg.creatorId === userId) {
+				console.info("fetched anonymous org from store")
+				return this.anonymousOrg
+			}
+			const org = await orgs_co.fetchAnonymousOrg(userId)
+			if (JSON.stringify(org) !== "{}") {
+				console.info("fetched anonymous org from db")
+				this.anonymousOrg = {
+					...this.anonymousOrg,
+					...org
+				}
+			} else {
+				this.createAnonymousOrg()
 			}
 		},
 		// 上传机构图标

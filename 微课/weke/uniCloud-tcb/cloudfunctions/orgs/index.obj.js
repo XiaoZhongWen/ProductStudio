@@ -95,7 +95,8 @@ module.exports = {
 		if (roles.includes(1)) {
 			res_creator = await db.collection("wk-orgs").where({
 				_id: dbCmd.nin(excludes),
-				creatorId: userId
+				creatorId: userId,
+				type: 0
 			}).get()
 		}
 		
@@ -103,7 +104,8 @@ module.exports = {
 		if (roles.includes(2)) {
 			res_teacher = await db.collection("wk-orgs").where({
 				_id: dbCmd.nin(excludes),
-				teacherIds: userId
+				teacherIds: userId,
+				type: 0
 			}).get()
 		}
 		
@@ -111,7 +113,8 @@ module.exports = {
 		if (roles.includes(3)) {
 			res_student = await db.collection("wk-orgs").where({
 				_id: dbCmd.nin(excludes),
-				studentIds: userId
+				studentIds: userId,
+				type: 0
 			}).get()
 		}
 		
@@ -123,7 +126,8 @@ module.exports = {
 			for (let child of children.data) {
 				const res = await db.collection("wk-orgs").where({
 					_id: dbCmd.nin(excludes),
-					studentIds: child._id
+					studentIds: child._id,
+					type: 0
 				}).get()
 				res_parents.data.push(...res.data)
 			}
@@ -145,6 +149,23 @@ module.exports = {
 		})
 		
 		return result
+	},
+	/**
+	 * @param {Object} userId 机构创建者
+	 */
+	async fetchAnonymousOrg(userId) {
+		let org = {}
+		if (typeof(userId) !== 'undefined' && userId.length !== 0) {
+			const db = uniCloud.database()
+			const res = await db.collection('wk-orgs').where({
+				creatorId: userId,
+				type: 1
+			}).get()
+			if (res.data.length > 0) {
+				org = res.data[0]
+			}
+		}
+		return org
 	},
 	async addTeachers(orgId, tIds) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||

@@ -233,9 +233,6 @@ const onDeleteTap = (data:{info:EditInfo}) => {
 			padding: $uni-padding-sm;
 		}
 	}
-	.invite-container {
-		
-	}
 	.edit-container {
 		position: relative;
 		display: flex;
