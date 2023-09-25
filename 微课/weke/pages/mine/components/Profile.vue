@@ -34,17 +34,19 @@
 					<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
 				</view>
 				<!-- 有效期 -->
-				<template v-if="usersStore.isExpired">
-					<text class="expired">123</text>
-				</template>
-				<template v-else>
-					<view class="expired">
-						<text>有效期至:</text>
-						<uni-dateformat 
-							style="display: inline;" 
-							:date="usersStore.owner.expireDate"
-							format="yyyy/MM/dd" />
-					</view>
+				<template v-if="usersStore.owner.from === 'wx'">
+					<template v-if="usersStore.isExpired">
+						<text class="expired">123</text>
+					</template>
+					<template v-else>
+						<view class="expired">
+							<text>有效期至:</text>
+							<uni-dateformat 
+								style="display: inline;" 
+								:date="usersStore.owner.expireDate"
+								format="yyyy/MM/dd" />
+						</view>
+					</template>
 				</template>
 			</template>
 			<template v-else>
@@ -117,10 +119,10 @@ const onSignatureTap = () => {
 	.right-container {
 		display: flex;
 		flex-direction: column;
-		justify-content: space-around;
 		flex: 1;
 		padding: $uni-padding-base $uni-padding-base $uni-padding-base 16px;
 		.top {
+			margin-top: $uni-spacing-col-sm;
 			display: flex;
 			.nickname {
 				position: relative;
@@ -150,6 +152,8 @@ const onSignatureTap = () => {
 		.login {
 			font-size: $uni-font-size-base;
 			color: $wk-text-color;
+			margin-top: auto;
+			margin-bottom: auto;
 		}
 	}
 }

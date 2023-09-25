@@ -59,6 +59,56 @@ module.exports = {
    },
    
    /**
+	* 身份验证
+	* @param {Object} stuNo
+	* @param {Object} pwd
+	*/
+   async authStuIdentity(stuNo, pwd) {
+	   const db = uniCloud.database()
+	   const res = await db.collection('wk-student').where({
+		   studentNo: stuNo,
+		   pwd: pwd
+	   }).get()
+	   if (res.data.length === 1) {
+		   return res.data[0]
+	   } else {
+		   return {}
+	   }
+   },
+   /**
+	* @param {Object} student
+	*/
+   async updateStudent(student) {
+	   let update = {}
+	   const { studentNo, nickName, avatarId, mobile, status, signature, pwd } = student
+	   if (typeof(studentNo) === undefined || studentNo.length === 0) {
+		   return {}
+	   }
+	   if (typeof(nickName) !== undefined || nickName.length !== 0) {
+		   update.nickName = nickName
+	   }
+	   if (typeof(avatarId) !== undefined || avatarId.length !== 0) {
+	   		update.avatarId = avatarId
+	   }
+	   if (typeof(mobile) !== undefined || mobile.length !== 0) {
+	   		update.mobile = mobile
+	   }
+	   if (typeof(status) !== undefined) {
+	   		update.status = status
+	   }
+	   if (typeof(signature) !== undefined || signature.length !== 0) {
+	   		update.signature = signature
+	   }
+	   if (typeof(pwd) !== undefined || pwd.length !== 0) {
+	   		update.pwd = pwd
+	   }
+	   const db = uniCloud.database()
+	   await db.collection('wk-wx').where({
+		   studentNo: studentNo
+	   }).update(update)
+   }
+   
+   /**
 	* 更新用户信息
 	* @param {Object} user
 	*/

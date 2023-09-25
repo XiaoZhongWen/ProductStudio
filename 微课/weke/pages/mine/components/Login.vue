@@ -28,6 +28,16 @@ const stuNo = ref('')
 const pwd = ref('')
 const emit = defineEmits(['onStuNoLogin'])
 
+uni.getStorage({
+	key: 'wk-login',
+	success: (res) => {
+		const data = res.data
+		if (data.from === 'stuNo') {
+			stuNo.value = data.stuNo
+		}
+	}
+})
+
 const onLogin = () => {
 	emit('onStuNoLogin', {
 		"stuNo": stuNo.value,

@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
-import { type } from 'os'
 
 enum IdentityType {
 	UseUnionId = 'unionid',
@@ -28,8 +27,11 @@ export const useUsersStore = defineStore('users', {
 				avatarUrl: '',
 				tempFileUrl: '',
 				nickName: '',
-				roles: []
-			} as User & WxIdentity,
+				roles: [],
+				studentNo: '',
+				status: 0,
+				from: 'wx'
+			} as User & WxIdentity & {studentNo:string, status: number, from:string},
 			lastLoginInfo: {
 				unionid: '',
 				openid: '',
@@ -140,13 +142,43 @@ export const useUsersStore = defineStore('users', {
 							this.owner.session_key = session_key
 							console.info("微信用户不存在")
 						}
+						uni.setStorage({
+							key: "wk-login",
+							data: {
+								from: 'wx'
+							}
+						})
 					} catch (e) {
 						console.error("登录报错: " + e)
 					}
 				} else if (from === 'stuNo') {
 					if (typeof(stuNo) !== 'undefined' && stuNo.length &&
 						typeof(pwd) !== 'undefined' && pwd.length) {
-							
+						const student = await users_co.authStuIdentity(stuNo, pwd)
+						if (JSON.stringify(student) !== '{}') {
+							this.isLogin = true
+							const { avatarId, mobile, nickName, status, studentNo } = student
+							this.owner.mobile = mobile
+							this.owner.nickName = nickName
+							this.owner.status = status
+							this.owner.studentNo = studentNo
+							this.owner.from = 'stuNo'
+							if (typeof(avatarId) !== 'undefined' && avatarId.length > 0) {
+								this.owner.avatarId = avatarId
+								const result = await uniCloud.getTempFileURL({
+									fileList:[this.owner.avatarId]
+								})
+								const { tempFileURL } = result.fileList[0]
+								this.updateAvatarUrl(tempFileURL)
+							}
+							uni.setStorage({
+								key: "wk-login",
+								data: {
+									from: 'stuNo',
+									stuNo: stuNo
+								}
+							})
+						}
 					}
 				}
 			} else {
@@ -205,13 +237,17 @@ export const useUsersStore = defineStore('users', {
 		async updateCloudUser() {
 			let result = false
 			try {
-				 await users_co.updateUser({
-					...this.owner,
-					type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
-				})
-				if (this.isLogin === false) {
-					this.isLogin = true
-					this.fetchStudents()
+				if (this.owner.from === 'wx') {
+					await users_co.updateUser({
+						...this.owner,
+						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
+					})
+					if (this.isLogin === false) {
+						this.isLogin = true
+						this.fetchStudents()
+					}
+				} else {
+					await users_co.updateStudent({...this.owner})
 				}
 				console.info("更新云端用户信息成功, " + this.owner)
 				result = true

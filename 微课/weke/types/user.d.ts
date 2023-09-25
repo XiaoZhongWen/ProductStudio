@@ -18,6 +18,7 @@ export type User = {
 export type Student = {
 	_id: string,
 	studentNo: string,
+	pwd: string,
 	nickName: string,
 	avatarId: string,
 	avatarUrl?: string,

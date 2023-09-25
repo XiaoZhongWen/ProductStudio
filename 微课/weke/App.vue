@@ -15,7 +15,15 @@
 			navigateInterceptor()
 		},
 		onShow: function() {
-			this.usersStore.login()
+			uni.getStorage({
+				key: 'wk-login',
+				success: (res) => {
+					const data = res.data
+					if (data.from === 'wx') {
+						this.usersStore.login()
+					}
+				}
+			})
 		},
 		onHide: function() {
 			console.log('App Hide')

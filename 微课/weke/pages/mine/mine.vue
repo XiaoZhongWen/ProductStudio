@@ -112,6 +112,8 @@ import Login from './components/Login.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
 import { Student } from '../../types/user'
+// @ts-ignore
+import md5 from 'js-md5'
 
 const is_mask_click = ref(false)
 const usersStore = useUsersStore()
@@ -185,15 +187,17 @@ const org:ListItem[] = computed({
 				to: "/pages/setting/setting"
 			}
 		]
-		const roles = new Set(usersStore.owner.roles)
-		if (roles.size === 0) {
-			org = []
-		} else {
-			if (roles.has(3) && roles.size === 1) {
-				// 家长
+		if (usersStore.owner.from === 'wx') {
+			const roles = new Set(usersStore.owner.roles)
+			if (roles.size === 0) {
 				org = []
-			} else if (!roles.has(1)) {
-				org.splice(1, 1)
+			} else {
+				if (roles.has(3) && roles.size === 1) {
+					// 家长
+					org = []
+				} else if (!roles.has(1)) {
+					org.splice(1, 1)
+				}
 			}
 		}
 		return org
@@ -221,9 +225,17 @@ const account:ListItem[] = computed({
 				to: "/pages/memberCenter/memberCenter"
 			}
 		]
-		const roles = new Set(usersStore.owner.roles)
-		if (roles.size === 0) {
-			account = []
+		if (usersStore.owner.from === 'wx') {
+			const roles = new Set(usersStore.owner.roles)
+			if (roles.size === 0) {
+				account = []
+			}
+		} else {
+			account = [{
+				type: "upload-filled",
+				name: "邀请",
+				to: "/pages/share/share"
+			}]
 		}
 		return account
 	}
@@ -232,11 +244,15 @@ const account:ListItem[] = computed({
  // @ts-ignore
  const students:Student[] = computed({
 	 get() {
-		 const roles = usersStore.owner.roles ?? []
-		 if (roles.includes(3)) {
-			 return usersStore.students
+		 if (usersStore.owner.from === 'wx') {
+			 const roles = usersStore.owner.roles ?? []
+			 if (roles.includes(3)) {
+			 	return usersStore.students
+			 } else {
+				return []
+			 }
 		 } else {
-			 return []
+			return [] 
 		 }
 	 }
  })
@@ -270,34 +286,38 @@ watch(isLogin, () => {
 })
 
 const selectRole = () => {
-	if (usersStore.isLogin) {
-		const roles = usersStore.owner.roles ?? []
-		is_mask_click.value = !(usersStore.isLogin && roles.length === 0)
-		if (roles.length === 0) {
-			showSelectRole()
-			uni.hideTabBar()
-		}
-		if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
-			const mobile = usersStore.owner.mobile
-			if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+	if (usersStore.owner.from === 'wx') {
+		if (usersStore.isLogin) {
+			const roles = usersStore.owner.roles ?? []
+			is_mask_click.value = !(usersStore.isLogin && roles.length === 0)
+			if (roles.length === 0) {
+				showSelectRole()
+				uni.hideTabBar()
+			}
+			if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
+				const mobile = usersStore.owner.mobile
+				if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+					uni.showToast({
+						title:"请绑定手机号",
+						duration:global.duration_toast,
+						icon:"none"
+					})
+				} else if (mobile === invitePhoneNumber) {
+					// 1. 添加到机构的老师集合中
+					// 2. 提醒用户加入机构成功
+				}
+			}
+		} else {
+			if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
 				uni.showToast({
-					title:"请绑定手机号",
+					title:"请登录注册",
 					duration:global.duration_toast,
 					icon:"none"
 				})
-			} else if (mobile === invitePhoneNumber) {
-				// 1. 添加到机构的老师集合中
-				// 2. 提醒用户加入机构成功
 			}
 		}
-	} else {
-		if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
-			uni.showToast({
-				title:"请登录注册",
-				duration:global.duration_toast,
-				icon:"none"
-			})
-		}
+	} else if (usersStore.owner.from === 'stuNo') {
+		
 	}
 }
 
@@ -429,13 +449,13 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 	uni.showLoading({
 		title: '正在登录...'
 	})
-	await usersStore.login('stuNo')
+	await usersStore.login('stuNo', stuNo, md5(pwd))
 	uni.hideLoading()
 	if (usersStore.isLogin) {
 		loginStuNoPopup.value?.close()
 	} else {
 		uni.showToast({
-			title:"用户名或密码错误",
+			title:"学号或密码错误",
 			duration:global.duration_toast,
 			icon:"error"
 		})
