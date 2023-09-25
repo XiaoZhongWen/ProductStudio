@@ -88,7 +88,6 @@ module.exports = {
 		const dbCmd = db.command
 		let res_creator = {data:[]}
 		let res_teacher = {data:[]}
-		let res_student = {data:[]}
 		let res_parents = {data:[]}
 		
 		// 1. 创建者
@@ -109,28 +108,19 @@ module.exports = {
 			}).get()
 		}
 		
-		// 3. 家长 
+		// 3. 家长
 		if (roles.includes(3)) {
-			const children = await db.collection('wk-student').where({
-				parentIds: userId
+			const students = await db.collection('wk-student').where({
+				associateIds: userId
 			}).get()
-			for (let child of children.data) {
+			for (let student of students.data) {
 				const res = await db.collection("wk-orgs").where({
 					_id: dbCmd.nin(excludes),
-					studentIds: child._id,
+					studentIds: student._id,
 					type: 0
 				}).get()
 				res_parents.data.push(...res.data)
 			}
-		}
-		
-		// 4. 学员
-		if (roles.includes(4)) {
-			res_student = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
-				studentIds: userId,
-				type: 0
-			}).get()
 		}
 		
 		let result = []
@@ -138,7 +128,6 @@ module.exports = {
 		let total = [
 			...res_creator.data, 
 			...res_teacher.data, 
-			...res_student.data, 
 			...res_parents.data
 		]
 		total.forEach(org => {

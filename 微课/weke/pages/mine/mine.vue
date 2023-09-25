@@ -18,15 +18,14 @@
 				</uni-list>
 			</view>
 			
-			<!-- 孩子相关 -->
-			<view class="children-container" v-if="children.length > 0">
+			<!-- 学生相关 -->
+			<view class="student-container" v-if="students.length > 0">
 				<uni-list>
-					<uni-list-item link v-for="child in children" :key="child._id" @tap="onChildTap(child._id)">
+					<uni-list-item link v-for="student in students" :key="student._id" @tap="onStudentTap(student._id)">
 						<template v-slot:header>
 							<view class="slot-box">
-								<image class="icon" :src="child.avatarUrl" mode="aspectFill"></image>
-								<!-- <uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons> -->
-								<text class="nickName">{{child.nickName}}</text>
+								<image class="icon" :src="student.avatarUrl" mode="aspectFill"></image>
+								<text class="nickName">{{student.nickName}}</text>
 							</view>
 						</template>
 					</uni-list-item>
@@ -61,6 +60,15 @@
 				</uni-list>
 			</view>
 			
+			<!-- popup 登录选择 -->
+			<uni-popup 
+				ref="loginOptionPopup" 
+				type="bottom" 
+				background-color="white"
+				@change="onChange">
+				<LoginOption @onLoginOption="onLoginOption" />
+			</uni-popup>
+			
 			<!-- popup 登录授权 -->
 			<uni-popup 
 				ref="loginAuthPopup" 
@@ -75,10 +83,20 @@
 				ref="selectRolePopup"
 				type="center"
 				:is-mask-click="is_mask_click"
-				@change="onSelectRoleChange"
+				@change="onChange"
 				background-color="transparent">
 				<SelectRole/>
 			</uni-popup>
+			
+			<!-- popup 学号登录 -->
+			<uni-popup 
+				ref="loginStuNoPopup" 
+				type="center"
+				@onStuNoLogin="onStuNoLogin"
+				background-color="transparent">
+				<Login @onStuNoLogin="onStuNoLogin" />
+			</uni-popup>
+			
 		</scroll-view>
 	</view>
 </template>
@@ -89,6 +107,8 @@ import { storeToRefs } from 'pinia'
 import { onLoad } from '@dcloudio/uni-app'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
+import LoginOption from './components/LoginOption.vue'
+import Login from './components/Login.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
 import { Student } from '../../types/user'
@@ -114,12 +134,22 @@ onLoad((option) => {
 	}
 })
 
+const loginOptionPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
 const loginAuthPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
 
 const selectRolePopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+const loginStuNoPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
@@ -176,8 +206,8 @@ const account:ListItem[] = computed({
 	get() {
 		let account = [
 			{
-				type: "phone-filled",
-				name: "绑定手机号",
+				type: "auth-filled",
+				name: "绑定学员号",
 				to: "/pages/bindphone/bindphone"
 			},
 			{
@@ -200,15 +230,13 @@ const account:ListItem[] = computed({
 })
 
  // @ts-ignore
- const children:Student[] = computed({
+ const students:Student[] = computed({
 	 get() {
 		 const roles = usersStore.owner.roles ?? []
-		 if (roles.length === 0 || !roles.includes(3)) {
-			 console.info("onChildren: " + roles)
-		 	return []
+		 if (roles.includes(3)) {
+			 return usersStore.students
 		 } else {
-			 console.info("onChildren: " + usersStore.children)
-			 return usersStore.children
+			 return []
 		 }
 	 }
  })
@@ -274,7 +302,11 @@ const selectRole = () => {
 }
 
 const onLogin = () => {
-	loginAuthPopup.value?.open()
+	if (usersStore.isLogin) {
+		loginAuthPopup.value?.open()
+	} else {
+		loginOptionPopup.value?.open()
+	}
 }
 
 const onPopup = () => {
@@ -285,14 +317,19 @@ const onChange = (e: UniHelper.UniPopupOnChangeEvent) => {
 	e.show? uni.hideTabBar(): uni.showTabBar()
 }
 
-const onSelectRoleChange = (e: UniHelper.UniPopupOnChangeEvent) => {
-	e.show? uni.hideTabBar(): uni.showTabBar()
-}
-
-const onChildTap = (id:string) => {
+const onStudentTap = (id:string) => {
 	uni.navigateTo({
 		url:`/pages/member-student/member-student?id=${id}`
 	})
+}
+
+const onLoginOption = (data: {from:string}) => {
+	loginOptionPopup.value?.close()
+	if (data.from === 'wx') {
+		loginAuthPopup.value?.open()
+	} else if (data.from === 'stu-num') {
+		loginStuNoPopup.value?.open()
+	}
 }
 
 const showSelectRole = () => {
@@ -369,6 +406,42 @@ uni.$on(global.event_name.login, async (data) => {
 	}
 })
 
+const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
+	const { stuNo, pwd } = data
+	// 1. 验证学号
+	if (typeof(stuNo) === 'undefined' || stuNo.length === 0) {
+		uni.showToast({
+			title:"请输入学号",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	// 2. 验证密码
+	if (typeof(pwd) === 'undefined' || pwd.length === 0) {
+		uni.showToast({
+			title:"请输入密码",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	uni.showLoading({
+		title: '正在登录...'
+	})
+	await usersStore.login('stuNo')
+	uni.hideLoading()
+	if (usersStore.isLogin) {
+		loginStuNoPopup.value?.close()
+	} else {
+		uni.showToast({
+			title:"用户名或密码错误",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+	}
+}
+
 uni.$on(global.event_name.didSelectedRole, () => {
 	selectRolePopup.value?.close()
 })
@@ -381,7 +454,7 @@ uni.$on(global.event_name.selectRole, () => {
 </script>
 
 <style lang="scss">
-.org-container, .children-container, .account-container, .other-container {
+.org-container, .student-container, .account-container, .other-container {
 	margin-top: $uni-spacing-col-lg;
 	.uni-list {
 		margin: 0 $uni-spacing-row-base;

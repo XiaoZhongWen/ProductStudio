@@ -17,7 +17,7 @@
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
-import { User } from '../../types/user';
+import { Student, User } from '../../types/user';
 
 const usersStore = useUsersStore()
 const _id = ref<string>('')
@@ -26,10 +26,13 @@ onLoad(async (option) => {
 	const { id } = option as {id:string}
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		_id.value = id
-		const user = await usersStore.fetchUser(id) as User
-		uni.setNavigationBarTitle({
-			title: user.nickName ?? ''
-		})
+		const res = usersStore.students.filter(student => student._id === id)
+		if (res.length === 1) {
+			const student:Student = res[0]
+			uni.setNavigationBarTitle({
+				title: student.nickName ?? ''
+			})
+		}
 	}
 })
 

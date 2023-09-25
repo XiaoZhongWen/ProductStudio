@@ -8,16 +8,7 @@
 				wrap
 				:localdata="roles" 
 				selected-color="#5073D6" 
-				selected-text-color="#5073D6"
-				@change="onValueChange"/>
-			<uni-data-checkbox
-				v-model="studentId" 
-				wrap
-				:localdata="student" 
-				selected-color="#5073D6" 
-				selected-text-color="#5073D6"
-				@change="onStudentValueChange"/>
-			<label class="annotation">注：机构负责人、老师、家长间的角色可以叠加，但学生角色不能叠加</label>
+				selected-text-color="#5073D6"/>
 		</view>
 		<view class="bottom">
 			<button class="btn" type="default" @tap="onConfirm">确定</button>
@@ -48,41 +39,14 @@ const roles = ref([
 	}
 ])
 
-const studentId = ref(0)
-const student = ref([
-	{
-		value: 4,
-		text: '学生',
-	}
-])
-
 uni.$on(global.event_name.showSelectRole, () => {
 	const roleIds =  usersStore.owner.roles ?? []
-	if (roleIds.length) {
-		let set = new Set(roleIds)
-		if (set.has(4)) {
-			studentId.value = 4
-		} else {
-			selectedId.value = roleIds
-		}
-	}
+	selectedId.value = roleIds
 })
 
 const onConfirm = () => {
 	const roleIds =  usersStore.owner.roles ?? []
 	console.info("roleIds: " + roleIds)
-	if (studentId.value === 4) {
-		let set = new Set(roleIds)
-		if (!set.has(studentId.value)) {
-			// 更新角色数据
-			usersStore.updateRoles([studentId.value])
-			console.info("角色变更为: " + studentId.value)
-		} else {
-			console.info("角色未变更")
-		}
-		uni.$emit(global.event_name.didSelectedRole)
-		return
-	}
 	if (selectedId.value.length) {
 		let flag = roleIds.length !== selectedId.value.length
 		if (!flag) {
@@ -108,24 +72,12 @@ const onConfirm = () => {
 	}
 }
 
-const onValueChange = () => {
-	if (studentId.value === student.value[0].value) {
-		studentId.value = 0
-	}
-}
-
-const onStudentValueChange = () => {
-	if (studentId.value === student.value[0].value) {
-		selectedId.value = []
-	}
-}
-
 </script>
 
 <style lang="scss" scoped>
 .roleContainer {
 	width: 250px;
-	height: 260px;
+	height: 190px;
 	background-color: $wk-bg-color-grey;
 	border-radius: $uni-border-radius-lg;
 	.header {

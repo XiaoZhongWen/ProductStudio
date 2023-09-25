@@ -1,8 +1,7 @@
 export enum RoleId {
 	Org = 1,
 	Teacher = 2,
-	Parents = 3,
-	Student = 4
+	Parents = 3
 }
 
 export type User = {

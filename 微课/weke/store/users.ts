@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
+import { type } from 'os'
 
 enum IdentityType {
 	UseUnionId = 'unionid',
@@ -35,11 +36,8 @@ export const useUsersStore = defineStore('users', {
 				nickName: '',
 				tempFileUrl: ''
 			},
-			children: [] as Student[],
-			users: [] as User[],
-			student: {
-				_id: ''
-			} as Student
+			students: [] as Student[],
+			users: [] as User[]
 		}
 	},
 	
@@ -76,72 +74,80 @@ export const useUsersStore = defineStore('users', {
 	
 	actions: {
 		// 登录
-		async login() {
+		// 当from为stuNo时, stuNo、pwd为传入的学号和密码
+		async login(from="wx", stuNo?:string, pwd?:string) {
 			if (this.isLogin === false) {
-				try {
-					// 1. 获取openid、unionid, session_key
-					console.info("开始微信登录")
-					const res = await uni.login({
-						provider: 'weixin'
-					})
-					const session = await users_co.code2Session(res.code)
-					const { session_key, openid, unionid } = session.data
-					// 2. 云端验证openid、unionid
-					const userInfo = await users_co.authIdentity({
-						openid: openid,
-						unionid: (identityType === IdentityType.UseUnionId)? unionid: "",
-						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
-					}) as User & WxIdentity
-					// 3. 通过验证则返回用户信息
-					if (JSON.stringify(userInfo) !== '{}') {
-						// 更新owner对象
-						this.owner.openid = openid
-						this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
-						this.owner.session_key = session_key
-						this.isLogin = true
-						
-						const { 
-							_id, 
-							nickName, 
-							expireDate,
-							avatarId, 
-							roles, 
-							mobile,  
-							signature
-						} = userInfo
-						this.owner._id = _id
-						this.owner.nickName = nickName
-						this.owner.expireDate = expireDate
-						this.owner.avatarId = avatarId
-						if (typeof(roles) !== 'undefined') {
-							this.owner.roles = roles
-						}
-						if (typeof(mobile) !== 'undefined') {
-							this.owner.mobile = mobile
-						}
-						if (typeof(signature) !== 'undefined') {
-							this.owner.signature = signature
-						}
-						// 更新lastLoginInfo对象
-						this.lastLoginInfo.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
-						this.lastLoginInfo.openid = openid
-						this.lastLoginInfo.nickName = this.owner.nickName ?? ''
-						const result = await uniCloud.getTempFileURL({
-							fileList:[this.owner.avatarId]
+				if (from === 'wx') {
+					try {
+						// 1. 获取openid、unionid, session_key
+						console.info("开始微信登录")
+						const res = await uni.login({
+							provider: 'weixin'
 						})
-						const { tempFileURL } = result.fileList[0]
-						this.updateAvatarUrl(tempFileURL)
-						this.fetchChildren()
-						console.info("微信用户存在:" + this.owner)
-						console.info("微信用户头像url:" + tempFileURL)
-					} else {
-						this.owner.openid = openid
-						this.owner.unionid = unionid
-						this.owner.session_key = session_key
-						console.info("微信用户不存在")
+						const session = await users_co.code2Session(res.code)
+						const { session_key, openid, unionid } = session.data
+						// 2. 云端验证openid、unionid
+						const userInfo = await users_co.authIdentity({
+							openid: openid,
+							unionid: (identityType === IdentityType.UseUnionId)? unionid: "",
+							type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
+						}) as User & WxIdentity
+						// 3. 通过验证则返回用户信息
+						if (JSON.stringify(userInfo) !== '{}') {
+							// 更新owner对象
+							this.owner.openid = openid
+							this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
+							this.owner.session_key = session_key
+							this.isLogin = true
+							
+							const { 
+								_id, 
+								nickName, 
+								expireDate,
+								avatarId, 
+								roles, 
+								mobile,  
+								signature
+							} = userInfo
+							this.owner._id = _id
+							this.owner.nickName = nickName
+							this.owner.expireDate = expireDate
+							this.owner.avatarId = avatarId
+							if (typeof(roles) !== 'undefined') {
+								this.owner.roles = roles
+							}
+							if (typeof(mobile) !== 'undefined') {
+								this.owner.mobile = mobile
+							}
+							if (typeof(signature) !== 'undefined') {
+								this.owner.signature = signature
+							}
+							// 更新lastLoginInfo对象
+							this.lastLoginInfo.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
+							this.lastLoginInfo.openid = openid
+							this.lastLoginInfo.nickName = this.owner.nickName ?? ''
+							const result = await uniCloud.getTempFileURL({
+								fileList:[this.owner.avatarId]
+							})
+							const { tempFileURL } = result.fileList[0]
+							this.updateAvatarUrl(tempFileURL)
+							this.fetchStudents()
+							console.info("微信用户存在:" + this.owner)
+							console.info("微信用户头像url:" + tempFileURL)
+						} else {
+							this.owner.openid = openid
+							this.owner.unionid = unionid
+							this.owner.session_key = session_key
+							console.info("微信用户不存在")
+						}
+					} catch (e) {
+						console.error("登录报错: " + e)
 					}
-				} catch (e) {
-					console.error("登录报错: " + e)
+				} else if (from === 'stuNo') {
+					if (typeof(stuNo) !== 'undefined' && stuNo.length &&
+						typeof(pwd) !== 'undefined' && pwd.length) {
+							
+					}
 				}
 			} else {
 				console.info("用户是已登录状态")
@@ -205,7 +211,7 @@ export const useUsersStore = defineStore('users', {
 				})
 				if (this.isLogin === false) {
 					this.isLogin = true
-					this.fetchChildren()
+					this.fetchStudents()
 				}
 				console.info("更新云端用户信息成功, " + this.owner)
 				result = true
@@ -255,16 +261,16 @@ export const useUsersStore = defineStore('users', {
 			this.owner.signature = signature
 			users_co.updateSignature(this.owner._id, signature)
 		},
-		// 获取children信息
-		async fetchChildren() {
-			const result = await users_co.fetchChildren(this.owner._id)
+		// 获取students信息
+		async fetchStudents() {
+			const result = await users_co.fetchStudents(this.owner._id)
 			for (let item of result) {
 				const res = await uniCloud.getTempFileURL({
 					fileList:[item.avatarId]
 				})
 				const { tempFileURL } = res.fileList[0]
 				item.avatarUrl = tempFileURL
-				this.children.push(item)
+				this.students.push(item)
 			}
 		},
 		// 获取用户信息

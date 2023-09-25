@@ -186,15 +186,11 @@ export const useOrgsStore = defineStore('orgs', {
 			let result = true
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
-				let orgs = []
-				// - to do
-				// if (usersStore.owner.bindId.length > 0 &&
-				// 	usersStore.student._id.length > 0 &&
-				// 	usersStore.owner.bindId === usersStore.student._id) {
-				// 	orgs = await orgs_co.fetchOrgs(usersStore.owner.bindId, [4], didLoadedOrgIds)
-				// } else {
-				// 	orgs = await orgs_co.fetchOrgs(usersStore.owner._id, usersStore.owner.roles, didLoadedOrgIds)
-				// }
+				const orgs = await orgs_co.fetchOrgs(
+					usersStore.owner._id, 
+					usersStore.owner.roles, 
+					didLoadedOrgIds
+				)
 				this.orgs.push(...orgs)
 				// 按创建时间降序排序
 				this.orgs.sort((a, b) => {

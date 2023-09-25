@@ -21,6 +21,7 @@ import { computed, onMounted, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
+import { Org } from "../../types/org";
 
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
@@ -47,13 +48,31 @@ onMounted(async () => {
 const orgs = computed({
 	get() {
 		if (userId.value === usersStore.owner._id) {
-			// 与自己相关的org
-			return useOrgs.orgs.filter(org => {
-				return org.creatorId === userId.value ||
-					   org.teacherIds?.includes(userId.value)
+			// 机构负责人 | 老师
+			const forCreator = useOrgs.orgs.filter(org => {
+				return org.creatorId === userId.value
 			})
+			const forTeacher = useOrgs.orgs.filter(org => {
+				return org.teacherIds?.includes(userId.value)
+			})
+			let res:Org[] = []
+			if (usersStore.owner.roles?.includes(1)) {
+				res.push(...forCreator)
+			}
+			if (usersStore.owner.roles?.includes(2)) {
+				let orgIds:string[] = []
+				if (res.length > 0) {
+					orgIds = res.map(item => item._id)
+				}
+				forTeacher.forEach(item => {
+					if (!orgIds.includes(item._id)) {
+						res.push(item)
+					}
+				})
+			}
+			return res
 		} else {
-			// 与孩子相关的org
+			// 家长 | 学生, 这里的userId指的是被关联学员的userId
 			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
 		}
 	}
