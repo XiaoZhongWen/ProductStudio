@@ -157,12 +157,14 @@ export const useUsersStore = defineStore('users', {
 						const student = await users_co.authStuIdentity(stuNo, pwd)
 						if (JSON.stringify(student) !== '{}') {
 							this.isLogin = true
-							const { avatarId, mobile, nickName, status, studentNo } = student
+							const { _id, avatarId, mobile, nickName, status, studentNo, signature } = student
+							this.owner._id = _id
 							this.owner.mobile = mobile
 							this.owner.nickName = nickName
 							this.owner.status = status
 							this.owner.studentNo = studentNo
 							this.owner.from = 'stuNo'
+							this.owner.signature = signature
 							if (typeof(avatarId) !== 'undefined' && avatarId.length > 0) {
 								this.owner.avatarId = avatarId
 								const result = await uniCloud.getTempFileURL({
@@ -295,7 +297,7 @@ export const useUsersStore = defineStore('users', {
 		// 更新个性签名
 		updateSignature(signature: string) {
 			this.owner.signature = signature
-			users_co.updateSignature(this.owner._id, signature)
+			users_co.updateSignature(this.owner._id, signature, this.owner.from)
 		},
 		// 获取students信息
 		async fetchStudents() {

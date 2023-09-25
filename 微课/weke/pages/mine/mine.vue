@@ -180,11 +180,6 @@ const org:ListItem[] = computed({
 				type: "chatboxes-filled",
 				name: "班级",
 				to: "/pages/grade/grade"
-			},
-			{
-				type: "gear-filled",
-				name: "设置",
-				to: "/pages/setting/setting"
 			}
 		]
 		if (usersStore.owner.from === 'wx') {
@@ -272,6 +267,11 @@ const account:ListItem[] = computed({
 	 	type: "heart-filled",
 	 	name: "关于我们",
 		to: "/pages/about/about"
+	 },
+	 {
+	 	type: "gear-filled",
+	 	name: "设置",
+	 	to: "/pages/setting/setting"
 	 }
  ]
 
@@ -403,9 +403,9 @@ uni.$on(global.event_name.login, async (data) => {
 		const unionid = usersStore.owner.unionid ?? ''
 		const openid = usersStore.owner.openid ?? ''
 		// 6. 更新云端用户信息
-		if (isUpdatedPortrait || 
-			isUpdatedNickname &&
-			(unionid.length > 0 || openid.length > 0)) {
+		if ((isUpdatedPortrait || isUpdatedNickname) &&
+			(usersStore.owner.from === 'stuNo' ||
+			(usersStore.owner.from === 'wx' && (unionid.length > 0 || openid.length > 0)))) {
 			const isUpdated = await usersStore.updateCloudUser()
 			if (isUpdated) {
 				// 7. 退出界面
