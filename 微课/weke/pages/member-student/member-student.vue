@@ -1,5 +1,13 @@
 <template>
 	<view class="org-container">
+		<view class="top">
+			<upload-image
+				class="portrait"
+				:url="avatarUrl"
+				prompt="头像"
+				@onChooseAvatar="onChooseAvatar">
+			</upload-image>
+		</view>
 		<uni-list>
 			<uni-list-item link v-for="item in org" :key="item.name" :to="item.to">
 				<template v-slot:header>
@@ -17,7 +25,7 @@
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
-import { Student, User } from '../../types/user';
+import { Student } from '../../types/user';
 
 const usersStore = useUsersStore()
 const _id = ref<string>('')
@@ -60,11 +68,32 @@ const org:ListItem[] = computed({
 	}
 })
 
+// @ts-ignore
+const avatarUrl = computed({
+	get() {
+		const res = usersStore.students.filter(student => student._id === _id.value)
+		if (res.length === 1) {
+			const student:Student = res[0]
+			return student.avatarUrl
+		} else {
+			return ""
+		}
+	}
+})
+
+const onChooseAvatar = (data:{url:string}) => {
+	const url = data.url ?? ""
+	usersStore.updateStudentAvatar(_id.value, url)
+}
+
 </script>
 
 <style lang="scss">
 .org-container {
 	margin-top: $uni-spacing-col-lg;
+	.top {
+		padding-bottom: 20px;
+	}
 	.uni-list {
 		margin: 0 $uni-spacing-row-base;
 		border-radius: $uni-border-radius-lg;

@@ -49,7 +49,7 @@ onMounted(async () => {
 		uni.hideLoading()
 		if (studentId.length === 0 && 
 			(usersStore.owner.roles?.includes(1) || 
-			usersStore.owner.roles?.includes(3))
+			usersStore.owner.from === 'stuNo')
 		) {
 			// 机构负责人或学生
 			loaddata(useOrgs.myOrgs)

@@ -81,7 +81,7 @@ module.exports = {
    async updateStudent(student) {
 	   let update = {}
 	   const { studentNo, nickName, avatarId, mobile, status, signature, pwd } = student
-	   if (typeof(studentNo) === 'undefined' && studentNo.length === 0) {
+	   if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
 		   return {}
 	   }
 	   if (typeof(nickName) !== 'undefined' && nickName.length !== 0) {
@@ -107,7 +107,24 @@ module.exports = {
 		   studentNo: studentNo
 	   }).update(update)
    },
-   
+   /**
+	* 更新学员头像
+	*/
+   async updateStudentAvatarId(stuNo, fileId) {
+	   let result = false
+	   if (typeof(stuNo) === 'undefined' || stuNo.length === 0 ||
+			typeof(fileId) === 'undefined' || fileId.length === 0) {
+			return result
+		}
+		const db = uniCloud.database()
+		const res = await db.collection('wk-student').where({
+			studentNo: stuNo
+		}).update({
+			avatarId: fileId
+		})
+		result = res.updated === 1
+		return result
+   },
    /**
 	* 更新用户信息
 	* @param {Object} user
@@ -209,13 +226,26 @@ module.exports = {
    },
    
    /**
-	* 获取孩子信息
+	* 通过关联id获取学员信息
 	* @param {Object} userId
 	*/
    async fetchStudents(userId) {
 	   const db = uniCloud.database()
 	   let res = await db.collection('wk-student').where({
 		   associateIds: userId
+	   }).get()
+	   return res.data
+   },
+   
+   /**
+   	* 通过学员id获取学员信息
+   	* @param {Object} userId
+   	*/
+   async fetchStudentsByIds(ids) {
+	   const db = uniCloud.database()
+	   const dbCmd = db.command
+	   const res = await db.collection('wk-student').where({
+	   		_id: dbCmd.in(ids)
 	   }).get()
 	   return res.data
    },

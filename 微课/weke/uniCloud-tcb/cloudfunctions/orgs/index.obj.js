@@ -79,9 +79,9 @@ module.exports = {
 	 * @param {roles} 角色id集合
 	 * @param {excludes} 排除的机构id集合
 	 */
-	async fetchOrgs(userId, roles, excludes) {
+	async fetchOrgs(userId, roles, excludes, from="wx") {
 		if (typeof(userId) === 'undefined' || userId.length === 0 ||
-			typeof(roles) === 'undefined' || roles.length === 0) {
+			(from === 'wx' && (typeof(roles) === 'undefined' || roles.length === 0))) {
 			return []
 		}
 		const db = uniCloud.database()
@@ -89,6 +89,7 @@ module.exports = {
 		let res_creator = {data:[]}
 		let res_teacher = {data:[]}
 		let res_parents = {data:[]}
+		let res_students = {data:[]}
 		
 		// 1. 创建者
 		if (roles.includes(1)) {
@@ -123,12 +124,22 @@ module.exports = {
 			}
 		}
 		
+		// 4. 学员
+		if (from === 'stuNo') {
+			res_students = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				studentIds: userId,
+				type: 0
+			}).get()
+		}
+		
 		let result = []
 		let orgIds = []
 		let total = [
 			...res_creator.data, 
 			...res_teacher.data, 
-			...res_parents.data
+			...res_parents.data,
+			...res_students.data
 		]
 		total.forEach(org => {
 			if (!orgIds.includes(org._id)) {

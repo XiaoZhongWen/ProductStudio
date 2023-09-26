@@ -10,20 +10,10 @@
 				{{org.type === 0?org.name:usersStore.owner.nickName}}
 			</text>
 		</view>
-		<view class="org-student-container" v-if="org.studentIds?.length ?? 0 > 0">
-			<template v-for="studentId in org.studentIds" :key="studentId">
-				<template v-if="fetchUserById(studentId)">
-					<wk-portrait
-						class="portrait"
-						:url="fetchUserById(studentId).avatarUrl" 
-						:name="fetchUserById(studentId).nickName">
-					</wk-portrait>
-				</template>
-				<template v-else>
-					<image class="icon" src="@/static/icon/profile.png" mode="aspectFill"></image>
-				</template>
-			</template>
-		</view>
+		<OrgStudentContainer
+			v-if="org.studentIds?.length ?? 0 > 0"
+			:studentIds="org.studentIds"
+		/>
 	</view>
 </template>
 
@@ -31,14 +21,11 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { onLoad } from '@dcloudio/uni-app'
-import { ref } from 'vue'
-import { User } from "../../types/user";
-import { Org } from "../../types/org";
+import { computed } from 'vue'
+import OrgStudentContainer from './components/OrgStudentContainer';
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
-const students = ref<User[]>([])
-const orgs = ref<Org[]>([])
 const global = getApp().globalData!
 
 onLoad(async () => {
@@ -47,19 +34,9 @@ onLoad(async () => {
 		uni.showLoading({
 			title:"加载中"
 		})
-		const userId = usersStore.owner._id
 		await useOrgs.loadOrgData()
-		useOrgs.orgs.forEach(org => {
-			if (org.creatorId === userId || org.teacherIds?.includes(userId)) {
-				orgs.value.push(org)
-			}
-		})
 		if (usersStore.owner.roles?.includes(2)) {
-			// 包含老师角色, 则创建老师的匿名机构
 			await useOrgs.fetchAnonymousOrg()
-			if (useOrgs.anonymousOrg._id.length > 0) {
-				orgs.value.push(useOrgs.anonymousOrg)
-			}
 		}
 		uni.hideLoading()
 		if (usersStore.owner.roles?.includes(1) && useOrgs.orgs.length === 0) {
@@ -70,17 +47,8 @@ onLoad(async () => {
 				icon: "error"
 			})
 		}
-		orgs.value.forEach(async org => {
-			const users:User[] = await usersStore.fetchUsers(org.studentIds ?? [])
-			students.value.push(...users)
-		})
 	}
 })
-
-const fetchUserById = (userId:string) => {
-	const result = students.value.filter(student => student._id === userId)
-	return result[0]
-}
 
 const orgBrief = (orgName:string) => {
 	return orgName.length > 2? orgName.substring(0, 2): orgName
@@ -91,6 +59,20 @@ const nickNameBrief = () => {
 	const length = nickname?.length ?? 0
 	return length > 2? nickname?.substring(length - 2, length): nickname
 }
+
+// @ts-ignore
+const orgs = computed({
+	get() {
+		const userId = usersStore.owner._id
+		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId || 
+											org.teacherIds?.includes(userId))
+		if (usersStore.owner.roles?.includes(2) &&
+			useOrgs.anonymousOrg._id.length > 0) {
+			normalOrgs.push(useOrgs.anonymousOrg)
+		}
+		return normalOrgs
+	}
+})
 
 </script>
 
@@ -116,20 +98,6 @@ const nickNameBrief = () => {
 			margin-left: $uni-spacing-row-base;
 			font-size: $uni-font-size-base;
 			color: $wk-text-color;
-		}
-	}
-	.org-student-container {
-		display: flex;
-		flex-direction: row;
-		flex-flow: row wrap;
-		padding: 4px;
-		border-top: 0.5px solid $wk-bg-color-grey;
-		border-bottom: 0.5px solid $wk-bg-color-grey;
-		.icon {
-			width: 30px;
-			height: 30px;
-			border-radius: $uni-border-radius-circle;
-			padding: $uni-padding-sm;
 		}
 	}
 }

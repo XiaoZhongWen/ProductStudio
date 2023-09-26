@@ -49,30 +49,37 @@ const orgs = computed({
 	get() {
 		if (userId.value === usersStore.owner._id) {
 			// 机构负责人 | 老师
-			const forCreator = useOrgs.orgs.filter(org => {
-				return org.creatorId === userId.value
-			})
-			const forTeacher = useOrgs.orgs.filter(org => {
-				return org.teacherIds?.includes(userId.value)
-			})
 			let res:Org[] = []
-			if (usersStore.owner.roles?.includes(1)) {
-				res.push(...forCreator)
-			}
-			if (usersStore.owner.roles?.includes(2)) {
-				let orgIds:string[] = []
-				if (res.length > 0) {
-					orgIds = res.map(item => item._id)
-				}
-				forTeacher.forEach(item => {
-					if (!orgIds.includes(item._id)) {
-						res.push(item)
-					}
+			if (usersStore.owner.from === 'wx') {
+				const forCreator = useOrgs.orgs.filter(org => {
+					return org.creatorId === userId.value
 				})
+				const forTeacher = useOrgs.orgs.filter(org => {
+					return org.teacherIds?.includes(userId.value)
+				})
+				if (usersStore.owner.roles?.includes(1)) {
+					res.push(...forCreator)
+				}
+				if (usersStore.owner.roles?.includes(2)) {
+					let orgIds:string[] = []
+					if (res.length > 0) {
+						orgIds = res.map(item => item._id)
+					}
+					forTeacher.forEach(item => {
+						if (!orgIds.includes(item._id)) {
+							res.push(item)
+						}
+					})
+				}
+			} else {
+				const forStudent = useOrgs.orgs.filter(org => {
+					return org.studentIds?.includes(userId.value)
+				})
+				res.push(...forStudent)
 			}
 			return res
 		} else {
-			// 家长 | 学生, 这里的userId指的是被关联学员的userId
+			// 家长, 这里的userId指的是被关联学员的userId
 			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
 		}
 	}

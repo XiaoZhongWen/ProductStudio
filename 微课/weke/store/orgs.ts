@@ -28,7 +28,10 @@ export const useOrgsStore = defineStore('orgs', {
 				// 机构负责人
 				return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
 			}
-			// - todo 学生相关的机构数据
+			if (usersStore.owner.from === 'stuNo') {
+				// 学生相关的机构数据
+				return state.orgs.filter(org => org.studentIds?.includes(usersStore.owner._id))
+			}
 			return []
 		}
 	},
@@ -189,7 +192,8 @@ export const useOrgsStore = defineStore('orgs', {
 				const orgs = await orgs_co.fetchOrgs(
 					usersStore.owner._id, 
 					usersStore.owner.roles, 
-					didLoadedOrgIds
+					didLoadedOrgIds,
+					usersStore.owner.from
 				)
 				this.orgs.push(...orgs)
 				// 按创建时间降序排序

@@ -258,6 +258,40 @@ export const useUsersStore = defineStore('users', {
 			}
 			return result
 		},
+		// 更新学生头像
+		async updateStudentAvatar(id:string, avatarUrl:string) {
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(avatarUrl) === 'undefined' || avatarUrl.length === 0) {
+				return
+			}
+			const res = this.students.filter(student => student._id === id)
+			if (res.length === 1) {
+				const student = res[0]
+				const prefix = "ddkb/header/"
+				// @ts-ignore
+				const result = await uniCloud.uploadFile({
+					filePath: avatarUrl,
+					cloudPath: prefix + md5(avatarUrl)
+				})
+				const { fileID } = result
+				if (fileID.length > 0) {
+					const success = await users_co.updateStudentAvatarId(student.studentNo, fileID)
+					if (success === true &&
+						typeof(student.avatarId) !== 'undefined' &&
+						student.avatarId.length > 0) {
+						uniCloud.deleteFile({
+							fileList:[student.avatarId]
+						}).then((res)=>{
+							console.info("删除头像文件成功: " + res)
+						}).catch(() => {
+							console.error("删除头像文件失败: " + student.avatarId)
+						})
+						student.avatarId = fileID
+						student.avatarUrl = avatarUrl
+					}
+				}
+			}
+		},
 		// 更新头像url
 		updateAvatarUrl(avatarUrl:string) {
 			this.owner.avatarUrl = avatarUrl
@@ -361,29 +395,50 @@ export const useUsersStore = defineStore('users', {
 				return user
 			}
 		},
-		async fetchUsers(userIds: string[]) {
+		async fetchUsers(userIds: string[], type = '') {
 			if (typeof(userIds) === 'undefined' || userIds.length === 0) {
 				return []
 			}
-			const loadedUserIds = this.users.map(user => user._id)
+			let loadedUserIds:string[] = []
+			if (type === 'student') {
+				loadedUserIds = this.students.map(student => student._id)
+			} else {
+				loadedUserIds = this.users.map(user => user._id)
+			}
 			const s = userIds.filter(userId => !loadedUserIds.includes(userId))
 			if (s.length > 0) {
-				const users = await users_co.fetchUsers(s) as User[]
-				this.users.push(...users)
-				const fileIds = users.map(user => user.avatarId)
-				const response = await uniCloud.getTempFileURL({
-					fileList:fileIds
-				})
-				const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
-				users.forEach(user => {
-					fileList.forEach(item => {
-						if (item.code === "SUCCESS" && item.fileID === user.avatarId) {
-							user.avatarUrl = item.tempFileURL
-						}
+				let res = []
+				if (type === 'student') {
+					res = await users_co.fetchStudentsByIds(s) as Student[]
+					if (res.length > 0) {
+						this.students.push(...res)
+					}
+				} else {
+					res = await users_co.fetchUsers(s) as User[]
+					if (res.length > 0) {
+						this.users.push(...res)
+					}
+				}
+				if (res.length > 0) {
+					const fileIds = res.map(user => user.avatarId)
+					const response = await uniCloud.getTempFileURL({
+						fileList:fileIds
 					})
-				})
+					const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
+					res.forEach(user => {
+						fileList.forEach(item => {
+							if (item.code === "SUCCESS" && item.fileID === user.avatarId) {
+								user.avatarUrl = item.tempFileURL
+							}
+						})
+					})
+				}
 			}
-			return this.users.filter(user => userIds.includes(user._id))
+			if (type === 'student') {
+				return this.students.filter(student => userIds.includes(student._id))
+			} else {
+				return this.users.filter(user => userIds.includes(user._id))
+			}
 		}
 	}
 })
