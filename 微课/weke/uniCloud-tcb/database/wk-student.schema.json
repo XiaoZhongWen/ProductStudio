@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["studentNo", "nickName", "registerDate", "status", "pwd"],
+	"required": ["studentNo", "nickName", "registerDate", "status", "pwd", "identity"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -60,6 +60,10 @@
 		"pwd": {
 			"bsonType": "string",
 			"description": "密码"
+		},
+		"identity": {
+			"bsonType": "string",
+			"description": "验证标识"
 		}
 	}
 }

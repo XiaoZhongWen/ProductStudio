@@ -14,6 +14,14 @@
 			v-if="org.studentIds?.length ?? 0 > 0"
 			:studentIds="org.studentIds"
 		/>
+		<view class="edit-container">
+			<edit-card 
+				:orgId="org._id" 
+				name="学生姓名" 
+				mobile="关联手机号" 
+				@onAddTap="onAddTap">
+			</edit-card>
+		</view>
 	</view>
 </template>
 
@@ -23,6 +31,13 @@ import { useOrgsStore } from '@/store/orgs'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed } from 'vue'
 import OrgStudentContainer from './components/OrgStudentContainer';
+
+type EditInfo = {
+	orgId:string, 
+	name:string, 
+	phoneNumber:string,
+	timestamp: number
+}
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
@@ -74,6 +89,13 @@ const orgs = computed({
 	}
 })
 
+const onAddTap = (data:{info:EditInfo}) => {
+	const { orgId, name, phoneNumber } = data.info
+	console.info(orgId)
+	console.info(name)
+	console.info(phoneNumber)
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -99,6 +121,13 @@ const orgs = computed({
 			font-size: $uni-font-size-base;
 			color: $wk-text-color;
 		}
+	}
+	.edit-container {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 10px;
 	}
 }
 </style>

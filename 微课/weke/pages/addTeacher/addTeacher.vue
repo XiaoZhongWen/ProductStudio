@@ -32,7 +32,11 @@
 			</template>
 		</view>
 		<view class="edit-container">
-			<EditCard :orgId="org._id" @onAddTap="onAddTap" />
+			<edit-card :orgId="org._id" 
+				name="老师姓名" 
+				mobile="手机号"  
+				@onAddTap="onAddTap">
+			</edit-card>
 		</view>
 	</view>
 </template>
@@ -43,7 +47,6 @@ import { onShareAppMessage } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 import { User } from '../../types/user'
-import EditCard from './components/edit-card'
 import InviteCard from './components/invite-card'
 
 type EditInfo = {

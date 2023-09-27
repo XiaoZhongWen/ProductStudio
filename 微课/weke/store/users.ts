@@ -19,6 +19,7 @@ export const useUsersStore = defineStore('users', {
 			isLogin: false,
 			owner: {
 				_id: '',
+				identity: '',
 				expireDate: 0,
 				unionid: '',
 				openid: '',
@@ -31,7 +32,7 @@ export const useUsersStore = defineStore('users', {
 				studentNo: '',
 				status: 0,
 				from: 'wx'
-			} as User & WxIdentity & {studentNo:string, status: number, from:string},
+			} as User & WxIdentity & {studentNo:string, status: number, from:string, identity:string},
 			lastLoginInfo: {
 				unionid: '',
 				openid: '',
@@ -157,8 +158,9 @@ export const useUsersStore = defineStore('users', {
 						const student = await users_co.authStuIdentity(stuNo, pwd)
 						if (JSON.stringify(student) !== '{}') {
 							this.isLogin = true
-							const { _id, avatarId, mobile, nickName, status, studentNo, signature } = student
+							const { _id, identity, avatarId, mobile, nickName, status, studentNo, signature } = student
 							this.owner._id = _id
+							this.owner.identity = identity
 							this.owner.mobile = mobile
 							this.owner.nickName = nickName
 							this.owner.status = status

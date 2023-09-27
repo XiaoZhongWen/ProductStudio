@@ -25,7 +25,8 @@ export type Student = {
 	mobile?: string,
 	signature?: string,
 	associateIds?: string[]
-	status: number
+	status: number,
+	identity: string
 }
 
 export type WxIdentity = {

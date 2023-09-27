@@ -4,14 +4,14 @@
 			id="name"
 			class="edit name" 
 			type="text" 
-			placeholder="姓名"
+			:placeholder="props.name"
 			v-model="name"
 		/>
 		<input 
 			id="phoneNumber"
 			class="edit phoneNumber" 
 			type="text" 
-			placeholder="手机号"
+			:placeholder="props.mobile"
 			v-model="phoneNumber"
 		/>
 		<uni-icons
@@ -29,7 +29,7 @@ import { ref } from "vue";
 import isChinesePhoneNumber from '@/utils/wk_phoneNumber_validate'
 import { useUsersStore } from "@/store/users"
 
-const props = defineProps(['orgId'])
+const props = defineProps(['orgId', 'name', 'mobile'])
 const emit = defineEmits(['onAddTap'])
 const global = getApp().globalData!
 const usersStore = useUsersStore()
@@ -41,6 +41,14 @@ const onAddTap = () => {
 	if (typeof(name.value) === 'undefined' || name.value.length === 0) {
 		uni.showToast({
 			title:"请输入姓名",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	if (name.value.indexOf(" ") !== -1) {
+		uni.showToast({
+			title:"不能包含空格",
 			duration:global.duration_toast,
 			icon:"error"
 		})
@@ -73,8 +81,8 @@ const onAddTap = () => {
 	emit('onAddTap', {
 		info:{
 			orgId: props.orgId,
-			name: name.value,
-			phoneNumber: phoneNumber.value
+			name: name.value.trim(),
+			phoneNumber: phoneNumber.value.trim()
 		}
 	})
 	name.value = ''
