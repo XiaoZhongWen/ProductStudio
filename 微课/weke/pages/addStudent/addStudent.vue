@@ -17,7 +17,7 @@
 		<view class="edit-container">
 			<edit-card 
 				:orgId="org._id" 
-				name="学生姓名" 
+				name="学员姓名" 
 				mobile="关联手机号" 
 				@onAddTap="onAddTap">
 			</edit-card>
@@ -31,6 +31,10 @@ import { useOrgsStore } from '@/store/orgs'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed } from 'vue'
 import OrgStudentContainer from './components/OrgStudentContainer';
+import { Student } from "../../types/user";
+import { Org } from "../../types/org";
+// @ts-ignore
+import md5 from 'js-md5'
 
 type EditInfo = {
 	orgId:string, 
@@ -89,11 +93,38 @@ const orgs = computed({
 	}
 })
 
-const onAddTap = (data:{info:EditInfo}) => {
+const onAddTap = async (data:{info:EditInfo}) => {
 	const { orgId, name, phoneNumber } = data.info
-	console.info(orgId)
-	console.info(name)
-	console.info(phoneNumber)
+	const res:Org[] = orgs.value.filter(org => org._id === orgId)
+	let isAvailable = true
+	if (res.length === 1) {
+		const org = res[0]
+		org.studentIds?.forEach(id => {
+			const data:Student[] = usersStore.students.filter(student => student._id === id)
+			if (data.length === 1) {
+				const student = data[0]
+				const identity = md5(name + "-" + phoneNumber)
+				if (student.identity === identity) {
+					isAvailable = false
+				}
+			}
+		})
+		if (isAvailable) {
+			// 1. 创建并返回该学员的云端数据记录
+			const id = await usersStore.createStudent(name, phoneNumber) as string
+			// 2. 将该学员记录id添加到相应的机构里
+			if (id.length > 0) {
+				org.studentIds?.push(id)
+				useOrgs.addStudents(orgId, [id])
+			}
+		} else {
+			uni.showToast({
+				title:"该学员已添加",
+				duration:global.duration_toast,
+				icon:"error"
+			})
+		}
+	}
 }
 
 </script>

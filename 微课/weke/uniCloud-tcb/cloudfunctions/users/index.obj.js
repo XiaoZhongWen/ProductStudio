@@ -1,5 +1,7 @@
 // 云对象教程: https://uniapp.dcloud.net.cn/uniCloud/cloud-obj
 // jsdoc语法提示教程：https://ask.dcloud.net.cn/docs/#//ask.dcloud.net.cn/article/129
+// @ts-ignore
+const md5 = require('js-md5')
 const mp_wx_data = {
 	AppID:'wx53884ee4fcbb9a5b',
 	AppSecret:'5bf343c79753aa2f2d4e9283886b2aa3'
@@ -293,5 +295,46 @@ module.exports = {
 			_id: dbCmd.in(userIds)
 	   }).get()
 	   return res.data
+   },
+   
+   /**
+	* 创建学生记录
+	* @param {Object} name 		学生姓名
+	* @param {Object} mobile	关联手机号
+	*/
+   async createStudent(name, mobile) {
+	   if (typeof(name) === 'undefined' || name.length === 0 ||
+			typeof(mobile) === 'undefined' || mobile.length === 0) {
+	   		return {}
+		}
+		const identity = md5(name + "-" + mobile)
+		const db = uniCloud.database()
+		let res = await db.collection('wk-student').where({
+			identity: identity
+		}).get()
+		if (res.data.length > 0) {
+			return res.data[0]
+		}
+		res = await db.collection('wk-student').count()
+		const suffix = (res.total + 1).toString()
+		const studentNo = "0".repeat(8 - suffix.length) + suffix
+		res = await db.collection('wk-student').add({
+			studentNo: studentNo,
+			nickName: name,
+			registerDate: Date.now(),
+			pwd: md5(studentNo),
+			identity: identity,
+			status: 0
+		})
+		if (res.inserted === 1) {
+			return {
+				_id: res.id,
+				studentNo: studentNo,
+				identity: identity,
+				nickName: name,
+			}
+		} else {
+			return {}
+		}
    }
 }

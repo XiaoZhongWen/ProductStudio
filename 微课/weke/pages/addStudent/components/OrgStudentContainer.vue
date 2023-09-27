@@ -21,7 +21,6 @@ const students = ref<Student[]>([])
 
 onMounted(async () => {
 	const users = await usersStore.fetchUsers(props.studentIds, 'student') as Student[]
-	console.info(users)
 	students.value.push(...users)
 })
 

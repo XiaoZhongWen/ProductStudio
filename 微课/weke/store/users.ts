@@ -422,24 +422,47 @@ export const useUsersStore = defineStore('users', {
 					}
 				}
 				if (res.length > 0) {
-					const fileIds = res.map(user => user.avatarId)
-					const response = await uniCloud.getTempFileURL({
-						fileList:fileIds
-					})
-					const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
+					let fileIds:string[] = []
 					res.forEach(user => {
-						fileList.forEach(item => {
-							if (item.code === "SUCCESS" && item.fileID === user.avatarId) {
-								user.avatarUrl = item.tempFileURL
-							}
-						})
+						if (typeof(user.avatarId) !== 'undefined' && user.avatarId.length > 0) {
+							fileIds.push(user.avatarId)
+						}
 					})
+					if (fileIds.length > 0) {
+						const response = await uniCloud.getTempFileURL({
+							fileList:fileIds
+						})
+						const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
+						res.forEach(user => {
+							fileList.forEach(item => {
+								if (item.code === "SUCCESS" && item.fileID === user.avatarId) {
+									user.avatarUrl = item.tempFileURL
+								}
+							})
+						})
+					}
 				}
 			}
 			if (type === 'student') {
 				return this.students.filter(student => userIds.includes(student._id))
 			} else {
 				return this.users.filter(user => userIds.includes(user._id))
+			}
+		},
+		/**
+		 * 创建云端学生记录
+		 */
+		async createStudent(name:string, mobile:string) {
+			if (typeof(name) === 'undefined' || name.length === 0 ||
+				typeof(mobile) === 'undefined' || mobile.length === 0) {
+				return {}
+			}
+			const student:Student = await users_co.createStudent(name, mobile)
+			if (JSON.stringify(student) !== '{}') {
+				this.students.push(student)
+				return student._id
+			} else {
+				return ''
 			}
 		}
 	}

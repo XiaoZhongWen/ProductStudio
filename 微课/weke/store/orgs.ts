@@ -260,6 +260,24 @@ export const useOrgsStore = defineStore('orgs', {
 					orgs_co.addTeachers(orgId, ids)
 				}
 			}
+		},
+		/**
+		 * 向机构添加学员
+		 */
+		addStudents(orgId:string, studentIds:string[]) {
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+				return
+			}
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				const org = res[0]
+				const ids = studentIds.filter(id => !org.studentIds?.includes(id))
+				if (ids.length > 0) {
+					// org.studentIds?.push(...ids)
+					orgs_co.addStudents(orgId, ids)
+				}
+			}
 		}
 	}
 })
