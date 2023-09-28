@@ -23,8 +23,13 @@
 				<uni-list>
 					<uni-list-item link v-for="student in students" :key="student._id" @tap="onStudentTap(student._id)">
 						<template v-slot:header>
-							<view class="slot-box">
-								<image class="icon" :src="student.avatarUrl" mode="aspectFill"></image>
+							<view class="box">
+								<view class="wk-icon">
+									<wk-icon
+										:text="nickNameBrief(student.nickName)"
+										:url="student.avatarUrl">
+									</wk-icon>
+								</view>
 								<text class="nickName">{{student.nickName}}</text>
 							</view>
 						</template>
@@ -462,6 +467,12 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 	}
 }
 
+const nickNameBrief = (nickName:string) => {
+	const length = nickName.length
+	const briefName = length > 2?nickName.substring(length - 2):nickName
+	return briefName
+}
+
 uni.$on(global.event_name.didSelectedRole, () => {
 	selectRolePopup.value?.close()
 })
@@ -490,15 +501,11 @@ uni.$on(global.event_name.selectRole, () => {
 	.slot-box {
 		flex-direction: row;
 		align-items: center;
-		.slot-text, .nickName {
+		.slot-text {
 			margin-left: $uni-padding-normal;
 			font-size: $uni-font-size-base;
 			color: $wk-text-color;
 			font-weight: 400;
-		}
-		.nickName {
-			position: relative;
-			top: -6px;
 		}
 		.icon {
 			width: 30px;
@@ -507,6 +514,30 @@ uni.$on(global.event_name.selectRole, () => {
 			position: relative;
 			top: 3px;
 		}
+		
 	}
 }
+
+.student-container {
+	.box {
+		position: relative;
+		flex-direction: row;
+		align-items: center;
+		.wk-icon {
+			width: 30px;
+			height: 30px;
+		}
+		.nickName {
+			position: absolute;
+			font-size: $uni-font-size-base;
+			color: $wk-text-color;
+			font-weight: 400;
+			display: block;
+			width: 100px;
+			bottom: 4px;
+			left: 40px;
+		}
+	}
+}
+
 </style>

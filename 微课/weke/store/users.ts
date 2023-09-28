@@ -344,7 +344,10 @@ export const useUsersStore = defineStore('users', {
 				})
 				const { tempFileURL } = res.fileList[0]
 				item.avatarUrl = tempFileURL
-				this.students.push(item)
+				const index = this.students.findIndex(stu => stu._id === item._id)
+				if (index === -1) {
+					this.students.push(item)
+				}
 			}
 		},
 		// 获取用户信息
@@ -459,7 +462,10 @@ export const useUsersStore = defineStore('users', {
 			}
 			const student:Student = await users_co.createStudent(name, mobile)
 			if (JSON.stringify(student) !== '{}') {
-				this.students.push(student)
+				const index = this.students.findIndex(stu => stu._id === student._id)
+				if (index === -1) {
+					this.students.push(student)
+				}
 				return student._id
 			} else {
 				return ''

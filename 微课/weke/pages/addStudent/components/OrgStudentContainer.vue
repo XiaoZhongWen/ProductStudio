@@ -55,6 +55,7 @@ const onDeleteTap = async () => {
 		duration:global.duration_toast,
 		icon:result?"success":"error"
 	})
+	selectedId.value = ''
 }
 
 </script>
