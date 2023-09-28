@@ -12,7 +12,7 @@
 		</view>
 		<OrgStudentContainer
 			v-if="org.studentIds?.length ?? 0 > 0"
-			:studentIds="org.studentIds"
+			:orgId="org._id"
 		/>
 		<view class="edit-container">
 			<edit-card 
@@ -114,7 +114,6 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			const id = await usersStore.createStudent(name, phoneNumber) as string
 			// 2. 将该学员记录id添加到相应的机构里
 			if (id.length > 0) {
-				org.studentIds?.push(id)
 				useOrgs.addStudents(orgId, [id])
 			}
 		} else {
@@ -126,7 +125,6 @@ const onAddTap = async (data:{info:EditInfo}) => {
 		}
 	}
 }
-
 </script>
 
 <style lang="scss" scoped>

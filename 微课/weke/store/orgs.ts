@@ -274,10 +274,34 @@ export const useOrgsStore = defineStore('orgs', {
 				const org = res[0]
 				const ids = studentIds.filter(id => !org.studentIds?.includes(id))
 				if (ids.length > 0) {
-					// org.studentIds?.push(...ids)
+					org.studentIds?.push(...ids)
 					orgs_co.addStudents(orgId, ids)
 				}
 			}
+		},
+		/**
+		 * 删除机构学员
+		 */
+		async removeStudents(orgId:string, studentIds:string[]) {
+			let result = false
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+				return result
+			}
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				result = await orgs_co.removeStudents(orgId, studentIds)
+				if (result) {
+					const org = res[0]
+					studentIds.forEach(id => {
+						const index = org.studentIds?.findIndex(sid => sid === id)
+						if (typeof(index) !== 'undefined' && index !== -1) {
+							org.studentIds?.splice(index, 1)
+						}
+					})
+				}
+			}
+			return result
 		}
 	}
 })

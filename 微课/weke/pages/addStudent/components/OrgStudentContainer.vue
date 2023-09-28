@@ -1,28 +1,61 @@
 <template>
 	<view class="org-student-container">
 		<template v-for="student in students" :key="student._id">
-			<wk-portrait
-				class="portrait"
-				:url="student.avatarUrl" 
-				:name="student.nickName">
-			</wk-portrait>
+			<view @longpress="onLongPress" :id="student._id" class="cell">
+				<uni-icons 
+					v-if="selectedId === student._id"
+					class="icon-minus" 
+					type="minus-filled" 
+					color="#dd524d" 
+					size="24" 
+					@tap="onDeleteTap">
+				</uni-icons>
+				<wk-portrait
+					:url="student.avatarUrl" 
+					:name="student.nickName">
+				</wk-portrait>
+			</view>
 		</template>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../../types/user';
+import { Org } from '../../../types/org';
 
 const usersStore = useUsersStore()
-const props = defineProps(['studentIds'])
+const useOrgs = useOrgsStore()
+const global = getApp().globalData!
+const props = defineProps(['orgId'])
 const students = ref<Student[]>([])
+const selectedId = ref('')
 
-onMounted(async () => {
-	const users = await usersStore.fetchUsers(props.studentIds, 'student') as Student[]
-	students.value.push(...users)
+watchEffect(async() => {
+	const org = useOrgs.orgs.filter(org => org._id === props.orgId)[0] as Org
+	const users = await usersStore.fetchUsers(org.studentIds ?? [], 'student') as Student[]
+	students.value = users
 })
+
+const onLongPress = (e) => {
+	const { id } = e.currentTarget
+	selectedId.value = id
+}
+
+const onDeleteTap = async () => {
+	uni.showLoading({
+		title:"正在删除"
+	})
+	const result = await useOrgs.removeStudents(props.orgId, [selectedId.value])
+	uni.hideLoading()
+	uni.showToast({
+		title:result?"删除成功":"删除失败",
+		duration:global.duration_toast,
+		icon:result?"success":"error"
+	})
+}
 
 </script>
 
@@ -31,14 +64,15 @@ onMounted(async () => {
 	display: flex;
 	flex-direction: row;
 	flex-flow: row wrap;
-	padding: 4px;
+	padding: 6px 4px 4px 4px;
 	border-top: 0.5px solid $wk-bg-color-grey;
 	border-bottom: 0.5px solid $wk-bg-color-grey;
-	.icon {
-		width: 30px;
-		height: 30px;
-		border-radius: $uni-border-radius-circle;
-		padding: $uni-padding-sm;
+	.cell {
+		position: relative;
+		.icon-minus {
+			position: absolute;
+			top: -6px;
+		}
 	}
 }
 </style>

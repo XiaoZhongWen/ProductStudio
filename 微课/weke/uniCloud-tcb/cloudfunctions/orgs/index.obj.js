@@ -212,11 +212,38 @@ module.exports = {
 				ids.push(studentId)
 			}
 		})
-		res = db.collection('wk-orgs').where({
+		res = await db.collection('wk-orgs').where({
 			_id: orgId
 		}).update({
 			studentIds: ids
 		})
 		return res
+	},
+	async removeStudents(orgId, sIds) {
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(sIds) === 'undefined' || sIds.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).field({studentIds:true}).get()
+		const data = res.data
+		let ids = []
+		if (data.length > 0) {
+			ids = data[0].studentIds
+		}
+		sIds.forEach(id => {
+			const index = ids.findIndex(sid => sid === id)
+			if (index !== -1) {
+				ids.splice(index, 1)
+			}
+		})
+		res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).update({
+			studentIds: ids
+		})
+		return res.updated > 0
 	}
 }
