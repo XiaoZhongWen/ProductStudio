@@ -245,5 +245,32 @@ module.exports = {
 			studentIds: ids
 		})
 		return res.updated > 0
+	},
+	async removeTeachers(orgId, tIds) {
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(tIds) === 'undefined' || tIds.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).field({teacherIds:true}).get()
+		const data = res.data
+		let ids = []
+		if (data.length > 0) {
+			ids = data[0].teacherIds
+		}
+		tIds.forEach(id => {
+			const index = ids.findIndex(tid => tid === id)
+			if (index !== -1) {
+				ids.splice(index, 1)
+			}
+		})
+		res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).update({
+			teacherIds: ids
+		})
+		return res.updated > 0
 	}
 }

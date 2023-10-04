@@ -10,7 +10,7 @@
 		<view 
 			class="add-container" 
 			@tap="onAddTap" 
-			v-if="usersStore.owner.roles?.includes(1)">
+			v-if="isShowAddBtn">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 		</view>
 	</view>
@@ -83,6 +83,11 @@ const orgs = computed({
 			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
 		}
 	}
+})
+
+const isShowAddBtn = computed(() => {
+	const id = usersStore.owner._id
+	return usersStore.owner.roles?.includes(1) && id === userId.value
 })
 
 const onAddTap = () => {

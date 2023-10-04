@@ -302,6 +302,27 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 			return result
+		},
+		async removeTeachers(orgId:string, teacherIds:string[]) {
+			let result = false
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(teacherIds) === 'undefined' || teacherIds.length === 0) {
+				return result
+			}
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				result = await orgs_co.removeTeachers(orgId, teacherIds)
+				if (result) {
+					const org = res[0]
+					teacherIds.forEach(id => {
+						const index = org.teacherIds?.findIndex(tid => tid === id)
+						if (typeof(index) !== 'undefined' && index !== -1) {
+							org.teacherIds?.splice(index, 1)
+						}
+					})
+				}
+			}
+			return result
 		}
 	}
 })

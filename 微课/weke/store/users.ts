@@ -189,6 +189,17 @@ export const useUsersStore = defineStore('users', {
 				console.info("用户是已登录状态")
 			}
 		},
+		// 更改密码
+		async changePassword(studentNo:string, originalPwd:string, pwd:string) {
+			let result = false
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+				typeof(originalPwd) === 'undefined' || originalPwd.length === 0 ||
+				typeof(pwd) === 'undefined' || pwd.length === 0) {
+				return result
+			}
+			result = await users_co.changePassword(studentNo, originalPwd, pwd)
+			return result
+		},
 		// 上传头像
 		async uploadPortrait() {
 			const lastAvatarUrl = this.lastLoginInfo.tempFileUrl ?? ''
@@ -278,16 +289,17 @@ export const useUsersStore = defineStore('users', {
 				const { fileID } = result
 				if (fileID.length > 0) {
 					const success = await users_co.updateStudentAvatarId(student.studentNo, fileID)
-					if (success === true &&
-						typeof(student.avatarId) !== 'undefined' &&
-						student.avatarId.length > 0) {
-						uniCloud.deleteFile({
-							fileList:[student.avatarId]
-						}).then((res)=>{
-							console.info("删除头像文件成功: " + res)
-						}).catch(() => {
-							console.error("删除头像文件失败: " + student.avatarId)
-						})
+					if (success === true) {
+						if (typeof(student.avatarId) !== 'undefined' &&
+							student.avatarId.length > 0) {
+							uniCloud.deleteFile({
+								fileList:[student.avatarId]
+							}).then((res)=>{
+								console.info("删除头像文件成功: " + res)
+							}).catch(() => {
+								console.error("删除头像文件失败: " + student.avatarId)
+							})
+						}
 						student.avatarId = fileID
 						student.avatarUrl = avatarUrl
 					}
@@ -335,20 +347,39 @@ export const useUsersStore = defineStore('users', {
 			this.owner.signature = signature
 			users_co.updateSignature(this.owner._id, signature, this.owner.from)
 		},
-		// 获取students信息
+		// 获取students信息 (与当前用户有绑定关系的所有学生 - 用户登录成功后会获取该信息)
 		async fetchStudents() {
 			const result = await users_co.fetchStudents(this.owner._id)
 			for (let item of result) {
-				const res = await uniCloud.getTempFileURL({
-					fileList:[item.avatarId]
-				})
-				const { tempFileURL } = res.fileList[0]
-				item.avatarUrl = tempFileURL
+				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+					const res = await uniCloud.getTempFileURL({
+						fileList:[item.avatarId]
+					})
+					if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+						const { tempFileURL } = res.fileList[0]
+						item.avatarUrl = tempFileURL
+					}
+				}
 				const index = this.students.findIndex(stu => stu._id === item._id)
 				if (index === -1) {
 					this.students.push(item)
 				}
 			}
+		},
+		// 根据学号获取学员记录
+		async fetchStudentByNo(studentNo:string) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
+				return {}
+			}
+			const student = await users_co.fetchStudentByNo(studentNo)
+			if (typeof(student) === 'undefined' || JSON.stringify(student) === '{}') {
+				return {}
+			}
+			const index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
+			if (index === -1) {
+				this.students.push(student)
+			}
+			return student
 		},
 		// 获取用户信息
 		async fetchUser(userId: string) {
@@ -415,14 +446,20 @@ export const useUsersStore = defineStore('users', {
 				let res = []
 				if (type === 'student') {
 					res = await users_co.fetchStudentsByIds(s) as Student[]
-					if (res.length > 0) {
-						this.students.push(...res)
-					}
+					res.forEach(stu => {
+						const index = this.students.findIndex(item => item._id === stu._id)
+						if (index === -1) {
+							this.students.push(stu)
+						}
+					})
 				} else {
 					res = await users_co.fetchUsers(s) as User[]
-					if (res.length > 0) {
-						this.users.push(...res)
-					}
+					res.forEach(user => {
+						const index = this.users.findIndex(item => item._id === user._id)
+						if (index === -1) {
+							this.users.push(user)
+						}
+					})
 				}
 				if (res.length > 0) {
 					let fileIds:string[] = []
@@ -470,6 +507,44 @@ export const useUsersStore = defineStore('users', {
 			} else {
 				return ''
 			}
+		},
+		async bindStudentNo(studentNo:string) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+				return false
+			}
+			const result = await users_co.bindStudentNo(studentNo, this.owner._id)
+			if (result) {
+				const res = this.students.filter(student => student.studentNo === studentNo)
+				if (res.length === 1) {
+					const student = res[0]
+					if (!student.associateIds?.includes(this.owner._id)) {
+						student.associateIds?.push(this.owner._id)
+					}
+				} else {
+					const student = await this.fetchStudentByNo(studentNo) as Student
+					if (!student.associateIds?.includes(this.owner._id)) {
+						student.associateIds?.push(this.owner._id)
+					}
+				}
+			}
+			return result
+		},
+		async unbindStudentNo(studentNo:string) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+				return false
+			}
+			const result = await users_co.unbindStudentNo(studentNo, this.owner._id)
+			if (result) {
+				const res = this.students.filter(student => student.studentNo === studentNo)
+				if (res.length === 1) {
+					const student = res[0]
+					const index = student.associateIds?.findIndex(id => id === this.owner._id)
+					if (typeof(index) !== 'undefined' && index !== -1) {
+						student.associateIds?.splice(index, 1)
+					}
+				}
+			}
+			return result
 		}
 	}
 })

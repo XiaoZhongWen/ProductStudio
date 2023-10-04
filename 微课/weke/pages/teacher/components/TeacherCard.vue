@@ -10,7 +10,7 @@
 			<wk-circle-progress class="circle-progress"></wk-circle-progress>
 		</view>
 		<view class="bottom">
-			<text class="text">{{org.name}}</text>
+			<text class="text">{{orgNames}}</text>
 			<view class="icon-container" @tap.stop="onIconTap">
 				<uni-icons id="course" class="icon" type="wallet-filled" color="#5073D6" size="24"></uni-icons>
 				<uni-icons id="schedule" class="icon" type="calendar-filled" color="#5073D6" size="24"></uni-icons>
@@ -22,11 +22,12 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
+import { computed } from "../../../uni_modules/lime-shared/vue";
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
-const props = defineProps(['teacherId', 'orgId'])
+const props = defineProps(['teacherId', 'orgIds'])
 
-const org = useOrgs.orgs.filter(org => org._id === props.orgId)[0]
+const orgs = useOrgs.orgs.filter(org => props.orgIds.includes(org._id))
 const user = usersStore.users.filter(user => user._id === props.teacherId)[0]
 
 const onCardTap = () => {
@@ -49,6 +50,20 @@ const onIconTap = (e) => {
 		})
 	}
 }
+
+const orgNames = computed(() => {
+	let index = 0
+	let str = ''
+	for (let org of orgs) {
+		str += org.name + " "
+		index++
+		if (index > 2) {
+			str += "等"
+			break
+		}
+	}
+	return str
+})
 
 </script>
 

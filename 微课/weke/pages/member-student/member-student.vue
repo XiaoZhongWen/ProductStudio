@@ -74,7 +74,11 @@ const avatarUrl = computed({
 		const res = usersStore.students.filter(student => student._id === _id.value)
 		if (res.length === 1) {
 			const student:Student = res[0]
-			return student.avatarUrl
+			if (typeof(student.avatarUrl) === 'undefined' || student.avatarUrl.length === 0) {
+				return ""
+			} else {
+				return student.avatarUrl
+			}
 		} else {
 			return ""
 		}

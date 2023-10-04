@@ -1,6 +1,6 @@
 <template>
-	<view class="course-container">
-		<wk-course-component />
+	<view class="student-container">
+		<wk-student-component></wk-student-component>
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -26,13 +26,14 @@ const isShowAddBtn = computed({
 
 const onAddTap = () => {
 	uni.navigateTo({
-		url: "/pages/addCourse/addCourse"
+		url: "/pages/addStudent/addStudent"
 	})
 }
+
 </script>
 
 <style lang="scss" scoped>
-.course-container {
+.student-container {
 	.add-container {
 		display: flex;
 		position: fixed;

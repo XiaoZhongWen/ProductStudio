@@ -1,5 +1,4 @@
 import { useUsersStore } from "@/store/users"
-import { error } from "console"
 
 export default function() {
 	const usersStore = useUsersStore()
@@ -8,7 +7,8 @@ export default function() {
 			console.info("Interceptor navigateTo, isLogin: " + usersStore.isLogin)
 			if (!usersStore.isLogin) {
 				uni.showToast({
-					title: "请登录"
+					title: "请登录",
+					icon:"error"
 				})
 			}
 			return usersStore.isLogin

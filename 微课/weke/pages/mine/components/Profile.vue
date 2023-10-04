@@ -4,11 +4,10 @@
 		<view class="left-container" @tap="onLoginTap">
 			<!-- 会员头像 -->
 			<template v-if="usersStore.isLogin">
-				<image
+				<wk-icon 
 					class="icon" 
-					:src="usersStore.owner.avatarUrl" 
-					mode="aspectFill">
-				</image>
+					:url="usersStore.owner.avatarUrl"
+					:text="nicknameBrief"></wk-icon>
 				<!-- 会员标识 -->
 				<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
 			</template>
@@ -59,6 +58,7 @@
 <script setup lang="ts">
 import WkTag from './WkTag.vue'
 import { useUsersStore } from '@/store/users'
+import { computed } from 'vue';
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
@@ -83,6 +83,12 @@ const onSignatureTap = () => {
 		url: "/pages/signature/signature"
 	})
 }
+
+const nicknameBrief = computed(() => {
+	const nickname = usersStore.owner.nickName
+	const length = nickname.length
+	return length > 2? nickname.substring(length - 2):nickname
+})
 
 </script>
 

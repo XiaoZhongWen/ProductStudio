@@ -82,7 +82,7 @@
 		</view>
 		<view class="org-member-container" v-if="isCreator">
 			<uni-list>
-				<uni-list-item class="item" clickable>
+				<uni-list-item class="item" clickable :to="toTeacher">
 					<template v-slot:header>
 						<view class="slot-box">
 							<text class="slot-text">添加老师</text>
@@ -90,7 +90,7 @@
 						</view>
 					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable>
+				<uni-list-item class="item" clickable to="/pages/student2/student2">
 					<template v-slot:header>
 						<view class="slot-box">
 							<text class="slot-text">添加学员</text>
@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
@@ -161,6 +161,10 @@ const org = ref<Org>({
 				classIds: [],
 				type: 0
 			})
+
+const toTeacher = computed(() => {
+	return "/pages/teacher/teacher?orgId=" + orgId.value
+})
 
 //@ts-ignore
 onLoad((option) => {

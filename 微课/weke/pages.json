@@ -115,7 +115,7 @@
             }
         }
         ,{
-            "path" : "pages/bindphone/bindphone",
+            "path" : "pages/bind/bind",
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "绑定手机号",
@@ -203,6 +203,24 @@
 				"navigationBarTitleText": "添加学员",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
+        ,{
+            "path" : "pages/student2/student2",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/addCourse/addCourse",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "添加课程",
+                "enablePullDownRefresh": false
             }
             
         }

@@ -27,16 +27,6 @@
 			"description": "课程字体图标",
 			"maxLength": 50
 		},
-		"orgId": {
-			"bsonType": "string",
-			"description": "课程所属机构id",
-			"foreignKey": "wk-orgs._id"
-		},
-		"teacherId": {
-			"bsonType": "string",
-			"description": "课程所属老师id",
-			"foreignKey": "wk-users._id"
-		},
 		"type": {
 			"bsonType": "int",
 			"description": "课程类型, 0 一对一 1 班课",

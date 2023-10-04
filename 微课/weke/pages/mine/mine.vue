@@ -206,13 +206,12 @@ const org:ListItem[] = computed({
 
 // @ts-ignore
 const account:ListItem[] = computed({
-	// - todo 非学生用户显示 “分享”
 	get() {
 		let account = [
 			{
-				type: "auth-filled",
-				name: "绑定学员号",
-				to: "/pages/bindphone/bindphone"
+				type: "phone-filled",
+				name: "绑定手机号",
+				to: "/pages/bind/bind?type=mobile"
 			},
 			{
 				type: "upload-filled",
@@ -229,6 +228,14 @@ const account:ListItem[] = computed({
 			const roles = new Set(usersStore.owner.roles)
 			if (roles.size === 0) {
 				account = []
+			}
+			if (usersStore.owner.roles?.includes(3)) {
+				// 包含家长角色
+				account.unshift({
+					type: "auth-filled",
+					name: "绑定学号",
+					to: "/pages/bind/bind?type=studentNo"
+				})
 			}
 		} else {
 			account = [{
@@ -247,7 +254,9 @@ const account:ListItem[] = computed({
 		 if (usersStore.owner.from === 'wx') {
 			 const roles = usersStore.owner.roles ?? []
 			 if (roles.includes(3)) {
-			 	return usersStore.students
+				const id = usersStore.owner._id
+				const result = usersStore.students.filter(student => student.associateIds?.includes(id))
+			 	return result
 			 } else {
 				return []
 			 }
@@ -400,7 +409,9 @@ uni.$on(global.event_name.login, async (data) => {
 	console.info("验证昵称通过")
 	try {
 		// 3. 登录
-		await usersStore.login()
+		if (usersStore.owner.from !== 'stuNo') {
+			await usersStore.login()
+		}
 		// 4. 上传头像
 		const isUpdatedPortrait = await usersStore.uploadPortrait()
 		// 5. 更新昵称
@@ -514,7 +525,6 @@ uni.$on(global.event_name.selectRole, () => {
 			position: relative;
 			top: 3px;
 		}
-		
 	}
 }
 

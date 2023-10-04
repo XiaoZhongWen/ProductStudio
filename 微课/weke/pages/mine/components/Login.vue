@@ -13,6 +13,9 @@
 				<input class="input" password v-model="pwd" placeholder="密码" />
 			</view>
 		</view>
+		<view class="tips">
+			<text style="text-align: right;">*初始密码即为学号，请尽快修改密码</text>
+		</view>
 		<view class="bottom">
 			<button class="btn" type="default" @tap="onLogin">
 				<text class="text">登录</text>
@@ -84,6 +87,15 @@ const onLogin = () => {
 				margin-right: $uni-spacing-row-base;
 			}
 		}
+	}
+	.tips {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+		background-color: white;
+		padding: 5px $uni-padding-normal;
+		font-size: $uni-font-size-10;
+		color: $wk-text-color-grey;
 	}
 	.bottom {
 		display: flex;

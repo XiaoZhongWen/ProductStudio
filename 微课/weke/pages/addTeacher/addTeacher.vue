@@ -11,11 +11,21 @@
 		<view class="org-teacher-container" v-if="org.teacherIds?.length ?? 0 > 0">
 			<template v-for="teacherId in org.teacherIds" :key="teacherId">
 				<template v-if="fetchUserById(teacherId)">
-					<wk-portrait
-						class="portrait"
-						:url="fetchUserById(teacherId).avatarUrl" 
-						:name="fetchUserById(teacherId).nickName">
-					</wk-portrait>
+					<view class="cell" @longpress="onLongPress" :id="teacherId">
+						<uni-icons
+							v-if="selectedId === teacherId"
+							class="icon-minus" 
+							type="minus-filled" 
+							color="#dd524d" 
+							size="24" 
+							@tap="onDelete(org._id)">
+						</uni-icons>
+						<wk-portrait
+							class="portrait"
+							:url="fetchUserById(teacherId).avatarUrl" 
+							:name="fetchUserById(teacherId).nickName">
+						</wk-portrait>
+					</view>
 				</template>
 				<template v-else>
 					<image class="icon" src="@/static/icon/profile.png" mode="aspectFill"></image>
@@ -61,6 +71,7 @@ const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const teachers = ref<User[]>([])
 const global = getApp().globalData!
+const selectedId = ref('')
 
 onShareAppMessage((option) => {
 	const { from, target } = option
@@ -156,7 +167,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 	}
 	
 	uni.showLoading({
-		title: "加载中..."
+		title: "添加中..."
 	})
 	
 	const user = await usersStore.fetchUserByPhoneNumber(phoneNumber) as User
@@ -179,7 +190,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 		if (!org.teacherIds?.includes(user._id)) {
 			useOrgs.addTeachers(org._id, [user._id])
 			teachers.value.push(user)
-			uni.$emit("add-teacher-success")
+			uni.$emit("modify-teacher-success")
 		} else {
 			uni.showToast({
 				title:"已添加",
@@ -190,10 +201,34 @@ const onAddTap = async (data:{info:EditInfo}) => {
 	}
 }
 
+// 删除邀请的老师
 const onDeleteTap = (data:{info:EditInfo}) => {
 	const { orgId, phoneNumber } = data.info
 	const index = inviteInfos.value.findIndex(info => info.orgId === orgId && info.phoneNumber === phoneNumber)
 	inviteInfos.value.splice(index, 1)
+}
+
+// 删除已添加到机构的老师
+const onDelete = async (orgId:string) => {
+	uni.showLoading({
+		title:"正在删除"
+	})
+	const result = await useOrgs.removeTeachers(orgId, [selectedId.value])
+	if (result) {
+		uni.$emit("modify-teacher-success")
+	}
+	uni.hideLoading()
+	uni.showToast({
+		title:result?"删除成功":"删除失败",
+		duration:global.duration_toast,
+		icon:result?"success":"error"
+	})
+	selectedId.value = ''
+}
+
+const onLongPress = (e) => {
+	const { id } = e.currentTarget
+	selectedId.value = id
 }
 
 </script>
@@ -226,9 +261,16 @@ const onDeleteTap = (data:{info:EditInfo}) => {
 		display: flex;
 		flex-direction: row;
 		flex-flow: row wrap;
-		padding: 4px;
+		padding: 8px 4px 4px 4px;
 		border-top: 0.5px solid $wk-bg-color-grey;
 		border-bottom: 0.5px solid $wk-bg-color-grey;
+		.cell {
+			position: relative;
+			.icon-minus {
+				position: absolute;
+				top: -8px;
+			}
+		}
 		.icon {
 			width: 30px;
 			height: 30px;

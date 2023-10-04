@@ -12,7 +12,8 @@ export type User = {
 	roles?: RoleId[],
 	mobile?: string,
 	expireDate: number,
-	signature?: string
+	signature?: string,
+	orgIds?:string[]
 }
 
 export type Student = {
@@ -26,7 +27,8 @@ export type Student = {
 	signature?: string,
 	associateIds?: string[]
 	status: number,
-	identity: string
+	identity: string,
+	orgIds?:string[]
 }
 
 export type WxIdentity = {

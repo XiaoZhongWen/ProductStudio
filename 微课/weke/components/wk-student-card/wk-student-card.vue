@@ -2,15 +2,15 @@
 	<view class="student-card">
 		<view class="top">
 			<member-info
-				url="https://img0.baidu.com/it/u=1242941133,368144607&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1046"
-				nickname="孙允珠"
-				mobile="13545118725"
-				signature="签名">
+				:url="props.url"
+				:nickname="props.name"
+				:mobile="`学号: ${props.studentNo}`"
+				:signature="props.signature">
 			</member-info>
 			<wk-circle-progress class="circle-progress"></wk-circle-progress>
 		</view>
 		<view class="bottom">
-			<text class="text">兮子英语</text>
+			<text class="text">{{props.orgNames}}</text>
 			<view class="icon-container" @tap.stop="onIconTap">
 				<uni-icons id="course" class="icon" type="wallet-filled" color="#5073D6" size="24"></uni-icons>
 				<uni-icons id="schedule" class="icon" type="calendar-filled" color="#5073D6" size="24"></uni-icons>
@@ -20,7 +20,9 @@
 </template>
 
 <script setup lang="ts">
-	
+const props = defineProps([
+	'id', 'orgIds', 'url', 'name', 'studentNo', 'signature', 'orgNames'
+])
 const onIconTap = () => {}
 	
 </script>

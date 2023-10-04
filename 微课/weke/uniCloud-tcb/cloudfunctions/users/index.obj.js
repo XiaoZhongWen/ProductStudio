@@ -78,6 +78,37 @@ module.exports = {
 	   }
    },
    /**
+	* 更改密码
+	* @param {Object} originalPwd
+	* @param {Object} pwd
+	*/
+   async changePassword(studentNo, originalPwd, pwd) {
+	   let result = false
+	   if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+			typeof(originalPwd) === 'undefined' || originalPwd.length === 0 ||
+	   		typeof(pwd) === 'undefined' || pwd.length === 0) {
+	   		return result
+	   	}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-student').where({
+			studentNo: studentNo
+		}).get()
+		if (res.data.length === 1) {
+			const student = res.data[0]
+			if (student.pwd === md5(originalPwd)) {
+				if (originalPwd !== pwd) {
+					res = await db.collection('wk-student').where({
+						studentNo: studentNo
+					}).update({
+						pwd: md5(pwd)
+					})
+				}
+				result = res.updated === 1
+			}
+		}
+		return result
+   },
+   /**
 	* @param {Object} student
 	*/
    async updateStudent(student) {
@@ -253,6 +284,22 @@ module.exports = {
    },
    
    /**
+	* 通过学员学号获取学员信息
+	* @param {Object} studentNo
+	*/
+   async fetchStudentByNo(studentNo) {
+	   if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
+		   return {}
+	   }
+	   const db = uniCloud.database()
+	   const dbCmd = db.command
+	   const res = await db.collection('wk-student').where({
+	   		studentNo: studentNo
+	   }).get()
+	   return res.data[0]
+   },
+   
+   /**
 	* 获取指定用户
 	* @param {Object} userId
 	*/
@@ -336,5 +383,77 @@ module.exports = {
 		} else {
 			return {}
 		}
+   },
+   
+   /**
+	* 绑定学号
+	* @param {Object} studentNo
+	* @param {Object} bindId
+	*/
+   async bindStudentNo(studentNo, bindId) {
+	   let result = false
+	   if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+			typeof(bindId) === 'undefined' || bindId.length === 0) {
+			return result
+		}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-student').where({
+			studentNo: studentNo
+		}).get()
+		
+		if (res.data.length === 0) {
+			result = false
+		} else {
+			const student = res.data[0]
+			const associateIds = student.associateIds ?? []
+			if (associateIds.includes(bindId)) {
+				result = true
+			} else {
+				res = await db.collection('wk-student').where({
+					studentNo: studentNo
+				}).update({
+					associateIds: [
+						...associateIds,
+						bindId
+					]
+				})
+				result = res.updated === 1
+			}
+		}
+	   return result
+   },
+   
+   /**
+   	* 解除绑定学号
+   	* @param {Object} studentNo
+   	* @param {Object} bindId
+   	*/
+   async unbindStudentNo(studentNo, bindId) {
+	   let result = false
+	   if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+	   			typeof(bindId) === 'undefined' || bindId.length === 0) {
+			return result
+	   	}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-student').where({
+			studentNo: studentNo
+		}).get()
+		if (res.data.length === 0) {
+			result = false
+		} else {
+			const student = res.data[0]
+			const associateIds = student.associateIds ?? []
+			const index = associateIds.findIndex(id => bindId === id)
+			if (index !== -1) {
+				associateIds.splice(index, 1)
+				res = await db.collection('wk-student').where({
+					studentNo: studentNo
+				}).update({
+					associateIds: associateIds
+				})
+				result = res.updated === 1
+			}
+		}
+	   return result
    }
 }

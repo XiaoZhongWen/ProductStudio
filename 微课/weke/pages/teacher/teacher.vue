@@ -1,7 +1,7 @@
 <template>
 	<view class="teacher-container">
 		<template v-for="teacher in teachers" :key="teacher._id">
-			<TeacherCard :teacherId="teacher._id" :orgId="teacher.orgId" />
+			<TeacherCard :teacherId="teacher._id" :orgIds="teacher.orgIds" />
 		</template>
 		<button
 			@tap.capture="onAddTap"
@@ -21,21 +21,23 @@ import { useOrgsStore } from '@/store/orgs'
 import { User } from '../../types/user'
 import { Org } from "../../types/org";
 
-type TeacherCardData = User & {orgId:string}
-
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
-const teachers = ref<TeacherCardData[]>([])
-let studentId = ''
+const teachers = ref<User[]>([])
 const isShowAddBtn = ref(false)
+let studentId = ''
+let organizationId = ''
 
 onLoad((option) => {
 	// 学生id, 如果用户包含家长角色且从孩子页面路由过来时会携带studentId参数
-	const id = option!.id
+	const { id, orgId } = option as {id?:string, orgId?:string}
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		studentId = id
 	} else {
 		isShowAddBtn.value = true
+	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId = orgId
 	}
 })
 
@@ -52,7 +54,12 @@ onMounted(async () => {
 			usersStore.owner.from === 'stuNo')
 		) {
 			// 机构负责人或学生
-			loaddata(useOrgs.myOrgs)
+			if (organizationId.length) {
+				// 指定机构
+				loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))
+			} else {
+				loaddata(useOrgs.myOrgs)
+			}
 		} else {
 			// 加载学生相关的机构老师数据
 			const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(studentId))
@@ -67,7 +74,7 @@ const onAddTap = () => {
 	})
 }
 
-uni.$on("add-teacher-success", () => {
+uni.$on("modify-teacher-success", () => {
 	loaddata(useOrgs.myOrgs)
 })
 
@@ -75,10 +82,21 @@ const loaddata = (orgs:Org[]) => {
 	teachers.value.splice(0, teachers.value.length)
 	orgs.forEach(async org => {
 		const teacherIds:string[] = Array.from(org.teacherIds?.values() ?? [])
-		const users:TeacherCardData[] = await usersStore.fetchUsers(teacherIds)
+		const users = await usersStore.fetchUsers(teacherIds) as User[]
 		if (users.length > 0) {
-			users.forEach(user => user.orgId = org._id)
-			teachers.value.push(...users)
+			users.forEach(user => {
+				if (typeof(user.orgIds) === 'undefined' || user.orgIds.length === 0) {
+					user.orgIds = [org._id]
+				} else if (!user.orgIds.includes(org._id)) {
+					user.orgIds.push(org._id)
+				}
+			})
+			users.forEach(user => {
+				const index = teachers.value.findIndex(t => t._id === user._id)
+				if (index === -1) {
+					teachers.value.push(user)
+				}
+			})
 		}
 	})
 }
