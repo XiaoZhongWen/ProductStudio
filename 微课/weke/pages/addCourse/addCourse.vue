@@ -11,52 +11,30 @@
 			</text>
 		</view>
 		<view class="edit-container">
-			<view class="icon">
+			<view class="icon" @tap="onTapCourseIcon(org._id)">
 				<uni-icons type="wallet-filled" color="#5073D6" size="24"></uni-icons>
 			</view>
-			<text class="text">添加图标</text>
+			<text class="text">课程图标</text>
 			<view class="list">
-				<uni-list>
-					<uni-list-item class="item">
-						<template v-slot:header>
-							<view class="slot-box">
-								<text class="slot-text">课程名称</text>
-								<input
-									class="input" 
-									placeholder-style="color: #808080" 
-									type="text"
-									maxlength="10"
-									placeholder="请输入名称" />
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item class="item">
-						<template v-slot:header>
-							<view class="slot-box">
-								<text class="slot-text">课程类型</text>
-								<input
-									class="input" 
-									placeholder-style="color: #808080" 
-									type="text"
-									maxlength="10"
-									placeholder="请输入类型" />
-							</view>
-						</template>
-					</uni-list-item>
-					<uni-list-item class="item">
-						<template v-slot:header>
-							<view class="slot-box">
-								<text class="slot-text">课程时长</text>
-								<input
-									class="input" 
-									placeholder-style="color: #808080" 
-									type="text"
-									maxlength="10"
-									placeholder="请输入时长" />
-							</view>
-						</template>
-					</uni-list-item>
-				</uni-list>
+				<uni-data-select
+					class="select" 
+					:clear="false"
+					:value="value" 
+					:localdata="range" 
+					placeholder="课程类型">
+				</uni-data-select>
+				<input class="input" type="text" value="" placeholder="课程名称" />
+				<view class="duration">
+					<view class="left">
+						<text class="text title">课程时长</text>
+					</view>
+					<view class="right">
+						<picker
+							:range="durations">
+							<text class="text minute">分钟</text>
+						</picker>
+					</view>
+				</view>
 			</view>
 			<view class="desc">
 				<textarea class="textarea" placeholder="课程描述" />
@@ -80,6 +58,24 @@ import { computed } from 'vue'
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const global = getApp().globalData!
+
+let value = 0
+const range = [
+	{
+		value: 0,
+		text: '一对一'
+	},
+	{
+		value: 1,
+		text: '班课'
+	},
+	{
+		value: 2,
+		text: '次课'
+	}
+]
+
+const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
 
 onLoad(async () => {
 	if (usersStore.isLogin) {
@@ -126,6 +122,11 @@ const orgs = computed({
 		return normalOrgs
 	}
 })
+
+const onTapCourseIcon = (orgId:string) => {
+	console.info(orgId)
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -175,38 +176,45 @@ const orgs = computed({
 		}
 		.list {
 			width: 100%;
-			.uni-list {
-				border-radius: $uni-border-radius-lg;
-				background-color: white;
-				.uni-list--border-top, .uni-list--border-bottom {
-					height: 0px;
-				}
-				.uni-list-item {
-					border-radius: $uni-border-radius-lg;
-					.uni-list-item__content {
-						padding: 0;
-					}
-				}
+			padding: 0 $uni-padding-base;
+			box-sizing: border-box;
+			.input {
+				height: 35px;
+				background-color: $wk-bg-color-grey;
+				padding: 0 $uni-padding-normal;
+				font-size: $uni-font-size-base;
+				border-radius: $uni-border-radius-base;
+				caret-color: $wk-theme-color;
+				margin-top: $uni-spacing-col-sm;
 			}
-			.item {
-				.slot-box {
+			.select {
+				width: 100%;
+			}
+			.duration {
+				display: flex;
+				flex-direction: row;
+				height: 35px;
+				margin-top: $uni-spacing-col-sm;
+				padding: 0 $uni-padding-normal;
+				background-color: $wk-bg-color-grey;
+				border-radius: $uni-border-radius-base;
+				.text {
 					position: relative;
-					flex-direction: row;
-					align-items: center;
-					width: 100%;
-					.slot-text {
-						font-size: $uni-font-size-base;
-						color: $wk-text-color;
-						font-weight: 400;
-					}
-					.input {
-						position: absolute;
+					top: 5px;
+					color: $uni-text-color-placeholder;
+					font-size: $uni-font-size-base;
+				}
+				.left {
+					width: 60px;
+					height: 100%;
+				}
+				.right {
+					flex: 1;
+					height: 100%;
+					.minute {
 						display: inline-block;
-						right: 0;
+						width: 100%;
 						text-align: right;
-						font-size: $uni-font-size-base;
-						caret-color: $wk-theme-color;
-						width: 70%;
 					}
 				}
 			}
