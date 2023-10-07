@@ -219,6 +219,32 @@ module.exports = {
 		})
 		return res
 	},
+	async addCourse(orgId, courseId) {
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(courseId) === 'undefined' || courseId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		let res = await db.collection('wk-orgs').where({
+			_id: orgId
+		}).field({courseIds:true}).get()
+		const data = res.data
+		let ids = []
+		if (data.length > 0) {
+			ids = data[0].courseIds
+		}
+		if (!ids.includes(courseId)) {
+			ids.push(courseId)
+			res = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).update({
+				courseIds: ids
+			})
+			return res.updated === 1
+		} else {
+			return true
+		}
+	},
 	async removeStudents(orgId, sIds) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(sIds) === 'undefined' || sIds.length === 0) {

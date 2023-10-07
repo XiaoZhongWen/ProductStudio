@@ -56,11 +56,15 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { Course } from "../../../types/course";
+import { Org } from "../../../types/org";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
+const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 const props = defineProps(['org'])
 const selectedIconId = ref('.t-icon .t-icon-yuwen1')
@@ -86,12 +90,21 @@ const range = [
 ]
 const courseName = ref('')
 const courseDesc = ref('')
+const courses = ref<Course[]>([])
+const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
+const duration = ref('分钟')
+
+onMounted(async () => {
+	const org:Org = props.org
+	const result = await courseStore.fetchCourses(org.courseIds ?? [])
+	courses.value = result
+	console.info(courses.value)
+})
+
 const number = computed(() => {
 	return 100 - courseDesc.value.length
 })
 
-const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
-const duration = ref('分钟')
 const orgBrief = (orgName:string) => {
 	return orgName.length > 2? orgName.substring(0, 2): orgName
 }
@@ -140,6 +153,10 @@ const onAddTap = async () => {
 		return
 	}
 	
+	uni.showLoading({
+		title:"添加中"
+	})
+	// 1. 创建课程
 	const index = duration.value.indexOf(suffix)
 	const cId = await courseStore.addCourse({
 		name: courseName.value,
@@ -148,8 +165,23 @@ const onAddTap = async () => {
 		type: value.value,
 		duration: Number(duration.value.substring(0, index))
 	})
-	if (typeof(cId) === 'undefined' || cId.length === 0) {
-		
+	let result = false
+	if (typeof(cId) !== 'undefined' && cId.length > 0) {
+		// 2. 将课程添加到相应机构
+		result = await useOrgs.addCourse(props.org._id, cId)
+	}
+	uni.hideLoading()
+	uni.showToast({
+		title: result?"添加成功":"添加失败",
+		duration: global.duration_toast,
+		icon: result?"success":"error"
+	})
+	if (result) {
+		selectedIconId.value = ".t-icon .t-icon-yuwen1"
+		value.value = -1
+		courseName.value = ''
+		duration.value = "分钟"
+		courseDesc.value = ''
 	}
 }
 

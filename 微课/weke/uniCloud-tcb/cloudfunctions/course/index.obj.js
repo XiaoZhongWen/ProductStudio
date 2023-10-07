@@ -4,7 +4,7 @@ module.exports = {
 	_before: function () { // 通用预处理器
 
 	},
-	addCourse(param) {
+	async addCourse(param) {
 		const {
 			name, icon, desc, type, duration
 		} = param
@@ -14,5 +14,26 @@ module.exports = {
 			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 			return ''
 		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-courses').add({
+			name: name,
+			desc: desc,
+			icon: icon,
+			type: type,
+			duration: duration
+		})
+		const { id, inserted } = result
+		return inserted === 1? id: ''
+	},
+	async fetchCourses(courseIds) {
+		if (typeof(courseIds) === 'undefined' || courseIds.length === 0) {
+			return []
+		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const result = await db.collection('wk-courses').where({
+			_id: dbCmd.in(courseIds)
+		}).get()
+		return result.data
 	}
 }

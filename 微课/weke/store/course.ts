@@ -24,7 +24,7 @@ export const useCourseStore = defineStore('course', {
 				duration:number
 		}) {
 			const {
-				name, icon, type, duration
+				name, icon, type, duration, desc
 			} = param
 			if (typeof(name) === 'undefined' || name.length === 0 || 
 				typeof(icon) === 'undefined' || icon.length === 0 ||
@@ -32,8 +32,32 @@ export const useCourseStore = defineStore('course', {
 				typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 				return ''
 			}
-			const cId = await course_co.addCourse(param)
-			return cId
+			const result = await course_co.addCourse(param)
+			if (typeof(result) !== 'undefined' && result.length > 0) {
+				this.course.push({
+					_id:result,
+					name: name,
+					desc: desc ?? '',
+					icon: icon,
+					type: type,
+					duration: duration
+				})
+			}
+			return result
+		},
+		async fetchCourses(ids:string[]) {
+			if (typeof(ids) === 'undefined' || ids.length === 0) {
+				return []
+			}
+			const g1 = this.course.filter(course => ids.includes(course._id))
+			const ids1 = g1.map(course => course._id)
+			const ids2 = ids.filter(id => !ids1.includes(id))
+			let other = [] as Course[]
+			if (ids2.length > 0) {
+				other = await course_co.fetchCourses(ids2) as Course[]
+				this.course.push(...other)
+			}
+			return [...g1, ...other]
 		}
 	}
 })

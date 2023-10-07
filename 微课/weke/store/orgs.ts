@@ -280,6 +280,30 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 		},
 		/**
+		 * 向机构添加课程
+		 */
+		async addCourse(orgId:string, courseId:string) {
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return false
+			}
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				const org = res[0]
+				if (!org.courseIds?.includes(courseId)) {
+					const result = await orgs_co.addCourse(orgId, courseId)
+					if (result) {
+						org.courseIds?.push(courseId)
+					}
+					return result
+				} else {
+					return true
+				}
+			} else {
+				return false
+			}
+		},
+		/**
 		 * 删除机构学员
 		 */
 		async removeStudents(orgId:string, studentIds:string[]) {
