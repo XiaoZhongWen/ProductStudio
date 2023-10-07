@@ -158,7 +158,6 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-            
         }
         ,{
             "path" : "pages/member-course/member-course",
@@ -167,7 +166,6 @@
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
-            
         }
         ,{
             "path" : "pages/member-calendar/member-calendar",
@@ -176,7 +174,6 @@
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
-            
         }
         ,{
             "path" : "pages/teacher-detail/teacher-detail",
@@ -185,7 +182,6 @@
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
-            
         }
         ,{
             "path" : "pages/member-student/member-student",
@@ -194,7 +190,6 @@
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
-            
         }
         ,{
             "path" : "pages/addStudent/addStudent",
@@ -204,7 +199,6 @@
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
-            
         }
         ,{
             "path" : "pages/student2/student2",
@@ -213,7 +207,6 @@
                 "navigationBarTitleText": "",
                 "enablePullDownRefresh": false
             }
-            
         }
         ,{
             "path" : "pages/addCourse/addCourse",
@@ -222,7 +215,14 @@
                 "navigationBarTitleText": "添加课程",
                 "enablePullDownRefresh": false
             }
-            
+        }
+        ,{
+            "path" : "pages/icon/icon",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "选择图标",
+                "enablePullDownRefresh": false
+            }
         }
     ],
 	"globalStyle": {

@@ -1,0 +1,7 @@
+{
+  "name": "course",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

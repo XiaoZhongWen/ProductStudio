@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name", "type", "duration"],
+	"required": ["name", "type", "duration", "icon"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -25,12 +25,13 @@
 		"icon": {
 			"bsonType": "string",
 			"description": "课程字体图标",
-			"maxLength": 50
+			"maxLength": 50,
+			"defaultValue": ".t-icon .t-icon-yuwen1"
 		},
 		"type": {
 			"bsonType": "int",
-			"description": "课程类型, 0 一对一 1 班课",
-			"enum": [0, 1]
+			"description": "课程类型, 0 一对一 1 班课 2次课，3试听课",
+			"enum": [0, 1, 2, 3]
 		},
 		"duration": {
 			"bsonType": "int",

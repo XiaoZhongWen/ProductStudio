@@ -40,13 +40,19 @@
 				selectRole: "selectRole",
 				showSelectRole: "showSelectRole",
 				didSelectedRole: "didSelectedRole",
-				onGradientChanged: "onGradientChanged"
+				onGradientChanged: "onGradientChanged",
+				didSelectedIcon: "didSelectedIcon"
 			}
 		}
 	}
 </script>
 
 <style lang="scss">
+@import url("static/iconfont-weapp-icon.css");
+.t-icon {
+	width: 30px;
+	height: 30px;
+}
 ::-webkit-scrollbar {  
     display: none;  
     width: 0 !important;  
