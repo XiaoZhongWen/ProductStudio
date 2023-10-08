@@ -58,6 +58,28 @@ export const useCourseStore = defineStore('course', {
 				this.course.push(...other)
 			}
 			return [...g1, ...other]
+		},
+		async updateCourse(
+			param:{
+				_id: string,
+				name:string, 
+				icon:string, 
+				desc?:string, 
+				type:number, 
+				duration:number
+		}) {
+			const {
+				_id, name, icon, type, duration
+			} = param
+			if (typeof(_id) === 'undefined' || _id.length === 0 ||
+				typeof(name) === 'undefined' || name.length === 0 ||
+				typeof(icon) === 'undefined' || icon.length === 0 ||
+				typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
+				typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
+				return false
+			}
+			const result = await course_co.updateCourse(param)
+			return result
 		}
 	}
 })

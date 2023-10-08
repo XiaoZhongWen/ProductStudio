@@ -35,5 +35,28 @@ module.exports = {
 			_id: dbCmd.in(courseIds)
 		}).get()
 		return result.data
+	},
+	async updateCourse(param) {
+		const {
+			_id, name, icon, desc, type, duration
+		} = param
+		if (typeof(_id) === 'undefined' || _id.length === 0 ||
+			typeof(name) === 'undefined' || name.length === 0 ||
+			typeof(icon) === 'undefined' || icon.length === 0 ||
+			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
+			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-courses').where({
+			_id: _id
+		}).update({
+			name: name,
+			desc: desc,
+			icon: icon,
+			type: type,
+			duration: duration
+		})
+		return result.updated === 1
 	}
 }
