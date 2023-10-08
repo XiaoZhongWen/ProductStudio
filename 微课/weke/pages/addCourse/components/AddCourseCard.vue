@@ -231,6 +231,12 @@ const onAddTap = async () => {
 				course.type === value.value &&
 				course.duration === minutes &&
 				course.desc === courseDesc.value) {
+				selectedIconId.value = ".t-icon .t-icon-yuwen1"
+				value.value = -1
+				courseName.value = ''
+				duration.value = "分钟"
+				courseDesc.value = ''
+				selectedCourseId.value = ''
 				return
 			} else {
 				uni.showLoading({
@@ -256,6 +262,13 @@ const onAddTap = async () => {
 					course.type = value.value
 					course.duration === minutes
 					course.desc === courseDesc.value
+					
+					selectedIconId.value = ".t-icon .t-icon-yuwen1"
+					value.value = -1
+					courseName.value = ''
+					duration.value = "分钟"
+					courseDesc.value = ''
+					selectedCourseId.value = ''
 				}
 			}
 		}
