@@ -11,9 +11,19 @@
 	</view>
 	<view class="course-container" v-if="courses.length > 0">
 		<template v-for="course in courses" :key="course._id">
-			<view :class="courseStyle(course._id)" @tap="onCourseTap(course._id)">
+			<view :class="courseStyle(course._id)" 
+					@tap="onCourseTap(course._id)" 
+					@longpress="onLongPressCourse(course._id)">
 				<view :class="course.icon"></view>
 				<text>{{course.name}}</text>
+				<uni-icons
+					v-if="longPressCourseId === course._id"
+					class="icon-minus" 
+					type="minus-filled" 
+					color="#dd524d" 
+					size="24" 
+					@tap="onDeleteTap">
+				</uni-icons>
 			</view>
 		</template>
 	</view>
@@ -77,6 +87,7 @@ const courseStore = useCourseStore()
 const props = defineProps(['org'])
 const selectedIconId = ref('.t-icon .t-icon-yuwen1')
 const selectedCourseId = ref('')
+const longPressCourseId = ref('')
 
 const value = ref(-1)
 const range = [
@@ -135,6 +146,7 @@ const onTapCourseIcon = () => {
 }
 
 const onCourseTap = (courseId:string) => {
+	console.info("onCourseTap...")
 	const res = courses.value.filter(course => course._id === courseId)
 	if (res.length === 1) {
 		const course = res[0]
@@ -147,131 +159,52 @@ const onCourseTap = (courseId:string) => {
 	}
 }
 
+const onLongPressCourse = (courseId:string) => {
+	longPressCourseId.value = courseId
+}
+
+const onDeleteTap = async () => {
+	uni.showLoading({
+		title:"删除中"
+	})
+	let result = await useOrgs.removeCourse(props.org._id, longPressCourseId.value)
+	if (result) {
+		result = await courseStore.removeCourse(longPressCourseId.value)
+	}
+	uni.hideLoading()
+	uni.showToast({
+		title: result?"删除成功":"删除失败",
+		duration: global.duration_toast,
+		icon: result?"success":"error"
+	})
+	if (result) {
+		const index = courses.value.findIndex(course => course._id === longPressCourseId.value)
+		if (index !== -1) {
+			courses.value.splice(index, 1)
+		}
+		if (longPressCourseId.value === selectedCourseId.value) {
+			selectedCourseId.value = ''
+			reset()
+		}
+		longPressCourseId.value = ''
+	}
+}
+
 const onDurationChange = (e:{detail:{value:number}}) => {
 	const { value } = e.detail
 	duration.value = durations[value]
 }
 
 const onAddTap = async () => {
-	if (value.value === -1) {
-		uni.showToast({
-			title: "请选择课程类型",
-			duration: global.duration_toast,
-			icon: "error"
-		})
-		return
-	}
-	if (courseName.value.length === 0) {
-		uni.showToast({
-			title: "请输入课程名称",
-			duration: global.duration_toast,
-			icon: "error"
-		})
-		return
-	}
-	const suffix = '分钟'
-	if (duration.value === suffix) {
-		uni.showToast({
-			title: "请设置课程时长",
-			duration: global.duration_toast,
-			icon: "error"
-		})
+	const isValid = validate()
+	if (!isValid) {
 		return
 	}
 	
-	const index = duration.value.indexOf(suffix)
-	const minutes = Number(duration.value.substring(0, index))
 	if (selectedCourseId.value.length === 0) {
-		// 创建
-		uni.showLoading({
-			title:"添加中"
-		})
-		// 1. 创建课程
-		const cId = await courseStore.addCourse({
-			name: courseName.value,
-			icon: selectedIconId.value,
-			desc: courseDesc.value,
-			type: value.value,
-			duration: minutes
-		})
-		let result = false
-		if (typeof(cId) !== 'undefined' && cId.length > 0) {
-			// 2. 将课程添加到相应机构
-			result = await useOrgs.addCourse(props.org._id, cId)
-		}
-		uni.hideLoading()
-		uni.showToast({
-			title: result?"添加成功":"添加失败",
-			duration: global.duration_toast,
-			icon: result?"success":"error"
-		})
-		if (result) {
-			const course = {
-				_id: cId,
-				name: courseName.value,
-				desc: courseDesc.value,
-				icon: selectedIconId.value,
-				type: value.value,
-				duration: minutes
-			}
-			courses.value.push(course)
-			selectedIconId.value = ".t-icon .t-icon-yuwen1"
-			value.value = -1
-			courseName.value = ''
-			duration.value = "分钟"
-			courseDesc.value = ''
-		}
+		createCourse()
 	} else {
-		// 更新
-		const res = courses.value.filter(course => course._id === selectedCourseId.value)
-		if (res.length === 1) {
-			const course = res[0]
-			if (course.name === courseName.value &&
-				course.icon === selectedIconId.value &&
-				course.type === value.value &&
-				course.duration === minutes &&
-				course.desc === courseDesc.value) {
-				selectedIconId.value = ".t-icon .t-icon-yuwen1"
-				value.value = -1
-				courseName.value = ''
-				duration.value = "分钟"
-				courseDesc.value = ''
-				selectedCourseId.value = ''
-				return
-			} else {
-				uni.showLoading({
-					title:"更新中"
-				})
-				const result = await courseStore.updateCourse({
-					_id: selectedCourseId.value,
-					name: courseName.value,
-					icon: selectedIconId.value,
-					desc: courseDesc.value,
-					type: value.value,
-					duration: minutes
-				})
-				uni.hideLoading()
-				uni.showToast({
-					title: result?"更新成功":"更新失败",
-					duration: global.duration_toast,
-					icon: result?"success":"error"
-				})
-				if (result) {
-					course.name = courseName.value
-					course.icon = selectedIconId.value
-					course.type = value.value
-					course.duration === minutes
-					course.desc === courseDesc.value
-					
-					selectedIconId.value = ".t-icon .t-icon-yuwen1"
-					value.value = -1
-					courseName.value = ''
-					duration.value = "分钟"
-					courseDesc.value = ''
-					selectedCourseId.value = ''
-				}
-			}
-		}
+		updateCourse()
 	}
 }
 
@@ -283,6 +216,132 @@ uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) 
 		selectedIconId.value = iconId
 	}
 })
+
+const validate = () => {
+	if (value.value === -1) {
+		uni.showToast({
+			title: "请选择课程类型",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return false
+	}
+	if (courseName.value.length === 0) {
+		uni.showToast({
+			title: "请输入课程名称",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return false
+	}
+	const suffix = '分钟'
+	if (duration.value === suffix) {
+		uni.showToast({
+			title: "请设置课程时长",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return false
+	}
+	return true
+}
+
+const createCourse = async () => {
+	// 创建
+	uni.showLoading({
+		title:"添加中"
+	})
+	// 1. 创建课程
+	const suffix = '分钟'
+	const index = duration.value.indexOf(suffix)
+	const minutes = Number(duration.value.substring(0, index))
+	const cId = await courseStore.addCourse({
+		name: courseName.value,
+		icon: selectedIconId.value,
+		desc: courseDesc.value,
+		type: value.value,
+		duration: minutes
+	})
+	let result = false
+	if (typeof(cId) !== 'undefined' && cId.length > 0) {
+		// 2. 将课程添加到相应机构
+		result = await useOrgs.addCourse(props.org._id, cId)
+	}
+	uni.hideLoading()
+	uni.showToast({
+		title: result?"添加成功":"添加失败",
+		duration: global.duration_toast,
+		icon: result?"success":"error"
+	})
+	if (result) {
+		const course = {
+			_id: cId,
+			name: courseName.value,
+			desc: courseDesc.value,
+			icon: selectedIconId.value,
+			type: value.value,
+			duration: minutes
+		}
+		courses.value.push(course)
+		reset()
+	}
+}
+
+const updateCourse = async () => {
+	// 更新
+	const suffix = '分钟'
+	const index = duration.value.indexOf(suffix)
+	const minutes = Number(duration.value.substring(0, index))
+	const res = courses.value.filter(course => course._id === selectedCourseId.value)
+	if (res.length === 1) {
+		const course = res[0]
+		if (course.name === courseName.value &&
+			course.icon === selectedIconId.value &&
+			course.type === value.value &&
+			course.duration === minutes &&
+			course.desc === courseDesc.value) {
+			selectedCourseId.value = ''
+			reset()
+			return
+		} else {
+			uni.showLoading({
+				title:"更新中"
+			})
+			const result = await courseStore.updateCourse({
+				_id: selectedCourseId.value,
+				name: courseName.value,
+				icon: selectedIconId.value,
+				desc: courseDesc.value,
+				type: value.value,
+				duration: minutes
+			})
+			uni.hideLoading()
+			uni.showToast({
+				title: result?"更新成功":"更新失败",
+				duration: global.duration_toast,
+				icon: result?"success":"error"
+			})
+			if (result) {
+				course.name = courseName.value
+				course.icon = selectedIconId.value
+				course.type = value.value
+				course.duration === minutes
+				course.desc === courseDesc.value
+				
+				selectedCourseId.value = ''
+				reset()
+			}
+		}
+	}
+}
+
+const reset = () => {
+	selectedIconId.value = ".t-icon .t-icon-yuwen1"
+	value.value = -1
+	courseName.value = ''
+	duration.value = "分钟"
+	courseDesc.value = ''
+}
 
 </script>
 
@@ -308,6 +367,7 @@ uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) 
 	display: flex;
 	margin: $uni-padding-base;
 	.course-cell {
+		position: relative;
 		width: 40px;
 		height: 60px;
 		display: flex;
@@ -316,6 +376,11 @@ uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) 
 		align-items: center;
 		font-size: $uni-font-size-base;
 		color: $wk-text-color-grey;
+		.icon-minus {
+			position: absolute;
+			top: -6px;
+			left: -2px;
+		}
 	}
 	.course-cell-selected {
 		background-color: $wk-bg-color-grey;

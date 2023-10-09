@@ -347,6 +347,24 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 			return result
+		},
+		async removeCourse(orgId:string, courseId:string) {
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return false
+			}
+			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length > 0) {
+				const org = res[0]
+				if (!org.courseIds?.includes(courseId)) {
+					return true
+				} else {
+					const result = await orgs_co.removeCourse(orgId, courseId)
+					return result
+				}
+			} else {
+				return false
+			}
 		}
 	}
 })

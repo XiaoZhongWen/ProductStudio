@@ -80,6 +80,19 @@ export const useCourseStore = defineStore('course', {
 			}
 			const result = await course_co.updateCourse(param)
 			return result
+		},
+		async removeCourse(courseId:string) {
+			if (typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return false
+			}
+			const result = await course_co.removeCourse(courseId)
+			if (result) {
+				const index = this.course.findIndex(course => course._id === courseId)
+				if (index !== -1) {
+					this.course.splice(index, 1)
+				}
+			}
+			return result
 		}
 	}
 })

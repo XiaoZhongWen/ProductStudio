@@ -58,5 +58,16 @@ module.exports = {
 			duration: duration
 		})
 		return result.updated === 1
+	},
+	async removeCourse(courseId) {
+		if (typeof(courseId) === 'undefined' || courseId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-courses').where({
+			_id: courseId
+		}).remove()
+		console.info(result)
+		return true
 	}
 }
