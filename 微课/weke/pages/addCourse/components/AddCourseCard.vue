@@ -33,13 +33,24 @@
 		</view>
 		<text class="text">课程图标</text>
 		<view class="list">
-			<uni-data-select
-				class="select" 
-				:clear="false"
-				v-model="value" 
-				:localdata="range" 
-				placeholder="课程类型">
-			</uni-data-select>
+			<view class="course-type">
+				<uni-data-select
+					class="select" 
+					:clear="false"
+					v-model="type" 
+					:localdata="range" 
+					placeholder="课程类型">
+				</uni-data-select>
+			</view>
+			<view class="teacher">
+				<uni-data-select
+					class="select" 
+					:clear="false"
+					v-model="selectedTeacherId" 
+					:localdata="orgTeachers" 
+					placeholder="授课老师">
+				</uni-data-select>
+			</view>
 			<input class="input" type="text" v-model="courseName" placeholder="课程名称" />
 			<view class="duration">
 				<view class="left">
@@ -79,6 +90,7 @@ import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from "vue";
 import { Course } from "../../../types/course";
 import { Org } from "../../../types/org";
+import { User } from "../../../types/user";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
@@ -89,7 +101,7 @@ const selectedIconId = ref('.t-icon .t-icon-yuwen1')
 const selectedCourseId = ref('')
 const longPressCourseId = ref('')
 
-const value = ref(-1)
+const type = ref(-1)
 const range = [
 	{
 		value: 0,
@@ -109,6 +121,9 @@ const range = [
 	}
 ]
 
+const selectedTeacherId = ref('')
+const orgTeachers = ref<{value: string, text:string}[]>([])
+
 const courseName = ref('')
 const courseDesc = ref('')
 const courses = ref<Course[]>([])
@@ -117,8 +132,19 @@ const duration = ref('分钟')
 
 onMounted(async () => {
 	const org:Org = props.org
-	const result = await courseStore.fetchCourses(org.courseIds ?? [])
-	courses.value = result
+	const teacherIds = org.teacherIds ?? []
+	if (!teacherIds.includes(org.creatorId)) {
+		teacherIds.unshift(org.creatorId)
+	}
+	const teachers = await usersStore.fetchUsers(teacherIds) as User[]
+	teachers.forEach(t => {
+		orgTeachers.value.push({
+			value: t._id,
+			text: t.nickName
+		})
+	})
+	const orgCourses = await courseStore.fetchCourses(org.courseIds ?? [])
+	courses.value = orgCourses
 })
 
 const number = computed(() => {
@@ -153,7 +179,7 @@ const onCourseTap = (courseId:string) => {
 		courseName.value = course.name
 		selectedIconId.value = course.icon
 		courseDesc.value = course.desc ?? ''
-		value.value = course.type
+		type.value = course.type
 		duration.value = course.duration + "分钟"
 		selectedCourseId.value = course._id
 	}
@@ -218,7 +244,7 @@ uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) 
 })
 
 const validate = () => {
-	if (value.value === -1) {
+	if (type.value === -1) {
 		uni.showToast({
 			title: "请选择课程类型",
 			duration: global.duration_toast,
@@ -243,6 +269,14 @@ const validate = () => {
 		})
 		return false
 	}
+	if (selectedTeacherId.value.length === 0) {
+		uni.showToast({
+			title: "请选择授课老师",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return false
+	}
 	return true
 }
 
@@ -259,8 +293,9 @@ const createCourse = async () => {
 		name: courseName.value,
 		icon: selectedIconId.value,
 		desc: courseDesc.value,
-		type: value.value,
-		duration: minutes
+		type: type.value,
+		duration: minutes,
+		teacherId: selectedTeacherId.value
 	})
 	let result = false
 	if (typeof(cId) !== 'undefined' && cId.length > 0) {
@@ -279,8 +314,9 @@ const createCourse = async () => {
 			name: courseName.value,
 			desc: courseDesc.value,
 			icon: selectedIconId.value,
-			type: value.value,
-			duration: minutes
+			type: type.value,
+			duration: minutes,
+			teacherId: selectedTeacherId.value
 		}
 		courses.value.push(course)
 		reset()
@@ -297,9 +333,10 @@ const updateCourse = async () => {
 		const course = res[0]
 		if (course.name === courseName.value &&
 			course.icon === selectedIconId.value &&
-			course.type === value.value &&
+			course.type === type.value &&
 			course.duration === minutes &&
-			course.desc === courseDesc.value) {
+			course.desc === courseDesc.value &&
+			course.teacherId === selectedTeacherId.value) {
 			selectedCourseId.value = ''
 			reset()
 			return
@@ -312,8 +349,9 @@ const updateCourse = async () => {
 				name: courseName.value,
 				icon: selectedIconId.value,
 				desc: courseDesc.value,
-				type: value.value,
-				duration: minutes
+				type: type.value,
+				duration: minutes,
+				teacherId: selectedTeacherId.value
 			})
 			uni.hideLoading()
 			uni.showToast({
@@ -324,7 +362,7 @@ const updateCourse = async () => {
 			if (result) {
 				course.name = courseName.value
 				course.icon = selectedIconId.value
-				course.type = value.value
+				course.type = type.value
 				course.duration === minutes
 				course.desc === courseDesc.value
 				
@@ -337,7 +375,8 @@ const updateCourse = async () => {
 
 const reset = () => {
 	selectedIconId.value = ".t-icon .t-icon-yuwen1"
-	value.value = -1
+	selectedTeacherId.value = ''
+	type.value = -1
 	courseName.value = ''
 	duration.value = "分钟"
 	courseDesc.value = ''
@@ -412,6 +451,9 @@ const reset = () => {
 		width: 100%;
 		padding: 0 $uni-padding-base;
 		box-sizing: border-box;
+		.course-type {
+			height: 39px;
+		}
 		.input {
 			height: 35px;
 			background-color: $wk-bg-color-grey;
@@ -445,6 +487,7 @@ const reset = () => {
 			.right {
 				flex: 1;
 				height: 100%;
+				justify-content: space-between;
 				.minute {
 					display: inline-block;
 					width: 100%;

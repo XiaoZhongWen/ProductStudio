@@ -150,7 +150,7 @@ export const useUsersStore = defineStore('users', {
 							}
 						})
 					} catch (e) {
-						console.error("登录报错: " + e)
+						console.error("登录报错: " + JSON.stringify(e))
 					}
 				} else if (from === 'stuNo') {
 					if (typeof(stuNo) !== 'undefined' && stuNo.length &&

@@ -6,10 +6,11 @@ module.exports = {
 	},
 	async addCourse(param) {
 		const {
-			name, icon, desc, type, duration
+			name, icon, desc, type, duration, teacherId
 		} = param
 		if (typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
+			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 			return ''
@@ -20,7 +21,8 @@ module.exports = {
 			desc: desc,
 			icon: icon,
 			type: type,
-			duration: duration
+			duration: duration,
+			teacherId: teacherId
 		})
 		const { id, inserted } = result
 		return inserted === 1? id: ''
@@ -38,11 +40,12 @@ module.exports = {
 	},
 	async updateCourse(param) {
 		const {
-			_id, name, icon, desc, type, duration
+			_id, name, icon, desc, type, duration, teacherId
 		} = param
 		if (typeof(_id) === 'undefined' || _id.length === 0 ||
 			typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
+			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 			return false
@@ -55,7 +58,8 @@ module.exports = {
 			desc: desc,
 			icon: icon,
 			type: type,
-			duration: duration
+			duration: duration,
+			teacherId: teacherId
 		})
 		return result.updated === 1
 	},
@@ -67,7 +71,6 @@ module.exports = {
 		const result = await db.collection('wk-courses').where({
 			_id: courseId
 		}).remove()
-		console.info(result)
-		return true
+		return result.deleted === 1
 	}
 }

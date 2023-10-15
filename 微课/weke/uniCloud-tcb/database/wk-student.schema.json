@@ -64,6 +64,10 @@
 		"identity": {
 			"bsonType": "string",
 			"description": "验证标识"
+		},
+		"courseIds": {
+			"bsonType": "array",
+			"description": "课程id集合"
 		}
 	}
 }

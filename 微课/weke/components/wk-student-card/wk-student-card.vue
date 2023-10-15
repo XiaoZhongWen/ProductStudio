@@ -9,6 +9,9 @@
 			</member-info>
 			<wk-circle-progress class="circle-progress"></wk-circle-progress>
 		</view>
+		<view class="body">
+			
+		</view>
 		<view class="bottom">
 			<text class="text">{{props.orgNames}}</text>
 			<view class="icon-container" @tap.stop="onIconTap">
@@ -46,6 +49,9 @@ const onIconTap = () => {}
 			top: 0;
 			right: 0;
 		}
+	}
+	.body {;
+		// border-top: #F2F4FD solid 5px;
 	}
 	.bottom {
 		position: relative;
