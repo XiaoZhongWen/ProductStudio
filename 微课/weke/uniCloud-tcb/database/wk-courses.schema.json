@@ -36,10 +36,6 @@
 		"duration": {
 			"bsonType": "int",
 			"description": "课程时长, 如45分钟、60分钟"
-		},
-		"teacherId": {
-			"bsonType": "string",
-			"description": "授课老师id"
 		}
 	}
 }

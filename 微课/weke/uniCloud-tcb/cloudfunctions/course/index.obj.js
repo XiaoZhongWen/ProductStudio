@@ -6,11 +6,10 @@ module.exports = {
 	},
 	async addCourse(param) {
 		const {
-			name, icon, desc, type, duration, teacherId
+			name, icon, desc, type, duration
 		} = param
 		if (typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
-			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 			return ''
@@ -21,8 +20,7 @@ module.exports = {
 			desc: desc,
 			icon: icon,
 			type: type,
-			duration: duration,
-			teacherId: teacherId
+			duration: duration
 		})
 		const { id, inserted } = result
 		return inserted === 1? id: ''
@@ -40,12 +38,11 @@ module.exports = {
 	},
 	async updateCourse(param) {
 		const {
-			_id, name, icon, desc, type, duration, teacherId
+			_id, name, icon, desc, type, duration
 		} = param
 		if (typeof(_id) === 'undefined' || _id.length === 0 ||
 			typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
-			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 			return false
@@ -58,8 +55,7 @@ module.exports = {
 			desc: desc,
 			icon: icon,
 			type: type,
-			duration: duration,
-			teacherId: teacherId
+			duration: duration
 		})
 		return result.updated === 1
 	},

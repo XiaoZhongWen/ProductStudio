@@ -4,6 +4,5 @@ export type Course = {
 	desc?: string,
 	icon: string,
 	type: number,
-	duration: number,
-	teacherId: string,
+	duration: number
 }

@@ -21,15 +21,13 @@ export const useCourseStore = defineStore('course', {
 				icon:string, 
 				desc?:string, 
 				type:number, 
-				duration:number,
-				teacherId: string
+				duration:number
 		}) {
 			const {
-				name, icon, type, duration, desc, teacherId
+				name, icon, type, duration, desc
 			} = param
 			if (typeof(name) === 'undefined' || name.length === 0 || 
 				typeof(icon) === 'undefined' || icon.length === 0 ||
-				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 				typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 				return ''
@@ -42,8 +40,7 @@ export const useCourseStore = defineStore('course', {
 					desc: desc ?? '',
 					icon: icon,
 					type: type,
-					duration: duration,
-					teacherId: teacherId
+					duration: duration
 				})
 			}
 			return result
@@ -69,16 +66,14 @@ export const useCourseStore = defineStore('course', {
 				icon:string, 
 				desc?:string, 
 				type:number, 
-				duration:number,
-				teacherId: string
+				duration:number
 		}) {
 			const {
-				_id, name, icon, type, duration, teacherId
+				_id, name, icon, type, duration
 			} = param
 			if (typeof(_id) === 'undefined' || _id.length === 0 ||
 				typeof(name) === 'undefined' || name.length === 0 ||
 				typeof(icon) === 'undefined' || icon.length === 0 ||
-				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
 				typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
 				return false

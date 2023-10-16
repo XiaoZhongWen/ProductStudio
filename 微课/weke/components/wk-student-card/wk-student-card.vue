@@ -26,7 +26,17 @@
 const props = defineProps([
 	'id', 'orgIds', 'url', 'name', 'studentNo', 'signature', 'orgNames'
 ])
-const onIconTap = () => {}
+const onIconTap = (e:UniHelper.EventTarget) => {
+	const { id } = e.target
+	if (id === 'course') {
+		uni.navigateTo({
+			url: "/pages/course-bind/course-bind?studentNo="+props.studentNo+"&orgIds="+props.orgIds
+		})
+	}
+	if (id === 'schedule') {
+		
+	}
+}
 	
 </script>
 

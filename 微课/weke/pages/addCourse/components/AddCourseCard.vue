@@ -15,7 +15,7 @@
 					@tap="onCourseTap(course._id)" 
 					@longpress="onLongPressCourse(course._id)">
 				<view :class="course.icon"></view>
-				<text>{{course.name}}</text>
+				<text class="course-name">{{course.name}}</text>
 				<uni-icons
 					v-if="longPressCourseId === course._id"
 					class="icon-minus" 
@@ -42,17 +42,8 @@
 					placeholder="课程类型">
 				</uni-data-select>
 			</view>
-			<view class="teacher">
-				<uni-data-select
-					class="select" 
-					:clear="false"
-					v-model="selectedTeacherId" 
-					:localdata="orgTeachers" 
-					placeholder="授课老师">
-				</uni-data-select>
-			</view>
 			<input class="input" type="text" v-model="courseName" placeholder="课程名称" />
-			<view class="duration">
+			<view class="duration" v-if="type !== 2">
 				<view class="left">
 					<text class="text title">课程时长</text>
 				</view>
@@ -90,7 +81,6 @@ import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from "vue";
 import { Course } from "../../../types/course";
 import { Org } from "../../../types/org";
-import { User } from "../../../types/user";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
@@ -121,9 +111,6 @@ const range = [
 	}
 ]
 
-const selectedTeacherId = ref('')
-const orgTeachers = ref<{value: string, text:string}[]>([])
-
 const courseName = ref('')
 const courseDesc = ref('')
 const courses = ref<Course[]>([])
@@ -132,17 +119,6 @@ const duration = ref('分钟')
 
 onMounted(async () => {
 	const org:Org = props.org
-	const teacherIds = org.teacherIds ?? []
-	if (!teacherIds.includes(org.creatorId)) {
-		teacherIds.unshift(org.creatorId)
-	}
-	const teachers = await usersStore.fetchUsers(teacherIds) as User[]
-	teachers.forEach(t => {
-		orgTeachers.value.push({
-			value: t._id,
-			text: t.nickName
-		})
-	})
 	const orgCourses = await courseStore.fetchCourses(org.courseIds ?? [])
 	courses.value = orgCourses
 })
@@ -261,17 +237,9 @@ const validate = () => {
 		return false
 	}
 	const suffix = '分钟'
-	if (duration.value === suffix) {
+	if (type.value === 2 && duration.value === suffix) {
 		uni.showToast({
 			title: "请设置课程时长",
-			duration: global.duration_toast,
-			icon: "error"
-		})
-		return false
-	}
-	if (selectedTeacherId.value.length === 0) {
-		uni.showToast({
-			title: "请选择授课老师",
 			duration: global.duration_toast,
 			icon: "error"
 		})
@@ -294,8 +262,7 @@ const createCourse = async () => {
 		icon: selectedIconId.value,
 		desc: courseDesc.value,
 		type: type.value,
-		duration: minutes,
-		teacherId: selectedTeacherId.value
+		duration: minutes
 	})
 	let result = false
 	if (typeof(cId) !== 'undefined' && cId.length > 0) {
@@ -315,8 +282,7 @@ const createCourse = async () => {
 			desc: courseDesc.value,
 			icon: selectedIconId.value,
 			type: type.value,
-			duration: minutes,
-			teacherId: selectedTeacherId.value
+			duration: minutes
 		}
 		courses.value.push(course)
 		reset()
@@ -335,8 +301,7 @@ const updateCourse = async () => {
 			course.icon === selectedIconId.value &&
 			course.type === type.value &&
 			course.duration === minutes &&
-			course.desc === courseDesc.value &&
-			course.teacherId === selectedTeacherId.value) {
+			course.desc === courseDesc.value) {
 			selectedCourseId.value = ''
 			reset()
 			return
@@ -350,8 +315,7 @@ const updateCourse = async () => {
 				icon: selectedIconId.value,
 				desc: courseDesc.value,
 				type: type.value,
-				duration: minutes,
-				teacherId: selectedTeacherId.value
+				duration: minutes
 			})
 			uni.hideLoading()
 			uni.showToast({
@@ -375,7 +339,6 @@ const updateCourse = async () => {
 
 const reset = () => {
 	selectedIconId.value = ".t-icon .t-icon-yuwen1"
-	selectedTeacherId.value = ''
 	type.value = -1
 	courseName.value = ''
 	duration.value = "分钟"
@@ -407,18 +370,25 @@ const reset = () => {
 	margin: $uni-padding-base;
 	.course-cell {
 		position: relative;
-		width: 40px;
+		width: 50px;
 		height: 60px;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		font-size: $uni-font-size-base;
+		font-size: $uni-font-size-sm;
 		color: $wk-text-color-grey;
 		.icon-minus {
 			position: absolute;
 			top: -6px;
 			left: -2px;
+		}
+		.course-name {
+			width: 50px;
+			height: 20px;
+			text-align: center;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 	}
 	.course-cell-selected {
@@ -451,9 +421,6 @@ const reset = () => {
 		width: 100%;
 		padding: 0 $uni-padding-base;
 		box-sizing: border-box;
-		.course-type {
-			height: 39px;
-		}
 		.input {
 			height: 35px;
 			background-color: $wk-bg-color-grey;
