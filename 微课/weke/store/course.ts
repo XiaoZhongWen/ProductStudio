@@ -93,6 +93,42 @@ export const useCourseStore = defineStore('course', {
 				}
 			}
 			return result
+		},
+		async bindCourse(param:{
+			teacherId: string,
+			studentId: string,
+			courseId: string,
+			total: number,
+			consume: number
+		}) {
+			const { teacherId, studentId, courseId, total, consume } = param
+			if (typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0 || 
+				typeof(total) === 'undefined' || total <= 0 || 
+				typeof(consume) === 'undefined' || consume < 0) {
+				return false
+			}
+			const result = await course_co.bindCourse(param)
+			return result
+		},
+		async addPaymentRecord(param: {
+			studentId: string,
+			date: number,
+			courseId: string,
+			count: number,
+			price: number
+		}) {
+			const { studentId, date, courseId, count, price } = param
+			if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(date) === 'undefined' ||
+				typeof(count) === 'undefined' || count <= 0 ||
+				typeof(price) === 'undefined' || price < 0) {
+				return false
+			}
+			const result = await course_co.addPaymentRecord(param)
+			return result
 		}
 	}
 })

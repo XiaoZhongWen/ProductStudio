@@ -10,6 +10,15 @@
 				placeholder="选择课程">
 			</uni-data-select>
 		</view>
+		<view class="teacher-selector">
+			<uni-data-select
+				class="selector"
+				:clear="false"
+				v-model="selectedTeacherId"
+				:localdata="teacherSelectorData"
+				placeholder="选择授课老师">
+			</uni-data-select>
+		</view>
 		<view class="course-type">
 			<view class="left">
 				<text class="text title">课程类型</text>
@@ -78,7 +87,9 @@ const courseType = ref('')
 const courseDuration = ref('')
 const courseDesc = ref('')
 const selectedCourseId = ref('')
+const selectedTeacherId = ref('')
 const courseSelectorData = ref<{value:string, text:string}[]>([])
+const teacherSelectorData = ref<{value:string, text:string}[]>([])
 
 const totle = ref()
 const consume = ref()
@@ -96,6 +107,9 @@ onLoad((option) => {
 })
 
 onMounted(async () => {
+	if (stuNo.length === 0 || oIds.length === 0) {
+		return
+	}
 	const id = usersStore.owner._id
 	const orgs = useOrgs.orgs.filter(org => (
 		org.creatorId === id || org.teacherIds?.includes(id)) && 
@@ -105,8 +119,10 @@ onMounted(async () => {
 		orgs.push(useOrgs.anonymousOrg)
 	}
 	const courseIds:string[] = []
+	const teacherIds:string[] = []
 	orgs.forEach(org => {
 		courseIds.push(...org.courseIds ?? [])
+		teacherIds.push(...org.teacherIds ?? [])
 	})
 	const orgCourses = await courseStore.fetchCourses(courseIds ?? [])
 	courses = orgCourses
@@ -114,6 +130,14 @@ onMounted(async () => {
 		courseSelectorData.value.push({
 			value: course._id,
 			text: course.name
+		})
+	})
+	
+	const orgTeachers = await usersStore.fetchUsers(teacherIds ?? [])
+	orgTeachers.forEach(teacher => {
+		teacherSelectorData.value.push({
+			value: teacher._id,
+			text: teacher.nickName
 		})
 	})
 })
@@ -125,7 +149,7 @@ const bindClass = computed(() => {
 		typeof(date.value) === 'undefined' || date.value === '') {
 		return "bind disable"
 	}
-	const result = selectedCourseId.value.length > 0
+	const result = selectedCourseId.value.length > 0 && selectedTeacherId.value.length > 0
 	return result? "bind able": "bind disable"
 })
 
@@ -154,7 +178,7 @@ const onChange = (e:string) => {
 	}
 }
 
-const onBindCourse = () => {
+const onBindCourse = async () => {
 	if (!isFinite(totle.value)) {
 		uni.showToast({
 			title: "总课" + (type.value === 2?"次":"时") + "数格式错误",
@@ -173,13 +197,53 @@ const onBindCourse = () => {
 	}
 	if (!isFinite(price.value)) {
 		uni.showToast({
-			title: "课" + (type.value === 2?"次":"时") + "时单价格式错误",
+			title: "单价格式错误",
 			duration: global.duration_toast,
 			icon: "error"
 		})
 		return
 	}
-	
+	if (totle.value <= 0) {
+		uni.showToast({
+			title: "总课" + (type.value === 2?"次":"时") + "要大于0",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return
+	}
+	if (price.value < 0) {
+		uni.showToast({
+			title: "单价不能小于0",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return
+	}
+	uni.showLoading({
+		title:"正在绑定..."
+	})
+	let result = await courseStore.bindCourse({
+		teacherId: selectedTeacherId.value,
+		studentId: stuNo,
+		courseId: selectedCourseId.value,
+		total: parseInt(totle.value),
+		consume: parseInt(consume.value)
+	})
+	if (result) {
+		result = await courseStore.addPaymentRecord({
+			studentId: stuNo,
+			date: date.value,
+			courseId: selectedCourseId.value,
+			count: parseInt(totle.value),
+			price: parseFloat(price.value)
+		})
+	}
+	uni.hideLoading()
+	uni.showToast({
+		title: result? "绑定成功": "绑定失败",
+		duration: global.duration_toast,
+		icon: result? "success": "error"
+	})
 }
 
 </script>
@@ -187,8 +251,9 @@ const onBindCourse = () => {
 <style lang="scss">
 .course-bind-container {
 	padding: $uni-padding-normal;
-	.course-selector {
+	.course-selector, .teacher-selector {
 		background-color: white;
+		margin-top: $uni-spacing-col-sm;
 	}
 	.course-type, .duration {
 		display: flex;

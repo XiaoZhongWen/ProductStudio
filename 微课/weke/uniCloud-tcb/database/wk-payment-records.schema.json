@@ -26,7 +26,7 @@
 			"description": "课程id",
 			"foreignKey": "wk-courses._id"
 		},
-		"hour": {
+		"count": {
 			"bsonType": "int",
 			"description": "课时数"
 		},

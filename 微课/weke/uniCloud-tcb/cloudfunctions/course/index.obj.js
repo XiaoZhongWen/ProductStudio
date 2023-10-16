@@ -68,5 +68,45 @@ module.exports = {
 			_id: courseId
 		}).remove()
 		return result.deleted === 1
+	},
+	async bindCourse(param) {
+		const { teacherId, studentId, courseId, total, consume } = param
+		if (typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+			typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(courseId) === 'undefined' || courseId.length === 0 || 
+			typeof(total) === 'undefined' || total <= 0 || 
+			typeof(consume) === 'undefined' || consume < 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-mapping').add({
+			teacherId,
+			studentId,
+			courseId,
+			total,
+			consume
+		})
+		const { inserted } = result
+		return inserted === 1
+	},
+	async addPaymentRecord(param) {
+		const { studentId, date, courseId, count, price } = param
+		if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(date) === 'undefined' ||
+			typeof(count) === 'undefined' || count <= 0 ||
+			typeof(price) === 'undefined' || price < 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-payment-records').add({
+			studentId,
+			courseId,
+			date,
+			count,
+			price
+		})
+		const { inserted } = result
+		return inserted === 1
 	}
 }

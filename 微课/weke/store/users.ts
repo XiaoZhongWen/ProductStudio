@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
+import { Entry } from '../types/entry'
 
 enum IdentityType {
 	UseUnionId = 'unionid',
@@ -40,7 +41,8 @@ export const useUsersStore = defineStore('users', {
 				tempFileUrl: ''
 			},
 			students: [] as Student[],
-			users: [] as User[]
+			users: [] as User[],
+			entries: [] as Entry[]
 		}
 	},
 	
@@ -545,6 +547,12 @@ export const useUsersStore = defineStore('users', {
 				}
 			}
 			return result
+		},
+		async fetchEntriesWithStudentNo(studentNo: string) {
+			
+		},
+		async fetchEntryWithId(studentNo: string, courseId:string) {
+			
 		}
 	}
 })

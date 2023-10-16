@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["teacherId", "studentId", "courseId"],
+	"required": ["teacherId", "studentId", "courseId", "total", "consume"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -27,10 +27,15 @@
 			"description": "课程id",
 			"foreignKey": "wk-courses._id"
 		},
-		"classId": {
-			"bsonType": "string",
-			"description": "班级id",
-			"foreignKey": "wk-classes._id"
+		"total": {
+			"bsonType": "int",
+			"description": "学生购买课程总数",
+			"defaultValue": 0
+		},
+		"consume": {
+			"bsonType": "int",
+			"description": "学生已耗课时数",
+			"defaultValue": 0
 		}
 	}
 }
