@@ -95,14 +95,16 @@ export const useCourseStore = defineStore('course', {
 			return result
 		},
 		async bindCourse(param:{
+			orgId: string,
 			teacherId: string,
 			studentId: string,
 			courseId: string,
 			total: number,
 			consume: number
 		}) {
-			const { teacherId, studentId, courseId, total, consume } = param
-			if (typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+			const { orgId, teacherId, studentId, courseId, total, consume } = param
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(studentId) === 'undefined' || studentId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 || 
 				typeof(total) === 'undefined' || total <= 0 || 
@@ -113,14 +115,16 @@ export const useCourseStore = defineStore('course', {
 			return result
 		},
 		async addPaymentRecord(param: {
+			orgId: string,
 			studentId: string,
 			date: number,
 			courseId: string,
 			count: number,
 			price: number
 		}) {
-			const { studentId, date, courseId, count, price } = param
-			if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			const { orgId, studentId, date, courseId, count, price } = param
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 ||
 				typeof(date) === 'undefined' ||
 				typeof(count) === 'undefined' || count <= 0 ||

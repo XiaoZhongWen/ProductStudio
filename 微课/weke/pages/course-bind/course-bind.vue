@@ -72,6 +72,8 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { Course } from '../../types/course';
+import { Org } from '../../types/org';
+import { User } from '../../types/user';
 
 const global = getApp().globalData!
 
@@ -81,6 +83,8 @@ const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 let courses:Course[] = []
+let orgs:Org[] = []
+let teachers:User[] = []
 
 const type = ref(-1)
 const courseType = ref('')
@@ -111,7 +115,7 @@ onMounted(async () => {
 		return
 	}
 	const id = usersStore.owner._id
-	const orgs = useOrgs.orgs.filter(org => (
+	orgs = useOrgs.orgs.filter(org => (
 		org.creatorId === id || org.teacherIds?.includes(id)) && 
 		oIds.includes(org._id)
 	)
@@ -133,7 +137,7 @@ onMounted(async () => {
 		})
 	})
 	
-	const orgTeachers = await usersStore.fetchUsers(teacherIds ?? [])
+	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
 	orgTeachers.forEach(teacher => {
 		teacherSelectorData.value.push({
 			value: teacher._id,
@@ -219,10 +223,12 @@ const onBindCourse = async () => {
 		})
 		return
 	}
+	const org = orgs.filter(org => org.courseIds?.includes(selectedCourseId.value))[0]
 	uni.showLoading({
 		title:"正在绑定..."
 	})
 	let result = await courseStore.bindCourse({
+		orgId: org._id,
 		teacherId: selectedTeacherId.value,
 		studentId: stuNo,
 		courseId: selectedCourseId.value,
@@ -231,6 +237,7 @@ const onBindCourse = async () => {
 	})
 	if (result) {
 		result = await courseStore.addPaymentRecord({
+			orgId: org._id,
 			studentId: stuNo,
 			date: date.value,
 			courseId: selectedCourseId.value,

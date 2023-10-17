@@ -549,7 +549,10 @@ export const useUsersStore = defineStore('users', {
 			return result
 		},
 		async fetchEntriesWithStudentNo(studentNo: string) {
-			
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+				return []
+			}
+			// this.entries.filter()
 		},
 		async fetchEntryWithId(studentNo: string, courseId:string) {
 			

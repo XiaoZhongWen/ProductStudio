@@ -70,8 +70,9 @@ module.exports = {
 		return result.deleted === 1
 	},
 	async bindCourse(param) {
-		const { teacherId, studentId, courseId, total, consume } = param
-		if (typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+		const { orgId, teacherId, studentId, courseId, total, consume } = param
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 || 
 			typeof(total) === 'undefined' || total <= 0 || 
@@ -80,6 +81,7 @@ module.exports = {
 		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-mapping').add({
+			orgId,
 			teacherId,
 			studentId,
 			courseId,
@@ -90,8 +92,9 @@ module.exports = {
 		return inserted === 1
 	},
 	async addPaymentRecord(param) {
-		const { studentId, date, courseId, count, price } = param
-		if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+		const { orgId, studentId, date, courseId, count, price } = param
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
 			typeof(date) === 'undefined' ||
 			typeof(count) === 'undefined' || count <= 0 ||
@@ -100,6 +103,7 @@ module.exports = {
 		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-payment-records').add({
+			orgId,
 			studentId,
 			courseId,
 			date,
