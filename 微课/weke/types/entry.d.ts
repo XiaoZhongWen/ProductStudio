@@ -4,5 +4,5 @@ export type Entry = {
 	studentId: string,
 	courseId: string,
 	total: number,
-	consume: string
+	consume: number
 }

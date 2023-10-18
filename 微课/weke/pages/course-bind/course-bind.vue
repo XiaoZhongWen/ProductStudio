@@ -87,12 +87,13 @@ const global = getApp().globalData!
 
 let stuNo = ''
 let oIds:string[] = []
-const usersStore = useUsersStore()
-const useOrgs = useOrgsStore()
-const courseStore = useCourseStore()
 let courses:Course[] = []
 let orgs:Org[] = []
 let teachers:User[] = []
+
+const usersStore = useUsersStore()
+const useOrgs = useOrgsStore()
+const courseStore = useCourseStore()
 
 const type = ref(-1)
 const courseType = ref('')
@@ -109,7 +110,7 @@ const consume = ref()
 const price = ref()
 const date = ref()
 
-onLoad((option) => {
+onLoad(async (option) => {
 	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string[]}
 	if (typeof(studentNo) !== 'undefined') {
 		stuNo = studentNo
@@ -117,6 +118,8 @@ onLoad((option) => {
 	if (typeof(orgIds) !== 'undefined') {
 		oIds = orgIds
 	}
+	const entries = await usersStore.fetchEntriesWithStudentNo(studentNo, orgIds)
+	
 })
 
 onMounted(async () => {

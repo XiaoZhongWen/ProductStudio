@@ -118,5 +118,12 @@ module.exports = {
 			typeof(ordIds) === 'undefined' || ordIds.length === 0) {
 			return []
 		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const result = await db.collection('wk-mapping').where({
+			studentId: studentNo,
+			orgId: dbCmd.in(ordIds)
+		}).get()
+		return result.data
 	}
 }

@@ -9,14 +9,18 @@
 			strokeColor="#5073D6">
 			<text class="text" :style="style">{{percent === 0? "未排课":`${percent}%`}}</text>
 		</l-circle>
-		<text class="progress" v-if="percent > 0">60/100</text>
+		<text class="progress" v-if="percent > 0">{{props.consume}}/{{props.total}}</text>
 	</view>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-const percent = ref(40)
+const props = defineProps(['total', 'consume'])
+const percent = ref(0)
+if (props.total > 0) {
+	percent.value = props.consume / props.total
+}
 
 // @ts-ignore
 const style = computed({

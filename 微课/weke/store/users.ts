@@ -564,11 +564,23 @@ export const useUsersStore = defineStore('users', {
 				}
 			})
 			if (data.length === 0) {
-				const res:Entry[] = await course_co.fetchEntriesWithStudentNo(studentNo, ordIds)
-				
+				const res:Entry[] = await course_co.fetchEntriesWithStudentNo(studentNo, ordIds) ?? []
+				this.entries.splice(0, this.entries.length)
+				this.entries.push(...res)
+				this.entries.forEach(entry => {
+					if (entry.studentId === studentNo || ordIds.includes(entry.orgId)) {
+						data.push(entry)
+					}
+				})
 			}
+			return data
 		},
 		async fetchEntryWithId(studentNo: string, courseId:string) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return []
+			}
+			
 			
 		}
 	}

@@ -7,7 +7,13 @@
 				:mobile="`学号: ${props.studentNo}`"
 				:signature="props.signature">
 			</member-info>
-			<wk-circle-progress class="circle-progress"></wk-circle-progress>
+			<wk-circle-progress 
+				v-if="total > 0" 
+				class="circle-progress" 
+				:total="total" 
+				:consume="consume">
+			</wk-circle-progress>
+			<view v-else class="bind">绑定课程</view>
 		</view>
 		<view class="body">
 			
@@ -23,6 +29,13 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from '../../uni_modules/lime-shared/vue';
+import { useUsersStore } from "@/store/users"
+
+const total = ref(0)
+const consume = ref(0)
+
+const usersStore = useUsersStore()
 const props = defineProps([
 	'id', 'orgIds', 'url', 'name', 'studentNo', 'signature', 'orgNames'
 ])
@@ -37,6 +50,14 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 		
 	}
 }
+
+onMounted(async () => {
+	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, props.orgIds)
+	entries.forEach(entry => {
+		total.value += entry.total
+		consume.value += entry.consume
+	})
+})
 	
 </script>
 
@@ -59,9 +80,13 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 			top: 0;
 			right: 0;
 		}
-	}
-	.body {;
-		// border-top: #F2F4FD solid 5px;
+		.bind {
+			position: absolute;
+			top: 0;
+			right: 0;
+			font-size: $uni-font-size-10;
+			color: $wk-text-color-grey;
+		}
 	}
 	.bottom {
 		position: relative;
