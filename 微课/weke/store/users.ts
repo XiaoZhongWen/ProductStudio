@@ -14,6 +14,10 @@ const users_co = uniCloud.importObject('users', {
 	customUI: true
 })
 
+const course_co = uniCloud.importObject('course', {
+	customUI: true
+})
+
 export const useUsersStore = defineStore('users', {
 	state: () => {
 		return {
@@ -548,11 +552,21 @@ export const useUsersStore = defineStore('users', {
 			}
 			return result
 		},
-		async fetchEntriesWithStudentNo(studentNo: string) {
-			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+		async fetchEntriesWithStudentNo(studentNo: string, ordIds:string[]) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+				typeof(ordIds) === 'undefined' || ordIds.length === 0) {
 				return []
 			}
-			// this.entries.filter()
+			const data:Entry[] = []
+			this.entries.forEach(entry => {
+				if (entry.studentId === studentNo || ordIds.includes(entry.orgId)) {
+					data.push(entry)
+				}
+			})
+			if (data.length === 0) {
+				const res:Entry[] = await course_co.fetchEntriesWithStudentNo(studentNo, ordIds)
+				
+			}
 		},
 		async fetchEntryWithId(studentNo: string, courseId:string) {
 			

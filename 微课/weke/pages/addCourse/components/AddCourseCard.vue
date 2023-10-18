@@ -55,6 +55,9 @@
 					</picker>
 				</view>
 			</view>
+			<view class="count" v-else>
+				<input class="input" type="text" v-model="courseCount" placeholder="课程次数" />
+			</view>
 		</view>
 		<view class="desc">
 			<textarea 
@@ -113,6 +116,7 @@ const range = [
 
 const courseName = ref('')
 const courseDesc = ref('')
+const courseCount = ref()
 const courses = ref<Course[]>([])
 const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
 const duration = ref('分钟')
@@ -237,9 +241,18 @@ const validate = () => {
 		return false
 	}
 	const suffix = '分钟'
-	if (type.value === 2 && duration.value === suffix) {
+	if (type.value !== 2 && duration.value === suffix) {
 		uni.showToast({
 			title: "请设置课程时长",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return false
+	}
+	
+	if (type.value === 2 && (!isFinite(courseCount.value) || parseInt(courseCount.value) <= 0)) {
+		uni.showToast({
+			title: "请设置课程次数",
 			duration: global.duration_toast,
 			icon: "error"
 		})

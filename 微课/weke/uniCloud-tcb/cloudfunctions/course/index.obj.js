@@ -112,5 +112,11 @@ module.exports = {
 		})
 		const { inserted } = result
 		return inserted === 1
+	},
+	async fetchEntriesWithStudentNo(studentNo, ordIds) {
+		if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+			typeof(ordIds) === 'undefined' || ordIds.length === 0) {
+			return []
+		}
 	}
 }

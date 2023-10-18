@@ -27,6 +27,14 @@
 				<text class="text title">{{courseType}}</text>
 			</view>
 		</view>
+		<view class="org">
+			<view class="left">
+				<text class="text title">机构名称</text>
+			</view>
+			<view class="right">
+				<text class="text title">{{orgName}}</text>
+			</view>
+		</view>
 		<view class="duration" v-if="type !== 2">
 			<view class="left">
 				<text class="text title">课程时长</text>
@@ -88,6 +96,7 @@ let teachers:User[] = []
 
 const type = ref(-1)
 const courseType = ref('')
+const orgName = ref('')
 const courseDuration = ref('')
 const courseDesc = ref('')
 const selectedCourseId = ref('')
@@ -138,12 +147,14 @@ onMounted(async () => {
 	})
 	
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
-	orgTeachers.forEach(teacher => {
-		teacherSelectorData.value.push({
-			value: teacher._id,
-			text: teacher.nickName
+	
+	if (courses.length === 0) {
+		uni.showToast({
+			title: "请先添加课程",
+			duration: global.duration_toast,
+			icon: "error"
 		})
-	})
+	}
 })
 
 const bindClass = computed(() => {
@@ -179,6 +190,43 @@ const onChange = (e:string) => {
 		}
 		courseDuration.value = course.duration.toString()
 		courseDesc.value = course.desc ?? ''
+	}
+	
+	const length = teacherSelectorData.value.length
+	teacherSelectorData.value.splice(0, length)
+	// 1. 获取课程所属的机构
+	const result = orgs.filter(org => org.courseIds?.includes(selectedCourseId.value))
+	if (result.length === 1) {
+		const org = result[0]
+		orgName.value = org.name
+		if (org.creatorId === usersStore.owner._id) {
+			// 2. 对于机构负责人
+			teachers.forEach(teacher => {
+				if (org.teacherIds?.includes(teacher._id)) {
+					teacherSelectorData.value.push({
+						value: teacher._id,
+						text: teacher.nickName
+					})
+				}
+			})
+		} else {
+			// 3. 对于机构老师
+			teachers.forEach(teacher => {
+				if (teacher._id === usersStore.owner._id) {
+					teacherSelectorData.value.push({
+						value: teacher._id,
+						text: teacher.nickName
+					})
+				}
+			})
+		}
+	}
+	if (teacherSelectorData.value.length === 0) {
+		uni.showToast({
+			title: "请先添加老师",
+			duration: global.duration_toast,
+			icon: "error"
+		})
 	}
 }
 
@@ -262,7 +310,7 @@ const onBindCourse = async () => {
 		background-color: white;
 		margin-top: $uni-spacing-col-sm;
 	}
-	.course-type, .duration {
+	.course-type, .org, .duration {
 		display: flex;
 		flex-direction: row;
 		height: 35px;

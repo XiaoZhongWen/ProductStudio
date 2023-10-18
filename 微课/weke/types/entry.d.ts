@@ -1,4 +1,5 @@
 export type Entry = {
+	orgId: string,
 	teacherId: string,
 	studentId: string,
 	courseId: string,
