@@ -1,7 +1,5 @@
 <template>
 	<view>
-		<wk-course-card></wk-course-card>
-		<wk-course-card></wk-course-card>
 	</view>
 </template>
 

@@ -109,7 +109,7 @@ export const useCourseStore = defineStore('course', {
 				typeof(courseId) === 'undefined' || courseId.length === 0 || 
 				typeof(total) === 'undefined' || total <= 0 || 
 				typeof(consume) === 'undefined' || consume < 0) {
-				return false
+				return ''
 			}
 			const result = await course_co.bindCourse(param)
 			return result

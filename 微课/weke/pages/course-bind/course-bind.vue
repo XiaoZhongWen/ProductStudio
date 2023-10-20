@@ -1,4 +1,12 @@
 <template>
+	<template v-for="entry in entries" :key="entry._id">
+		<wk-course-card 
+			forStudent
+			:courseId="entry.courseId"
+			:teacherId="entry.teacherId"
+			:orgId="entry.orgId">
+		</wk-course-card>
+	</template>
 	<view class="course-bind-container">
 		<view class="course-selector">
 			<uni-data-select
@@ -82,6 +90,7 @@ import { useCourseStore } from "@/store/course"
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
 import { User } from '../../types/user';
+import { Entry } from '../../types/entry';
 
 const global = getApp().globalData!
 
@@ -109,17 +118,17 @@ const totle = ref()
 const consume = ref()
 const price = ref()
 const date = ref()
+const entries = ref<Entry[]>([])
 
 onLoad(async (option) => {
-	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string[]}
+	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string}
 	if (typeof(studentNo) !== 'undefined') {
 		stuNo = studentNo
 	}
 	if (typeof(orgIds) !== 'undefined') {
-		oIds = orgIds
+		oIds = orgIds.split(',')
 	}
-	const entries = await usersStore.fetchEntriesWithStudentNo(studentNo, orgIds)
-	
+	entries.value = await usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
 })
 
 onMounted(async () => {
@@ -278,7 +287,7 @@ const onBindCourse = async () => {
 	uni.showLoading({
 		title:"正在绑定..."
 	})
-	let result = await courseStore.bindCourse({
+	const entryId = await courseStore.bindCourse({
 		orgId: org._id,
 		teacherId: selectedTeacherId.value,
 		studentId: stuNo,
@@ -286,7 +295,8 @@ const onBindCourse = async () => {
 		total: parseInt(totle.value),
 		consume: parseInt(consume.value)
 	})
-	if (result) {
+	let result = false
+	if (entryId.length > 0) {
 		result = await courseStore.addPaymentRecord({
 			orgId: org._id,
 			studentId: stuNo,
@@ -302,6 +312,33 @@ const onBindCourse = async () => {
 		duration: global.duration_toast,
 		icon: result? "success": "error"
 	})
+	if (result) {
+		const entry = {
+			_id: entryId,
+			orgId: org._id,
+			teacherId: selectedTeacherId.value,
+			studentId: stuNo,
+			courseId: selectedCourseId.value,
+			total: parseInt(totle.value),
+			consume: parseInt(consume.value)
+		}
+		entries.value.push(entry)
+		reset()
+	}
+}
+
+const reset = () => {
+	type.value = -1
+	courseType.value = ''
+	orgName.value = ''
+	courseDuration.value = ''
+	courseDesc.value = ''
+	selectedCourseId.value = ''
+	selectedTeacherId.value = ''
+	totle.value = null
+	consume.value = null
+	price.value = null
+	date.value = null
 }
 
 </script>

@@ -449,6 +449,9 @@ export const useUsersStore = defineStore('users', {
 			}
 			const s = userIds.filter(userId => !loadedUserIds.includes(userId))
 			if (s.length > 0) {
+				console.info("before")
+				// debugger
+				console.info(this.users)
 				let res = []
 				if (type === 'student') {
 					res = await users_co.fetchStudentsByIds(s) as Student[]
@@ -460,13 +463,19 @@ export const useUsersStore = defineStore('users', {
 					})
 				} else {
 					res = await users_co.fetchUsers(s) as User[]
+					console.info(this.users.length)
 					res.forEach(user => {
 						const index = this.users.findIndex(item => item._id === user._id)
 						if (index === -1) {
 							this.users.push(user)
+							console.info(user._id)
+							console.info(this.users.length)
 						}
 					})
 				}
+				console.info("after")
+				// debugger
+				console.info(this.users)
 				if (res.length > 0) {
 					let fileIds:string[] = []
 					res.forEach(user => {

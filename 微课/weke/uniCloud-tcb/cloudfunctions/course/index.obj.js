@@ -77,7 +77,7 @@ module.exports = {
 			typeof(courseId) === 'undefined' || courseId.length === 0 || 
 			typeof(total) === 'undefined' || total <= 0 || 
 			typeof(consume) === 'undefined' || consume < 0) {
-			return false
+			return ''
 		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-mapping').add({
@@ -89,7 +89,11 @@ module.exports = {
 			consume
 		})
 		const { inserted } = result
-		return inserted === 1
+		if (inserted === 1) {
+			return result.id
+		} else {
+			return ''
+		}
 	},
 	async addPaymentRecord(param) {
 		const { orgId, studentId, date, courseId, count, price } = param
