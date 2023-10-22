@@ -42,10 +42,8 @@ export const useOrgsStore = defineStore('orgs', {
 			const orgId = org._id
 			if (orgId.length > 0) {
 				// modify
-				console.info("modify org data, orgId: " + orgId)
 				const arr = this.orgs.filter(org => org._id === orgId)
 				if (arr.length === 0) {
-					console.error("org data [" + orgId + "] not in orgs store, modify org icon failure.")
 					result = false
 				} else {
 					const curOrg = arr[0]
@@ -58,7 +56,6 @@ export const useOrgsStore = defineStore('orgs', {
 						org.createDate === curOrg.createDate &&
 						org.gradient.toString() === curOrg.gradient.toString()) {
 							result = true
-							console.info("org data not change.")
 						} else {
 							try {
 								const id = await orgs_co.createOrg(org)
@@ -66,17 +63,13 @@ export const useOrgsStore = defineStore('orgs', {
 								result = id === curOrg._id && index !== -1
 								if (result) {
 									this.orgs.splice(index, 1, org)
-									console.info("update org data success.")
 								} else {
-									console.error("update org data failure.")
 								}
 							} catch(e) {
-								console.error("update org failure.")
 							}
 						}
 				}
 			} else {
-				console.info("create org data")
 				// create
 				try {
 					const id = await orgs_co.createOrg(org)
@@ -86,19 +79,15 @@ export const useOrgsStore = defineStore('orgs', {
 						this.orgs.unshift(org)
 					}
 				} catch(e) {
-					console.error("create org failure.")
 				}
 			}
 			if (result) {
-				console.info("update org data success.")
 			} else {
-				console.error("update org data failure.")
 			}
 			return result
 		},
 		// 创建匿名机构
 		async createAnonymousOrg() {
-			console.info("create anonymous org")
 			const userId = usersStore.owner._id
 			if (this.anonymousOrg._id.length === 0) {
 				const date = new Date(Date.now())
@@ -109,24 +98,19 @@ export const useOrgsStore = defineStore('orgs', {
 				this.anonymousOrg.creatorId = userId
 				const orgId = await orgs_co.createOrg(this.anonymousOrg)
 				if (orgId.length > 0) {
-					console.info("userId: " + userId + ", 创建机构成功")
 					this.anonymousOrg._id = orgId
 				} else {
-					console.info("userId: " + userId + ", 创建机构失败")
 				}
 			}
 		},
 		// 获取匿名机构
 		async fetchAnonymousOrg() {
-			console.info("fetch anonymous org...")
 			const userId = usersStore.owner._id
 			if (this.anonymousOrg.creatorId === userId) {
-				console.info("fetched anonymous org from store")
 				return this.anonymousOrg
 			}
 			const org = await orgs_co.fetchAnonymousOrg(userId)
 			if (JSON.stringify(org) !== "{}") {
-				console.info("fetched anonymous org from db")
 				this.anonymousOrg = {
 					...this.anonymousOrg,
 					...org
@@ -147,29 +131,23 @@ export const useOrgsStore = defineStore('orgs', {
 				// modify
 				const result = this.orgs.filter(org => org._id === orgId)
 				if (result.length === 0) {
-					console.error("org data [" + orgId + "] not in orgs store, modify org icon failure.")
 				} else {
 					const org:Org = result[0]
 					if (org.logoUrl === logoUrl) {
 						fileId = org.logoId ?? ''
-						console.info("org icon not change.")
 					} else {
 						flag = true
 						// 删除旧图标
 						uniCloud.deleteFile({
 							fileList:[org.logoId]
 						}).then((res)=>{
-							console.info("删除机构图标文件成功: " + res)
 						}).catch(() => {
-							console.error("删除机构图标文件失败: " + org.logoId)
 						})
-						console.info("start modify org icon")
 					}
 				}
 			} else {
 				// create
 				flag = true
-				console.info("start upload org icon")
 			}
 			if (flag) {
 				// @ts-ignore
@@ -179,7 +157,6 @@ export const useOrgsStore = defineStore('orgs', {
 				})
 				fileId = res.fileID
 				if (fileId.length === 0) {
-					console.info("upload org icon failure")
 				}
 			}
 			return fileId
@@ -234,10 +211,13 @@ export const useOrgsStore = defineStore('orgs', {
 						org.tel = usersStore.owner.mobile ?? ''
 					} else {
 						// 获取
-						const user = await usersStore.fetchUser(org.creatorId) as User
-						if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
-							org.nickname = user.nickName
-							org.tel = user.mobile ?? ''
+						const res = await usersStore.fetchUsers([org.creatorId]) as User[]
+						if (res.length > 0) {
+							const user = res[0]
+							if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
+								org.nickname = user.nickName
+								org.tel = user.mobile ?? ''
+							}
 						}
 					}
 				}

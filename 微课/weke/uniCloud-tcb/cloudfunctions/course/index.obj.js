@@ -129,5 +129,74 @@ module.exports = {
 			orgId: dbCmd.in(ordIds)
 		}).get()
 		return result.data
+	},
+	async loadAllEntries(id, roles, studentNo, from = 'wx') {
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const s = []
+		if (from === 'wx') {
+			const forCreator = []
+			if (roles.includes(1)) {
+				let res = await db.collection("wk-orgs").where({
+					creatorId: id,
+					type: 0
+				}).get()
+				if (res.data.length > 0) {
+					const orgIds = res.data.map(org => org._id)
+					// 1. 获取所有机构相关的实体
+					res = await db.collection('wk-mapping').where({
+						orgId: dbCmd.in(orgIds)
+					}).get()
+					if (res.data.length > 0) {
+						forCreator.push(...res.data)
+					}
+				}
+			}
+			const forTeacher = []
+			if (roles.includes(2) && id.length > 0) {
+				// 2. 获取老师相关的所有实体
+				const res = await db.collection('wk-mapping').where({
+					teacherId: id
+				}).get()
+				if (res.data.length > 0) {
+					forTeacher.push(...res.data)
+				}
+			}
+			const forParents = []
+			if (roles.includes(3) && id.length > 0) {
+				// 3. 获取所有孩子相关的实体
+				let res = await db.collection('wk-student').where({
+					associateIds: id
+				}).get()
+				if (res.length > 0) {
+					const students = res.data
+					const studentNos = students.map((student) => student.studentNo)
+					res = await db.collection('wk-mapping').where({
+						studentId: dbCmd.in(studentNos)
+					})
+					if (res.data.length > 0) {
+						forParents.push(...res.data)
+					}
+				}
+			}
+			s.push(...forCreator, ...forTeacher, ...forParents)
+		} else if (from === 'stuNo') {
+			const forStudents = []
+			const res = await db.collection('wk-mapping').where({
+				studentId: studentNo
+			}).get()
+			if (res.data.length > 0) {
+				forStudents.push(...res.data)
+			}
+			s.push(...forStudents)
+		}
+		const entries = []
+		s.forEach(entry => {
+			const index = entries.findIndex(e => e._id === entry._id)
+			if (index === -1) {
+				entries.push(entry)
+			}
+		})
+		return entries
 	}
 }

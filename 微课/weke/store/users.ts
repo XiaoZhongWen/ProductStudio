@@ -89,7 +89,6 @@ export const useUsersStore = defineStore('users', {
 				if (from === 'wx') {
 					try {
 						// 1. 获取openid、unionid, session_key
-						console.info("开始微信登录")
 						const res = await uni.login({
 							provider: 'weixin'
 						})
@@ -141,13 +140,10 @@ export const useUsersStore = defineStore('users', {
 							const { tempFileURL } = result.fileList[0]
 							this.updateAvatarUrl(tempFileURL)
 							this.fetchStudents()
-							console.info("微信用户存在:" + this.owner)
-							console.info("微信用户头像url:" + tempFileURL)
 						} else {
 							this.owner.openid = openid
 							this.owner.unionid = unionid
 							this.owner.session_key = session_key
-							console.info("微信用户不存在")
 						}
 						uni.setStorage({
 							key: "wk-login",
@@ -212,13 +208,9 @@ export const useUsersStore = defineStore('users', {
 			const avatarUrl = this.owner.tempFileUrl ?? ''
 			let result = false
 			if (lastAvatarUrl !== avatarUrl || avatarUrl.length === 0) {
-				console.info("开始更新头像...")
-				console.info("当前头像url: " + lastAvatarUrl)
-				console.info("更新头像url: " + avatarUrl)
 				const url = this.owner.tempFileUrl?.trim() ?? ""
 				const prefix = "ddkb/header/"
 				const oldFileId = this.owner.avatarId ?? ''
-				console.info("待删除头像文件id: " + oldFileId)
 				// @ts-ignore
 				const res = await uniCloud.uploadFile({
 					filePath: url,
@@ -232,25 +224,18 @@ export const useUsersStore = defineStore('users', {
 					})
 					const { tempFileURL } = response.fileList[0]
 					this.updateAvatarUrl(tempFileURL)
-					console.info("更新头像成功, url: " + tempFileURL)
 					result = true
 					if (oldFileId.length > 0) {
 						// 删除旧头像
 						uniCloud.deleteFile({
 							fileList:[oldFileId]
 						}).then((res)=>{
-							console.info("删除头像文件成功: " + res)
 						}).catch(() => {
-							console.error("删除头像文件失败: " + oldFileId)
 						})
 					}
 				} catch (error) {
-					console.error("获取头像临时url失败, " + error)
 				}
 			} else {
-				console.info("头像未修改")
-				console.info("原头像url: " + lastAvatarUrl)
-				console.info("更新头像url: " + avatarUrl)
 			}
 			return result
 		},
@@ -270,10 +255,8 @@ export const useUsersStore = defineStore('users', {
 				} else {
 					await users_co.updateStudent({...this.owner})
 				}
-				console.info("更新云端用户信息成功, " + this.owner)
 				result = true
 			} catch (e) {
-				console.error("更新云端用户信息失败, " + e)
 			}
 			return result
 		},
@@ -301,9 +284,7 @@ export const useUsersStore = defineStore('users', {
 							uniCloud.deleteFile({
 								fileList:[student.avatarId]
 							}).then((res)=>{
-								console.info("删除头像文件成功: " + res)
 							}).catch(() => {
-								console.error("删除头像文件失败: " + student.avatarId)
 							})
 						}
 						student.avatarId = fileID
@@ -355,6 +336,9 @@ export const useUsersStore = defineStore('users', {
 		},
 		// 获取students信息 (与当前用户有绑定关系的所有学生 - 用户登录成功后会获取该信息)
 		async fetchStudents() {
+			if (this.students.length > 0) {
+				return
+			}
 			const result = await users_co.fetchStudents(this.owner._id)
 			for (let item of result) {
 				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
@@ -377,66 +361,45 @@ export const useUsersStore = defineStore('users', {
 			if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
 				return {}
 			}
+			let index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
+			if (index !== -1) {
+				return this.students[index]
+			}
 			const student = await users_co.fetchStudentByNo(studentNo)
 			if (typeof(student) === 'undefined' || JSON.stringify(student) === '{}') {
 				return {}
 			}
-			const index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
+			index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
 			if (index === -1) {
 				this.students.push(student)
 			}
 			return student
 		},
-		// 获取用户信息
-		async fetchUser(userId: string) {
-			if (typeof(userId) === 'undefined' || userId.length === 0) {
-				return {}
-			}
-			const index = this.users.findIndex(user => user._id === userId)
-			if (index !== -1) {
-				return this.users[index]
-			} else {
-				const user = await users_co.fetchUser(userId) as User
-				if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
-					this.users.push(user)
-					const response = await uniCloud.getTempFileURL({
-						fileList:[user.avatarId]
-					})
-					const { tempFileURL } = response.fileList[0]
-					user.avatarUrl = tempFileURL
-				}
-				return user
-			}
-		},
 		async fetchUserByPhoneNumber(phoneNumber: string) {
-			console.info("fetchUserByPhoneNumber...")
 			if (typeof(phoneNumber) === 'undefined' || phoneNumber.length === 0) {
-				console.info("fetchUserByPhoneNumber: param phoneNumber error")
 				return {}
 			}
 			const index = this.users.findIndex(user => user.mobile === phoneNumber)
-			console.info("fetchUserByPhoneNumber, fetch from users")
 			if (index !== -1) {
-				console.info("fetchUserByPhoneNumber, be fetched from users")
 				return this.users[index]
 			} else {
 				const user = await users_co.fetchUserByPhoneNumber(phoneNumber) as User
-				console.info("fetchUserByPhoneNumber, fetch from cloud obj")
 				if (typeof(user) !== 'undefined' && JSON.stringify(user) !== '{}') {
-					console.info("fetchUserByPhoneNumber, be fetched from cloud obj")
-					console.info(user)
-					this.users.push(user)
+					const index = this.users.findIndex(user => user.mobile === phoneNumber)
+					if (index === -1) {
+						this.users.push(user)
+					}
 					const response = await uniCloud.getTempFileURL({
 						fileList:[user.avatarId]
 					})
 					const { tempFileURL } = response.fileList[0]
 					user.avatarUrl = tempFileURL
 				} else {
-					console.info("fetchUserByPhoneNumber: user is not exist")
 				}
 				return user
 			}
 		},
+		// 获取用户信息
 		async fetchUsers(userIds: string[], type = '') {
 			if (typeof(userIds) === 'undefined' || userIds.length === 0) {
 				return []
@@ -449,9 +412,6 @@ export const useUsersStore = defineStore('users', {
 			}
 			const s = userIds.filter(userId => !loadedUserIds.includes(userId))
 			if (s.length > 0) {
-				console.info("before")
-				// debugger
-				console.info(this.users)
 				let res = []
 				if (type === 'student') {
 					res = await users_co.fetchStudentsByIds(s) as Student[]
@@ -463,19 +423,13 @@ export const useUsersStore = defineStore('users', {
 					})
 				} else {
 					res = await users_co.fetchUsers(s) as User[]
-					console.info(this.users.length)
 					res.forEach(user => {
 						const index = this.users.findIndex(item => item._id === user._id)
 						if (index === -1) {
 							this.users.push(user)
-							console.info(user._id)
-							console.info(this.users.length)
 						}
 					})
 				}
-				console.info("after")
-				// debugger
-				console.info(this.users)
 				if (res.length > 0) {
 					let fileIds:string[] = []
 					res.forEach(user => {
@@ -561,36 +515,30 @@ export const useUsersStore = defineStore('users', {
 			}
 			return result
 		},
+		async loadAllEntries() {
+			if (this.entries.length > 0) {
+				return
+			}
+			const entries = await course_co.loadAllEntries(
+				this.owner._id,
+				this.owner.roles, 
+				this.owner.studentNo, 
+				this.owner.from
+			)
+			if (entries.length) {
+				this.entries.push(...entries)
+			}
+		},
 		async fetchEntriesWithStudentNo(studentNo: string, ordIds:string[]) {
 			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
 				typeof(ordIds) === 'undefined' || ordIds.length === 0) {
 				return []
 			}
-			const data:Entry[] = []
-			this.entries.forEach(entry => {
-				if (entry.studentId === studentNo || ordIds.includes(entry.orgId)) {
-					data.push(entry)
-				}
-			})
-			if (data.length === 0) {
-				const res:Entry[] = await course_co.fetchEntriesWithStudentNo(studentNo, ordIds) ?? []
-				this.entries.splice(0, this.entries.length)
-				this.entries.push(...res)
-				this.entries.forEach(entry => {
-					if (entry.studentId === studentNo || ordIds.includes(entry.orgId)) {
-						data.push(entry)
-					}
-				})
-			}
+			await this.loadAllEntries()
+			const data:Entry[] = this.entries.filter(
+				entry => entry.teacherId === studentNo && ordIds.includes(entry.orgId)
+			)
 			return data
-		},
-		async fetchEntryWithId(studentNo: string, courseId:string) {
-			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
-				typeof(courseId) === 'undefined' || courseId.length === 0) {
-				return []
-			}
-			
-			
 		}
 	}
 })

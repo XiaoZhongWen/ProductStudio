@@ -42,28 +42,28 @@ onLoad((option) => {
 })
 
 onMounted(async () => {
-	console.info("teacher onMounted...")
 	if (usersStore.isLogin) {
 		uni.showLoading({
 			title:"加载中"
 		})
 		await useOrgs.loadOrgData()
 		uni.hideLoading()
-		if (studentId.length === 0 && 
-			(usersStore.owner.roles?.includes(1) || 
-			usersStore.owner.from === 'stuNo')
-		) {
-			// 机构负责人或学生
-			if (organizationId.length) {
-				// 指定机构
-				loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))
-			} else {
+		if (organizationId.length > 0) {
+			// 从机构详情进入
+			loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))
+		} else if (studentId.length > 0) {
+			// 家长从孩子页面进入
+			loadEntries(studentId)
+		} else {
+			// 从我的页面进入
+			if (usersStore.owner.roles?.includes(1)) {
+				// 机构负责人
 				loaddata(useOrgs.myOrgs)
 			}
-		} else {
-			// 加载学生相关的机构老师数据
-			const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(studentId))
-			loaddata(orgs)
+			if (usersStore.owner.from === 'stuNo') {
+				// 学生
+				loadEntries(usersStore.owner.studentNo)
+			}
 		}
 	}
 })
@@ -99,6 +99,13 @@ const loaddata = (orgs:Org[]) => {
 			})
 		}
 	})
+}
+
+const loadEntries = (studentId:String) => {
+	// 1. 获取孩子所有授课老师id
+	// usersStore.fetchEntriesWithStudentNo(studentId)
+	
+	// 2. 获取相应老师信息
 }
 
 </script>

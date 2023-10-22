@@ -157,9 +157,7 @@ onMounted(async () => {
 			text: course.name
 		})
 	})
-	
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
-	
 	if (courses.length === 0) {
 		uni.showToast({
 			title: "请先添加课程",

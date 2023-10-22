@@ -8,7 +8,7 @@
 		<view class="duration">
 			<text>课程时长: {{course.duration}}分钟</text>
 		</view>
-		<view class="teacher" v-if="props.forStudent">
+		<view class="teacher" v-if="isShowTeacher">
 			<text>授课老师: </text>
 			<view class="teacher-cell">
 				<wk-icon
@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
 import { User } from '../../types/user';
@@ -61,7 +61,10 @@ onMounted(async () => {
 		props.forStudent &&
 		typeof(props.teacherId) !== 'undefined' && 
 		props.teacherId.length > 0) {
-		teacher.value = await usersStore.fetchUser(props.teacherId) as User
+		const res = await usersStore.fetchUsers([props.teacherId]) as User[]
+		if (res.length > 0) [
+			teacher.value = res[0]
+		]
 	}
 	if (typeof(props.courseId) !== 'undefined' && 
 		props.courseId.length > 0) {
@@ -87,6 +90,10 @@ onMounted(async () => {
 		props.orgId.length > 0) {
 		org.value = useOrgs.fetchOrgById(props.orgId)
 	}
+})
+
+const isShowTeacher = computed(() => {
+	return props.forStudent && typeof(teacher.value) !== 'undefined'
 })
 
 </script>

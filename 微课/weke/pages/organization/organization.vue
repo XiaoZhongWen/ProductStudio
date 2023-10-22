@@ -72,6 +72,7 @@ const orgs = computed({
 					})
 				}
 			} else {
+				// 学生
 				const forStudent = useOrgs.orgs.filter(org => {
 					return org.studentIds?.includes(userId.value)
 				})

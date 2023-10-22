@@ -301,22 +301,6 @@ module.exports = {
    
    /**
 	* 获取指定用户
-	* @param {Object} userId
-	*/
-   async fetchUser(userId) {
-	   let user = {}
-	   const db = uniCloud.database()
-	   const res = await db.collection('wk-users').where({
-			_id: userId
-	   }).get()
-	   if (res.data.length === 1) {
-	   		user = res.data[0]
-	   }
-	   return user
-   },
-   
-   /**
-	* 获取指定用户
 	* @param {Object} phoneNumber
 	*/
    async fetchUserByPhoneNumber(phoneNumber) {
