@@ -272,6 +272,7 @@ module.exports = {
 	   }
 	   const db = uniCloud.database()
 	   const studentIds = []
+	   const studentNos = []
 	   if (from === 'wx') {
 		   if (typeof(userId) === 'undefined' || userId.length === 0 ||
 			   typeof(roles) === 'undefined' || roles.length === 0) {
@@ -299,8 +300,8 @@ module.exports = {
 			   }).get()
 			   if (res.data.length > 0) {
 				   res.data.forEach(entry => {
-					   if (!studentIds.includes(entry.studentId)) {
-						   studentIds.push(entry.studentId)
+					   if (!studentNos.includes(entry.studentId)) {
+						   studentNos.push(entry.studentId)
 					   }
 				   })
 			   }
@@ -310,28 +311,27 @@ module.exports = {
 			   let res = await db.collection('wk-student').where({
 			   		associateIds: userId
 			   }).get()
-			   if (res.data.length) {
-				   res.data.forEach(student => {
-					   if (!studentIds.includes(student.studentNo)) {
-							studentIds.push(student.studentNo)
+			   if (res.data.length > 0) {
+				   for (let student of res.data) {
+					   if (!studentNos.includes(student.studentNo)) {
+					   		studentNos.push(student.studentNo)
 					   }
-					   
 					   let result = await db.collection('wk-mapping').where({
-					   		studentId: studentNo
+						   studentId: student.studentNo
 					   }).get()
 					   if (result.data.length > 0) {
-						    const courseIds = result.data.map(entry => entry.courseId)
-					   	    const dbCmd = db.command
-							result = await db.collection('wk-mapping').where({
-								courseId: dbCmd.in(courseIds)
-					   		}).get()
-					   		result.data.forEach(entry => {
-								if (!studentIds.includes(entry.studentId)) {
-									studentIds.push(entry.studentId)
+						   const courseIds = result.data.map(entry => entry.courseId)
+						   const dbCmd = db.command
+						   result = await db.collection('wk-mapping').where({
+							   courseId: dbCmd.in(courseIds)
+					   	   }).get()
+						   result.data.forEach(entry => {
+							   if (!studentNos.includes(entry.studentId)) {
+								   studentNos.push(entry.studentId)
 								}
 							})
 					   }
-				   })
+				   }
 			   }
 		   }
 	   } else {
@@ -339,6 +339,7 @@ module.exports = {
 		   if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
 			   return []
 		   }
+		   studentNos.push(studentNo)
 		   let res = await db.collection('wk-mapping').where({
 			   studentId: studentNo
 		   }).get()
@@ -349,17 +350,49 @@ module.exports = {
 			   		courseId: dbCmd.in(courseIds)
 			   }).get()
 			   res.data.forEach(entry => {
-				   if (!studentIds.includes(entry.studentId)) {
-					   studentIds.push(entry.studentId)
+				   if (!studentNos.includes(entry.studentId)) {
+					   studentNos.push(entry.studentId)
 				   }
 			   })
 		   }
 	   }
 	   
-	   let res = await db.collection('wk-student').where({
+	   const fromSId = []
+	   const fromSNo = []
+	   const fromAssociate = []
+	   const total = []
+	   const dbCmd = db.command
+	   if (studentIds.length > 0) {
+		   const res = await db.collection('wk-student').where({
+				_id: dbCmd.in(studentIds)
+		   }).get()
+		   fromSId.push(...res.data)
+		   total.push(...fromSId)
+	   }
+	   if (studentNos.length > 0) {
+		   const res = await db.collection('wk-student').where({
+		   		studentNo: dbCmd.in(studentNos)
+		   }).get()
+		   fromSNo.push(...res.data)
+		   fromSNo.forEach(stu => {
+			   const index = total.findIndex(student => student._id === stu._id)
+			   if (index === -1) {
+				   total.push(stu)
+			   }
+		   })
+	   }
+	   
+	   const res = await db.collection('wk-student').where({
 		   associateIds: userId
 	   }).get()
-	   return res.data
+	   fromAssociate.push(...res.data)
+	   fromAssociate.forEach(stu => {
+		   const index = total.findIndex(student => student._id === stu._id)
+		   if (index === -1) {
+			   total.push(stu)
+			}
+	   })
+	   return total
    },
    
    /**

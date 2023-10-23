@@ -46,16 +46,13 @@ onMounted(async() => {
 	await usersStore.loadAllEntries()
 	uni.hideLoading()
 	
-	const userId = usersStore.owner._id
 	if (usersStore.owner.from === 'wx') {
 		if (usersStore.owner.roles?.includes(1)) {
-			// 机构负责人 - 获取机构所有学员
-			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
-			
+			loadOrgStudent()
 		}
 		if (usersStore.owner.roles?.includes(2)) {
 			// 老师 - 获取教授的所有学员
-			
+			loadTeacherStudent()
 		}
 		if (usersStore.owner.roles?.includes(3)) {
 			// 家长 - 获取与孩子学习相同课程的学员
@@ -64,6 +61,35 @@ onMounted(async() => {
 		// 学员 - 获取学习相同课程的学员
 	}
 })
+
+const loadOrgStudent = () => {
+	const userId = usersStore.owner._id
+	// 机构负责人 - 获取机构所有学员
+	const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+	orgs.forEach(org => {
+		const studentIds = org.studentIds ?? []
+		studentIds.forEach(sId => {
+			let index = usersStore.students.findIndex(student => student._id === sId)
+			if (index !== -1) {
+				const student = usersStore.students[index]
+				index = students.value.findIndex(s => s._id === student._id)
+				if (index === -1) {
+					students.value.push(student)
+				}
+				if (typeof(student.orgIds) === 'undefined') {
+					student.orgIds = []
+				}
+				if (!student.orgIds?.includes(org._id)) {
+					student.orgIds?.push(org._id)
+				}
+			}
+		})
+	})
+}
+
+const loadTeacherStudent = () => {
+	
+}
 
 watchEffect(async () => {
 	if (usersStore.isLogin) {
