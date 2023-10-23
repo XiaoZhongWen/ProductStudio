@@ -259,11 +259,103 @@ module.exports = {
    },
    
    /**
-	* 通过关联id获取学员信息
-	* @param {Object} userId
+	* 机构负责人 - 获取机构所有学员
+	* 老师 - 获取匿名机构所有学员 + 有教学关系的学员
+	* 家长 - 获取与孩子学习相同课程的学员
+	* 学员 - 获取学习相同课程的学员
+	* @param {Object} param
 	*/
-   async fetchStudents(userId) {
+   async fetchStudents(param) {
+	   const { userId, roles, studentNo, from } = param
+	   if (typeof(from) === 'undefined' || from.length === 0) {
+		   return []
+	   }
 	   const db = uniCloud.database()
+	   const studentIds = []
+	   if (from === 'wx') {
+		   if (typeof(userId) === 'undefined' || userId.length === 0 ||
+			   typeof(roles) === 'undefined' || roles.length === 0) {
+			   return []
+		   }
+		   if (roles.includes(1)) {
+			   // 机构负责人
+			   const res = await db.collection('wk-orgs').where({
+				   creatorId: userId
+			   }).get()
+			   if (res.data.length > 0) {
+				   res.data.forEach(org => {
+					   org.studentIds.forEach(id => {
+						   if (!studentIds.includes(id)) {
+							   studentIds.push(id)
+						   }
+					   })
+				   })
+			   }
+		   }
+		   if (roles.includes(2)) {
+			   // 老师
+			   const res = await db.collection('wk-mapping').where({
+				   teacherId: userId
+			   }).get()
+			   if (res.data.length > 0) {
+				   res.data.forEach(entry => {
+					   if (!studentIds.includes(entry.studentId)) {
+						   studentIds.push(entry.studentId)
+					   }
+				   })
+			   }
+		   }
+		   if (roles.includes(3)) {
+		   	   // 家长
+			   let res = await db.collection('wk-student').where({
+			   		associateIds: userId
+			   }).get()
+			   if (res.data.length) {
+				   res.data.forEach(student => {
+					   if (!studentIds.includes(student.studentNo)) {
+							studentIds.push(student.studentNo)
+					   }
+					   
+					   let result = await db.collection('wk-mapping').where({
+					   		studentId: studentNo
+					   }).get()
+					   if (result.data.length > 0) {
+						    const courseIds = result.data.map(entry => entry.courseId)
+					   	    const dbCmd = db.command
+							result = await db.collection('wk-mapping').where({
+								courseId: dbCmd.in(courseIds)
+					   		}).get()
+					   		result.data.forEach(entry => {
+								if (!studentIds.includes(entry.studentId)) {
+									studentIds.push(entry.studentId)
+								}
+							})
+					   }
+				   })
+			   }
+		   }
+	   } else {
+		   // 学员
+		   if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+			   return []
+		   }
+		   let res = await db.collection('wk-mapping').where({
+			   studentId: studentNo
+		   }).get()
+		   if (res.data.length > 0) {
+			   const courseIds = res.data.map(entry => entry.courseId)
+			   const dbCmd = db.command
+			   res = await db.collection('wk-mapping').where({
+			   		courseId: dbCmd.in(courseIds)
+			   }).get()
+			   res.data.forEach(entry => {
+				   if (!studentIds.includes(entry.studentId)) {
+					   studentIds.push(entry.studentId)
+				   }
+			   })
+		   }
+	   }
+	   
 	   let res = await db.collection('wk-student').where({
 		   associateIds: userId
 	   }).get()

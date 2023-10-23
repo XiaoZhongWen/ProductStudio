@@ -1,7 +1,10 @@
 <template>
 	<view class="teacher-container">
 		<template v-for="teacher in teachers" :key="teacher._id">
-			<TeacherCard :teacherId="teacher._id" :orgIds="teacher.orgIds" />
+			<TeacherCard 
+				:teacherId="teacher._id" 
+				:orgIds="teacher.orgIds" 
+				:forStudent="forStudent"/>
 		</template>
 		<button
 			@tap.capture="onAddTap"
@@ -13,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import TeacherCard from './components/TeacherCard.vue'
 import { useUsersStore } from "@/store/users"
@@ -68,6 +71,16 @@ onMounted(async () => {
 	}
 })
 
+const forStudent = computed(() => {
+	if (organizationId.length > 0 ||
+		studentId.length > 0 ||
+		usersStore.owner.from === 'stuNo') {
+		return true
+	} else {
+		return !usersStore.owner.roles?.includes(1)
+	}
+})
+
 const onAddTap = () => {
 	uni.navigateTo({
 		url: "/pages/addTeacher/addTeacher"
@@ -101,11 +114,29 @@ const loaddata = (orgs:Org[]) => {
 	})
 }
 
-const loadEntries = (studentId:String) => {
+const loadEntries = async (studentId:string) => {
 	// 1. 获取孩子所有授课老师id
-	// usersStore.fetchEntriesWithStudentNo(studentId)
-	
+	const res = await usersStore.fetchEntriesWithStudentNo(studentId)
+	const teacherIds:string[] = res.map(entry => entry.teacherId)
 	// 2. 获取相应老师信息
+	const users = await usersStore.fetchUsers(teacherIds) as User[]
+	if (users.length > 0) {
+		users.forEach(user => {
+			const orgIds:string[] = []
+			res.forEach(entry => {
+				if (entry.teacherId === user._id && !orgIds.includes(entry.orgId)) {
+					orgIds.push(entry.orgId)
+				}
+			})
+			user.orgIds = orgIds
+		})
+		users.forEach(user => {
+			const index = teachers.value.findIndex(t => t._id === user._id)
+			if (index === -1) {
+				teachers.value.push(user)
+			}
+		})
+	}
 }
 
 </script>

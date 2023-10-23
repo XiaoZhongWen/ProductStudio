@@ -168,12 +168,12 @@ module.exports = {
 				let res = await db.collection('wk-student').where({
 					associateIds: id
 				}).get()
-				if (res.length > 0) {
+				if (res.data.length > 0) {
 					const students = res.data
 					const studentNos = students.map((student) => student.studentNo)
 					res = await db.collection('wk-mapping').where({
 						studentId: dbCmd.in(studentNos)
-					})
+					}).get()
 					if (res.data.length > 0) {
 						forParents.push(...res.data)
 					}

@@ -73,6 +73,17 @@ module.exports = {
 		}
 		return orgId
 	},
+	async fetchOrgsByIds(orgIds) {
+		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
+			return []
+		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const res = await db.collection("wk-orgs").where({
+			_id: dbCmd.in(orgIds)
+		}).get()
+		return res.data
+	},
 	/**
 	 * 获取所有与用户相关的机构信息
 	 * @param {userId} 机构创建者id

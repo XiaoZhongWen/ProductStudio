@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../types/user';
@@ -35,9 +35,40 @@ const useOrgs = useOrgsStore()
 const students = ref<Student[]>([])
 const orgs = ref<Org[]>([])
 
+onMounted(async() => {
+	uni.showLoading({
+		title:"加载中"
+	})
+	await useOrgs.loadOrgData()
+	if (usersStore.owner.roles?.includes(2)) {
+		await useOrgs.fetchAnonymousOrg()
+	}
+	await usersStore.loadAllEntries()
+	uni.hideLoading()
+	
+	const userId = usersStore.owner._id
+	if (usersStore.owner.from === 'wx') {
+		if (usersStore.owner.roles?.includes(1)) {
+			// 机构负责人 - 获取机构所有学员
+			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+			
+		}
+		if (usersStore.owner.roles?.includes(2)) {
+			// 老师 - 获取教授的所有学员
+			
+		}
+		if (usersStore.owner.roles?.includes(3)) {
+			// 家长 - 获取与孩子学习相同课程的学员
+		}
+	} if (usersStore.owner.from === 'stuNo') {
+		// 学员 - 获取学习相同课程的学员
+	}
+})
+
 watchEffect(async () => {
 	if (usersStore.isLogin) {
 		const userId = usersStore.owner._id
+		
 		// 加载所有相关机构
 		uni.showLoading({
 			title:"加载中"

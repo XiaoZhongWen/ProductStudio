@@ -169,6 +169,7 @@ export const useUsersStore = defineStore('users', {
 							this.owner.studentNo = studentNo
 							this.owner.from = 'stuNo'
 							this.owner.signature = signature
+							this.fetchStudents()
 							if (typeof(avatarId) !== 'undefined' && avatarId.length > 0) {
 								this.owner.avatarId = avatarId
 								const result = await uniCloud.getTempFileURL({
@@ -248,12 +249,12 @@ export const useUsersStore = defineStore('users', {
 						...this.owner,
 						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 					})
-					if (this.isLogin === false) {
-						this.isLogin = true
-						this.fetchStudents()
-					}
 				} else {
 					await users_co.updateStudent({...this.owner})
+				}
+				if (this.isLogin === false) {
+					this.isLogin = true
+					this.fetchStudents()
 				}
 				result = true
 			} catch (e) {
@@ -334,12 +335,20 @@ export const useUsersStore = defineStore('users', {
 			this.owner.signature = signature
 			users_co.updateSignature(this.owner._id, signature, this.owner.from)
 		},
-		// 获取students信息 (与当前用户有绑定关系的所有学生 - 用户登录成功后会获取该信息)
+		// 机构负责人 - 获取机构所有学员
+		// 老师 - 获取匿名机构所有学员 + 有教学关系的学员
+		// 家长 - 获取与孩子学习相同课程的学员
+		// 学员 - 获取学习相同课程的学员
 		async fetchStudents() {
 			if (this.students.length > 0) {
 				return
 			}
-			const result = await users_co.fetchStudents(this.owner._id)
+			const result = await users_co.fetchStudents({
+				userId: this.owner._id,
+				roles: this.owner.roles,
+				studentNo: this.owner.studentNo,
+				from: this.owner.from
+			})
 			for (let item of result) {
 				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
 					const res = await uniCloud.getTempFileURL({
@@ -526,17 +535,33 @@ export const useUsersStore = defineStore('users', {
 				this.owner.from
 			)
 			if (entries.length) {
-				this.entries.push(...entries)
+				entries.forEach(entry => {
+					const index = this.entries.findIndex(e => e._id === entry._id)
+					if (index === -1) {
+						this.entries.push(entry)
+					}
+				})
 			}
 		},
-		async fetchEntriesWithStudentNo(studentNo: string, ordIds:string[]) {
-			if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
-				typeof(ordIds) === 'undefined' || ordIds.length === 0) {
+		async fetchEntriesWithStudentNo(studentNo: string, orgIds:string[] = []) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
 				return []
 			}
 			await this.loadAllEntries()
 			const data:Entry[] = this.entries.filter(
-				entry => entry.teacherId === studentNo && ordIds.includes(entry.orgId)
+				entry => entry.studentId === studentNo && 
+				(orgIds.length > 0? orgIds.includes(entry.orgId): true)
+			)
+			return data
+		},
+		async fetchEntriesWithTeacherId(teacherId: string, orgIds:string[] = []) {
+			if (typeof(teacherId) === 'undefined' || teacherId.length === 0) {
+				return []
+			}
+			await this.loadAllEntries()
+			const data:Entry[] = this.entries.filter(
+				entry => entry.teacherId === teacherId && 
+				(orgIds.length > 0? orgIds.includes(entry.orgId): true)
 			)
 			return data
 		}

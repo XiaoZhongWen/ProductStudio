@@ -435,7 +435,6 @@ uni.$on(global.event_name.login, async (data) => {
 			}
 		} else {
 			onPopup()
-			console.info("头像及昵称均未变更")
 		}
 	} catch(e) {
 		console.error(e)

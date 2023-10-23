@@ -7,11 +7,16 @@
 				:mobile="user.mobile"
 				:signature="user.signature">
 			</member-info>
-			<wk-circle-progress class="circle-progress"></wk-circle-progress>
+			<wk-circle-progress 
+				class="circle-progress"
+				v-if="total > 0 && !props.forStudent" 
+				:total="total"
+				:consume="consume">
+			</wk-circle-progress>
 		</view>
 		<view class="bottom">
 			<text class="text">{{orgNames}}</text>
-			<view class="icon-container" @tap.stop="onIconTap">
+			<view class="icon-container" v-if="!props.forStudent" @tap.stop="onIconTap">
 				<uni-icons id="course" class="icon" type="wallet-filled" color="#5073D6" size="24"></uni-icons>
 				<uni-icons id="schedule" class="icon" type="calendar-filled" color="#5073D6" size="24"></uni-icons>
 			</view>
@@ -22,18 +27,30 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
-import { computed } from "../../../uni_modules/lime-shared/vue";
+import { onMounted, ref } from "../../../uni_modules/lime-shared/vue";
+import { Org } from "../../../types/org";
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
-const props = defineProps(['teacherId', 'orgIds'])
-
-const orgs = useOrgs.orgs.filter(org => props.orgIds.includes(org._id))
+const props = defineProps(['teacherId', 'orgIds', 'forStudent'])
 const user = usersStore.users.filter(user => user._id === props.teacherId)[0]
+const orgNames = ref('')
+const total = ref(0)
+const consume = ref(0)
+
+onMounted(async () => {
+	const orgs = await useOrgs.fetchOrgsByIds(props.orgIds) as Org[]
+	handleOrgNames(orgs)
+	const entries = await usersStore.fetchEntriesWithTeacherId(props.teacherId, props.orgIds)
+	entries.forEach(entry => {
+		total.value += entry.total
+		consume.value += entry.consume
+	})
+})
 
 const onCardTap = () => {
-	uni.navigateTo({
-		url: `/pages/teacher-detail/teacher-detail?orgId=${props.orgId}&teacherId=${props.teacherId}`
-	})
+	// uni.navigateTo({
+	// 	url: `/pages/teacher-detail/teacher-detail?orgId=${props.orgId}&teacherId=${props.teacherId}`
+	// })
 }
 
 // @ts-ignore
@@ -51,7 +68,7 @@ const onIconTap = (e) => {
 	}
 }
 
-const orgNames = computed(() => {
+const handleOrgNames = (orgs:Org[]) => {
 	let index = 0
 	let str = ''
 	for (let org of orgs) {
@@ -62,8 +79,8 @@ const orgNames = computed(() => {
 			break
 		}
 	}
-	return str
-})
+	orgNames.value = str
+}
 
 </script>
 

@@ -29,6 +29,7 @@ import { Student } from '../../types/user';
 
 const usersStore = useUsersStore()
 const _id = ref<string>('')
+let _studentNo = ''
 
 onLoad(async (option) => {
 	const { id } = option as {id:string}
@@ -37,6 +38,7 @@ onLoad(async (option) => {
 		const res = usersStore.students.filter(student => student._id === id)
 		if (res.length === 1) {
 			const student:Student = res[0]
+			_studentNo = student.studentNo
 			uni.setNavigationBarTitle({
 				title: student.nickName ?? ''
 			})
@@ -56,7 +58,7 @@ const org:ListItem[] = computed({
 			{
 				type: "person-filled",
 				name: "老师",
-				to: `/pages/teacher/teacher?id=${_id.value}`
+				to: `/pages/teacher/teacher?id=${_studentNo}`
 			},
 			{
 				type: "chatboxes-filled",
