@@ -16,10 +16,10 @@
 					:url="teacher.avatarUrl"
 					:text="teacher.nickName">
 				</wk-icon>
-				<uni-icons type="loop" class="replace" color="#5073D6"></uni-icons>
+				<uni-icons type="loop" class="replace" color="#5073D6" v-if="isCreator"></uni-icons>
 			</view>
 		</view>
-		<view class="operation" v-if="props.forStudent">
+		<view class="operation" v-if="props.forStudent && isCreator">
 			<view class="left">
 				<text>{{org.name}}</text>
 			</view>
@@ -50,6 +50,7 @@ const teacher = ref<User>()
 const org = ref<Org>()
 const type = ref('')
 const display = ref(false)
+const isCreator = ref(false)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
@@ -89,6 +90,7 @@ onMounted(async () => {
 	if (typeof(props.orgId) !== 'undefined' &&
 		props.orgId.length > 0) {
 		org.value = useOrgs.fetchOrgById(props.orgId)
+		isCreator.value = org.value.creatorId === usersStore.owner._id
 	}
 })
 

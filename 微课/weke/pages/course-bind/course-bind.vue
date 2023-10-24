@@ -1,13 +1,17 @@
 <template>
+	<uni-section title="课程" type="line" v-if="entries.length > 0">
+	</uni-section>
 	<template v-for="entry in entries" :key="entry._id">
-		<wk-course-card 
+		<wk-course-card
 			forStudent
 			:courseId="entry.courseId"
 			:teacherId="entry.teacherId"
 			:orgId="entry.orgId">
 		</wk-course-card>
 	</template>
-	<view class="course-bind-container">
+	<uni-section title="绑定课程" type="line" v-if="isTeacherOrCreator">
+	</uni-section>
+	<view class="course-bind-container" v-if="isTeacherOrCreator">
 		<view class="course-selector">
 			<uni-data-select
 				@change="onChange"
@@ -119,6 +123,7 @@ const consume = ref()
 const price = ref()
 const date = ref()
 const entries = ref<Entry[]>([])
+const isTeacherOrCreator = ref(true)
 
 onLoad(async (option) => {
 	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string}
@@ -129,6 +134,11 @@ onLoad(async (option) => {
 		oIds = orgIds.split(',')
 	}
 	entries.value = await usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
+	if (usersStore.owner.roles?.includes(1) || usersStore.owner.roles?.includes(2)) {
+		isTeacherOrCreator.value = true
+	} else {
+		isTeacherOrCreator.value = false
+	}
 })
 
 onMounted(async () => {
@@ -165,6 +175,9 @@ onMounted(async () => {
 			icon: "error"
 		})
 	}
+	uni.setNavigationBarTitle({
+		title: isTeacherOrCreator.value? "绑定课程": "课程"
+	})
 })
 
 const bindClass = computed(() => {
@@ -341,9 +354,12 @@ const reset = () => {
 
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.uni-section {
+	background-color: transparent !important;
+}
 .course-bind-container {
-	padding: $uni-padding-normal;
+	padding: 0 $uni-padding-normal $uni-padding-normal $uni-padding-normal;
 	.course-selector, .teacher-selector {
 		background-color: white;
 		margin-top: $uni-spacing-col-sm;
