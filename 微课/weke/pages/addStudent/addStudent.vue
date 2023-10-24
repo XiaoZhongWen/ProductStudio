@@ -83,8 +83,7 @@ const nickNameBrief = () => {
 const orgs = computed({
 	get() {
 		const userId = usersStore.owner._id
-		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId || 
-											org.teacherIds?.includes(userId))
+		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId)
 		if (usersStore.owner.roles?.includes(2) &&
 			useOrgs.anonymousOrg._id.length > 0) {
 			normalOrgs.push(useOrgs.anonymousOrg)

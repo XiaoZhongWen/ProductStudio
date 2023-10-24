@@ -229,13 +229,14 @@ module.exports = {
 	* @param {Object} userId
 	* @param {Object} roleIds
 	*/
-   updateRoles(userId, roleIds) {
+   async updateRoles(userId, roleIds) {
 	   const db = uniCloud.database()
-	   db.collection('wk-users').where({
+	   const res = await db.collection('wk-users').where({
 		   _id: userId
 	   }).update({
 		   roles: roleIds
 	   })
+	   return res.updated === 1
    },
    
    /**

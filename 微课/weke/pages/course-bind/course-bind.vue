@@ -129,7 +129,6 @@ onLoad(async (option) => {
 		oIds = orgIds.split(',')
 	}
 	entries.value = await usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
-	debugger
 })
 
 onMounted(async () => {

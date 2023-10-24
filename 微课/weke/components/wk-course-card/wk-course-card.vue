@@ -21,7 +21,7 @@
 		</view>
 		<view class="operation" v-if="props.forStudent">
 			<view class="left">
-				<text>兮子英语</text>
+				<text>{{org.name}}</text>
 			</view>
 			<view class="right">
 				<text class="action">续课</text>

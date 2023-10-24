@@ -19,7 +19,7 @@
 			
 		</view>
 		<view class="bottom">
-			<text class="text">{{props.orgNames}}</text>
+			<text class="text">{{orgNames}}</text>
 			<view class="icon-container" @tap.stop="onIconTap">
 				<uni-icons id="course" class="icon" type="wallet-filled" color="#5073D6" size="24"></uni-icons>
 				<uni-icons id="schedule" class="icon" type="calendar-filled" color="#5073D6" size="24"></uni-icons>
@@ -29,21 +29,25 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from '../../uni_modules/lime-shared/vue';
+import { computed, onMounted, ref } from '../../uni_modules/lime-shared/vue';
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from '@/store/orgs'
 
 const total = ref(0)
 const consume = ref(0)
+const orgIds = ref<string[]>([])
 
 const usersStore = useUsersStore()
+const useOrgs = useOrgsStore()
 const props = defineProps([
-	'id', 'orgIds', 'url', 'name', 'studentNo', 'signature', 'orgNames'
+	'id', 'url', 'name', 'studentNo', 'signature'
 ])
+
 const onIconTap = (e:UniHelper.EventTarget) => {
 	const { id } = e.target
 	if (id === 'course') {
 		uni.navigateTo({
-			url: "/pages/course-bind/course-bind?studentNo="+props.studentNo+"&orgIds="+props.orgIds
+			url: "/pages/course-bind/course-bind?studentNo="+props.studentNo+"&orgIds="+orgIds.value
 		})
 	}
 	if (id === 'schedule') {
@@ -52,11 +56,28 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 }
 
 onMounted(async () => {
-	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, props.orgIds)
+	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
+	orgIds.value = orgs.map(org => org._id)
+	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, orgIds.value)
 	entries.forEach(entry => {
 		total.value += entry.total
 		consume.value += entry.consume
 	})
+})
+
+const orgNames = computed(() => {
+	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
+	let index = 0
+	let str = ''
+	for (let org of orgs) {
+		str += org.name + " "
+		index++
+		if (index > 2) {
+			str += "等"
+			break
+		}
+	}
+	return str
 })
 	
 </script>
