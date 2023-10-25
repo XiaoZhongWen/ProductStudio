@@ -103,36 +103,30 @@ module.exports = {
 		let res_students = {data:[]}
 		
 		// 1. 创建者
-		if (roles.includes(1)) {
-			res_creator = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
-				creatorId: userId,
-				type: 0
-			}).get()
-		}
+		res_creator = await db.collection("wk-orgs").where({
+			_id: dbCmd.nin(excludes),
+			creatorId: userId,
+			type: 0
+		}).get()
 		
 		// 2. 老师
-		if (roles.includes(2)) {
-			res_teacher = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
-				teacherIds: userId,
-				type: 0
-			}).get()
-		}
+		res_teacher = await db.collection("wk-orgs").where({
+			_id: dbCmd.nin(excludes),
+			teacherIds: userId,
+			type: 0
+		}).get()
 		
 		// 3. 家长
-		if (roles.includes(3)) {
-			const students = await db.collection('wk-student').where({
-				associateIds: userId
+		const students = await db.collection('wk-student').where({
+			associateIds: userId
+		}).get()
+		for (let student of students.data) {
+			const res = await db.collection("wk-orgs").where({
+				_id: dbCmd.nin(excludes),
+				studentIds: student._id,
+				type: 0
 			}).get()
-			for (let student of students.data) {
-				const res = await db.collection("wk-orgs").where({
-					_id: dbCmd.nin(excludes),
-					studentIds: student._id,
-					type: 0
-				}).get()
-				res_parents.data.push(...res.data)
-			}
+			res_parents.data.push(...res.data)
 		}
 		
 		// 4. 学员

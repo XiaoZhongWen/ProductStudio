@@ -49,7 +49,6 @@ export const useUsersStore = defineStore('users', {
 			entries: [] as Entry[]
 		}
 	},
-	
 	getters: {
 		roleNames(state) {
 			return state.owner.roles?.map((roleId:RoleId) => {

@@ -1,7 +1,5 @@
 <script>
 	import { useUsersStore } from "@/store/users"
-	import { watch } from 'vue'
-	import { storeToRefs } from 'pinia'
 	import navigateInterceptor from './libs/interceptor/navigateInterceptor'
 	export default {
 		data() {
@@ -11,7 +9,6 @@
 			}
 		},
 		onLaunch: function() {
-			console.log('App Launch')
 			navigateInterceptor()
 		},
 		onShow: function() {
@@ -26,7 +23,6 @@
 			})
 		},
 		onHide: function() {
-			console.log('App Hide')
 		},
 		globalData: {
 			duration_toast: 2000,
