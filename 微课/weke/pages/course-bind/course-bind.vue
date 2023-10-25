@@ -9,9 +9,9 @@
 			:orgId="entry.orgId">
 		</wk-course-card>
 	</template>
-	<uni-section title="绑定课程" type="line" v-if="isTeacherOrCreator">
+	<uni-section title="绑定课程" type="line" v-if="canBindCourse">
 	</uni-section>
-	<view class="course-bind-container" v-if="isTeacherOrCreator">
+	<view class="course-bind-container" v-if="canBindCourse">
 		<view class="course-selector">
 			<uni-data-select
 				@change="onChange"
@@ -123,7 +123,7 @@ const consume = ref()
 const price = ref()
 const date = ref()
 const entries = ref<Entry[]>([])
-const isTeacherOrCreator = ref(true)
+const canBindCourse = ref(false)
 
 onLoad(async (option) => {
 	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string}
@@ -134,11 +134,6 @@ onLoad(async (option) => {
 		oIds = orgIds.split(',')
 	}
 	entries.value = await usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
-	if (usersStore.owner.roles?.includes(1) || usersStore.owner.roles?.includes(2)) {
-		isTeacherOrCreator.value = true
-	} else {
-		isTeacherOrCreator.value = false
-	}
 })
 
 onMounted(async () => {
@@ -146,13 +141,16 @@ onMounted(async () => {
 		return
 	}
 	const id = usersStore.owner._id
-	orgs = useOrgs.orgs.filter(org => (
-		org.creatorId === id || org.teacherIds?.includes(id)) && 
-		oIds.includes(org._id)
-	)
+	orgs = useOrgs.orgs.filter(org => org.creatorId === id && oIds.includes(org._id))
+	if (usersStore.owner.roles?.includes(1) && orgs.length > 0) {
+		canBindCourse.value = true
+	}
+	
 	if (oIds.includes(useOrgs.anonymousOrg._id)) {
 		orgs.push(useOrgs.anonymousOrg)
+		canBindCourse.value = true
 	}
+	
 	const courseIds:string[] = []
 	const teacherIds:string[] = []
 	orgs.forEach(org => {
@@ -168,7 +166,7 @@ onMounted(async () => {
 		})
 	})
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
-	if (courses.length === 0) {
+	if (courses.length === 0 && canBindCourse.value === true) {
 		uni.showToast({
 			title: "请先添加课程",
 			duration: global.duration_toast,
@@ -176,7 +174,7 @@ onMounted(async () => {
 		})
 	}
 	uni.setNavigationBarTitle({
-		title: isTeacherOrCreator.value? "绑定课程": "课程"
+		title: canBindCourse.value? "绑定课程": "课程"
 	})
 })
 
@@ -354,7 +352,7 @@ const reset = () => {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .uni-section {
 	background-color: transparent !important;
 }
