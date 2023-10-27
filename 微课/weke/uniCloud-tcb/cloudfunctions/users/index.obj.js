@@ -267,7 +267,7 @@ module.exports = {
 	* @param {Object} param
 	*/
    async fetchStudents(param) {
-	   const { userId, roles, studentNo, from } = param
+	   const { userId, studentNo, from } = param
 	   if (typeof(from) === 'undefined' || from.length === 0) {
 		   return []
 	   }
@@ -275,64 +275,59 @@ module.exports = {
 	   const studentIds = []
 	   const studentNos = []
 	   if (from === 'wx') {
-		   if (typeof(userId) === 'undefined' || userId.length === 0 ||
-			   typeof(roles) === 'undefined' || roles.length === 0) {
+		   if (typeof(userId) === 'undefined' || userId.length === 0) {
 			   return []
 		   }
-		   if (roles.includes(1)) {
-			   // 机构负责人
-			   const res = await db.collection('wk-orgs').where({
-				   creatorId: userId
-			   }).get()
-			   if (res.data.length > 0) {
-				   res.data.forEach(org => {
-					   org.studentIds.forEach(id => {
-						   if (!studentIds.includes(id)) {
-							   studentIds.push(id)
-						   }
-					   })
-				   })
-			   }
+		   // 机构负责人
+		   let res = await db.collection('wk-orgs').where({
+		   		creatorId: userId
+		   }).get()
+		   if (res.data.length > 0) {
+			   res.data.forEach(org => {
+				   org.studentIds.forEach(id => {
+					   if (!studentIds.includes(id)) {
+						   studentIds.push(id)
+					   }
+					})
+			   })
 		   }
-		   if (roles.includes(2)) {
-			   // 老师
-			   const res = await db.collection('wk-mapping').where({
-				   teacherId: userId
-			   }).get()
-			   if (res.data.length > 0) {
-				   res.data.forEach(entry => {
-					   if (!studentNos.includes(entry.studentId)) {
-						   studentNos.push(entry.studentId)
-					   }
-				   })
-			   }
+		   
+		   // 老师
+		   res = await db.collection('wk-mapping').where({
+		   		teacherId: userId
+		   }).get()
+		   if (res.data.length > 0) {
+		   		res.data.forEach(entry => {
+				   if (!studentNos.includes(entry.studentId)) {
+  					   studentNos.push(entry.studentId)
+		   		   }
+			   })
 		   }
-		   if (roles.includes(3)) {
-		   	   // 家长
-			   let res = await db.collection('wk-student').where({
-			   		associateIds: userId
-			   }).get()
-			   if (res.data.length > 0) {
-				   for (let student of res.data) {
-					   if (!studentNos.includes(student.studentNo)) {
-					   		studentNos.push(student.studentNo)
-					   }
-					   let result = await db.collection('wk-mapping').where({
-						   studentId: student.studentNo
-					   }).get()
-					   if (result.data.length > 0) {
-						   const courseIds = result.data.map(entry => entry.courseId)
-						   const dbCmd = db.command
-						   result = await db.collection('wk-mapping').where({
-							   courseId: dbCmd.in(courseIds)
-					   	   }).get()
-						   result.data.forEach(entry => {
-							   if (!studentNos.includes(entry.studentId)) {
-								   studentNos.push(entry.studentId)
-								}
-							})
-					   }
-				   }
+		   
+		   // 家长
+		   res = await db.collection('wk-student').where({
+		   		associateIds: userId
+		   }).get()
+		   if (res.data.length > 0) {
+		   		for (let student of res.data) {
+		   			if (!studentNos.includes(student.studentNo)) {
+				   		studentNos.push(student.studentNo)
+		   			}
+				   let result = await db.collection('wk-mapping').where({
+		   				studentId: student.studentNo
+		   		   }).get()
+		   		   if (result.data.length > 0) {
+		   				const courseIds = result.data.map(entry => entry.courseId)
+		   	 		    const dbCmd = db.command
+		   			    result = await db.collection('wk-mapping').where({
+		   					courseId: dbCmd.in(courseIds)
+		   				}).get()
+		   				result.data.forEach(entry => {
+		   					if (!studentNos.includes(entry.studentId)) {
+		   					   studentNos.push(entry.studentId)
+		   					}
+						})
+		   			}
 			   }
 		   }
 	   } else {
@@ -464,7 +459,9 @@ module.exports = {
 			typeof(mobile) === 'undefined' || mobile.length === 0) {
 	   		return {}
 		}
-		const identity = md5(name + "-" + mobile)
+		let identity = md5(name + "-" + mobile)
+		// 开发环境
+		identity = mobile
 		const db = uniCloud.database()
 		let res = await db.collection('wk-student').where({
 			identity: identity

@@ -94,11 +94,6 @@ onShareAppMessage((option) => {
 onMounted(async () => {
 	console.info("organization page...")
 	if (usersStore.isLogin) {
-		uni.showLoading({
-			title:"加载中"
-		})
-		await useOrgs.loadOrgData()
-		uni.hideLoading()
 		useOrgs.myOrgs.forEach(async org => {
 			const users:User[] = await usersStore.fetchUsers(org.teacherIds ?? [])
 			teachers.value.push(...users)

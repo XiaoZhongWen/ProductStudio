@@ -5,8 +5,6 @@ import { useUsersStore } from "@/store/users"
 import md5 from 'js-md5'
 import { User } from '../types/user'
 
-const usersStore = useUsersStore()
-
 const orgs_co = uniCloud.importObject('orgs', {
 	customUI: true
 })
@@ -24,6 +22,7 @@ export const useOrgsStore = defineStore('orgs', {
 	},
 	getters: {
 		myOrgs(state) {
+			const usersStore = useUsersStore()
 			if (usersStore.owner.roles?.includes(1)) {
 				// 机构负责人
 				return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
@@ -88,6 +87,7 @@ export const useOrgsStore = defineStore('orgs', {
 		},
 		// 创建匿名机构
 		async createAnonymousOrg() {
+			const usersStore = useUsersStore()
 			const userId = usersStore.owner._id
 			if (this.anonymousOrg._id.length === 0) {
 				const date = new Date(Date.now())
@@ -105,6 +105,7 @@ export const useOrgsStore = defineStore('orgs', {
 		},
 		// 获取匿名机构
 		async fetchAnonymousOrg() {
+			const usersStore = useUsersStore()
 			const userId = usersStore.owner._id
 			if (this.anonymousOrg.creatorId === userId) {
 				return this.anonymousOrg
@@ -115,8 +116,6 @@ export const useOrgsStore = defineStore('orgs', {
 					...this.anonymousOrg,
 					...org
 				}
-			} else {
-				this.createAnonymousOrg()
 			}
 		},
 		// 上传机构图标
@@ -163,6 +162,7 @@ export const useOrgsStore = defineStore('orgs', {
 		},
 		// 获取用户所有相关机构信息
 		async loadOrgData() {
+			const usersStore = useUsersStore()
 			let result = true
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
@@ -203,6 +203,7 @@ export const useOrgsStore = defineStore('orgs', {
 		},
 		// 获取机构的创建者信息
 		async fetchOrgCreator() {
+			const usersStore = useUsersStore()
 			for (let org of this.orgs) {
 				const nickname = org.nickname ?? ''
 				if (nickname.length === 0) {
@@ -278,7 +279,11 @@ export const useOrgsStore = defineStore('orgs', {
 				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
 				return
 			}
-			const res = this.orgs.filter(org => org._id === orgId)
+			
+			let res = this.orgs.filter(org => org._id === orgId)
+			if (res.length === 0 && this.anonymousOrg._id === orgId) {
+				res = [this.anonymousOrg]
+			}
 			if (res.length > 0) {
 				const org = res[0]
 				const ids = studentIds.filter(id => !org.studentIds?.includes(id))

@@ -46,11 +46,6 @@ onLoad((option) => {
 
 onMounted(async () => {
 	if (usersStore.isLogin) {
-		uni.showLoading({
-			title:"加载中"
-		})
-		await useOrgs.loadOrgData()
-		uni.hideLoading()
 		if (organizationId.length > 0) {
 			// 从机构详情进入
 			loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))

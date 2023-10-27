@@ -21,10 +21,6 @@ onLoad(async () => {
 		uni.showLoading({
 			title:"加载中"
 		})
-		await useOrgs.loadOrgData()
-		if (usersStore.owner.roles?.includes(2)) {
-			await useOrgs.fetchAnonymousOrg()
-		}
 		uni.hideLoading()
 		if (usersStore.owner.roles?.includes(1) && useOrgs.orgs.length === 0) {
 			// 如果是机构管理员且没有创建过机构,则提示创建机构

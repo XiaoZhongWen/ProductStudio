@@ -2,12 +2,6 @@
 	import { useUsersStore } from "@/store/users"
 	import navigateInterceptor from './libs/interceptor/navigateInterceptor'
 	export default {
-		data() {
-			const usersStore = useUsersStore()
-			return {
-				usersStore
-			}
-		},
 		onLaunch: function() {
 			navigateInterceptor()
 		},
@@ -17,7 +11,8 @@
 				success: (res) => {
 					const data = res.data
 					if (data.from === 'wx') {
-						this.usersStore.login()
+						const usersStore = useUsersStore()
+						usersStore.login()
 					}
 				}
 			})

@@ -34,9 +34,18 @@ const students = ref<Student[]>([])
 const selectedId = ref('')
 
 watchEffect(async() => {
-	const org = useOrgs.orgs.filter(org => org._id === props.orgId)[0] as Org
-	const users = await usersStore.fetchUsers(org.studentIds ?? [], 'student') as Student[]
-	students.value = users
+	const anonymousOrgId = useOrgs.anonymousOrg._id
+	const res = useOrgs.orgs.filter(org => org._id === props.orgId)
+	let org: Org | undefined = undefined
+	if (res.length > 0) {
+		org = res[0]
+	} else if (anonymousOrgId.length > 0 && anonymousOrgId === props.orgId) {
+		org = useOrgs.anonymousOrg
+	}
+	if (typeof(org) !== 'undefined') {
+		const users = await usersStore.fetchUsers(org.studentIds ?? [], 'student') as Student[]
+		students.value = users
+	}
 })
 
 const onLongPress = (e) => {

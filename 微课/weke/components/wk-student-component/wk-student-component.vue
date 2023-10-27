@@ -25,10 +25,6 @@ onMounted(async() => {
 	uni.showLoading({
 		title:"加载中"
 	})
-	await useOrgs.loadOrgData()
-	if (usersStore.owner.roles?.includes(2)) {
-		await useOrgs.fetchAnonymousOrg()
-	}
 	await usersStore.loadAllEntries()
 	uni.hideLoading()
 })
@@ -78,7 +74,6 @@ const students = computed(() => {
 })
 
 const loadOrgStudent = () => {
-	debugger
 	const students:Student[] = []
 	const userId = usersStore.owner._id
 	// 机构负责人 - 获取机构所有学员
@@ -105,8 +100,16 @@ const loadTeacherStudent = () => {
 	// 老师 - 获取教授的所有学员
 	const entries = usersStore.entries.filter(entry => entry.teacherId === userId)
 	const studentIds = entries.map(entry => entry.studentId)
+	// 匿名机构的学员
+	if (useOrgs.anonymousOrg._id.length > 0) {
+		const o = useOrgs.anonymousOrg.studentIds ?? []
+		if (o.length > 0) {
+			studentIds.push(...o)
+		}
+	}
+	
 	studentIds.forEach(sId => {
-		let index = usersStore.students.findIndex(student => student.studentNo === sId)
+		let index = usersStore.students.findIndex(student => student.studentNo === sId || student._id === sId)
 		if (index !== -1) {
 			const student = usersStore.students[index]
 			index = students.findIndex(s => s._id === student._id)

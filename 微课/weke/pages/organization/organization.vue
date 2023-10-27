@@ -34,16 +34,6 @@ onLoad(async (option) => {
 	}
 })
 
-onMounted(async () => {
-	if (usersStore.isLogin) {
-		uni.showLoading({
-			title:"加载中"
-		})
-		await useOrgs.loadOrgData()
-		uni.hideLoading()
-	}
-})
-
 // @ts-ignore
 const orgs = computed({
 	get() {

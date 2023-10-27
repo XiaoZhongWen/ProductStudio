@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useOrgsStore } from "@/store/orgs"
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
@@ -139,6 +140,8 @@ export const useUsersStore = defineStore('users', {
 							const { tempFileURL } = result.fileList[0]
 							this.updateAvatarUrl(tempFileURL)
 							this.fetchStudents()
+							useOrgsStore().loadOrgData()
+							useOrgsStore().fetchAnonymousOrg()
 						} else {
 							this.owner.openid = openid
 							this.owner.unionid = unionid
@@ -169,6 +172,7 @@ export const useUsersStore = defineStore('users', {
 							this.owner.from = 'stuNo'
 							this.owner.signature = signature
 							this.fetchStudents()
+							useOrgsStore().loadOrgData()
 							if (typeof(avatarId) !== 'undefined' && avatarId.length > 0) {
 								this.owner.avatarId = avatarId
 								const result = await uniCloud.getTempFileURL({
@@ -254,6 +258,8 @@ export const useUsersStore = defineStore('users', {
 				if (this.isLogin === false) {
 					this.isLogin = true
 					this.fetchStudents()
+					useOrgsStore().loadOrgData()
+					useOrgsStore().fetchAnonymousOrg()
 				}
 				result = true
 			} catch (e) {
@@ -325,9 +331,12 @@ export const useUsersStore = defineStore('users', {
 			}
 		},
 		// 更新角色
-		updateRoles(roleIds: RoleId[]) {
+		async updateRoles(roleIds: RoleId[]) {
 			this.owner.roles = roleIds
-			users_co.updateRoles(this.owner._id, roleIds)
+			const res = await users_co.updateRoles(this.owner._id, roleIds)
+			if (res === true) {
+				useOrgsStore().createAnonymousOrg()
+			}
 		},
 		// 更新个性签名
 		updateSignature(signature: string) {
@@ -344,7 +353,6 @@ export const useUsersStore = defineStore('users', {
 			}
 			const result = await users_co.fetchStudents({
 				userId: this.owner._id,
-				roles: this.owner.roles,
 				studentNo: this.owner.studentNo,
 				from: this.owner.from
 			})
@@ -528,8 +536,7 @@ export const useUsersStore = defineStore('users', {
 				return
 			}
 			const entries = await course_co.loadAllEntries(
-				this.owner._id,
-				this.owner.roles, 
+				this.owner._id, 
 				this.owner.studentNo, 
 				this.owner.from
 			)

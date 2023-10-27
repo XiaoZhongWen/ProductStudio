@@ -28,8 +28,7 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
-import { onLoad } from '@dcloudio/uni-app'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import OrgStudentContainer from './components/OrgStudentContainer';
 import { Student } from "../../types/user";
 import { Org } from "../../types/org";
@@ -47,17 +46,8 @@ const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const global = getApp().globalData!
 
-onLoad(async () => {
+onMounted(() => {
 	if (usersStore.isLogin) {
-		// 加载所有相关机构
-		uni.showLoading({
-			title:"加载中"
-		})
-		await useOrgs.loadOrgData()
-		if (usersStore.owner.roles?.includes(2)) {
-			await useOrgs.fetchAnonymousOrg()
-		}
-		uni.hideLoading()
 		if (usersStore.owner.roles?.includes(1) && useOrgs.orgs.length === 0) {
 			// 如果是机构管理员且没有创建过机构,则提示创建机构
 			uni.showToast({
@@ -83,7 +73,13 @@ const nickNameBrief = () => {
 const orgs = computed({
 	get() {
 		const userId = usersStore.owner._id
-		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+		let normalOrgs = []
+		if (usersStore.owner.roles?.includes(1)) {
+			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+			if (orgs.length > 0) {
+				normalOrgs.push(...orgs)
+			}
+		}
 		if (usersStore.owner.roles?.includes(2) &&
 			useOrgs.anonymousOrg._id.length > 0) {
 			normalOrgs.push(useOrgs.anonymousOrg)
@@ -102,7 +98,11 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			const data:Student[] = usersStore.students.filter(student => student._id === id)
 			if (data.length === 1) {
 				const student = data[0]
-				const identity = md5(name + "-" + phoneNumber)
+				let identity = md5(name + "-" + phoneNumber)
+				if (process.env.NODE_ENV === 'development') {
+					// 开发环境
+					identity = phoneNumber
+				}
 				if (student.identity === identity) {
 					isAvailable = false
 				}

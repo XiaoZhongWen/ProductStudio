@@ -66,7 +66,16 @@ onMounted(async () => {
 })
 
 const orgNames = computed(() => {
-	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
+	const userId = usersStore.owner._id
+	const roles = usersStore.owner.roles ?? []
+	const from = usersStore.owner.from
+	const orgs = useOrgs.orgs.filter(
+		org => org.studentIds?.includes(props.id) &&
+			(org.creatorId === userId || 
+			org.teacherIds?.includes(userId) || 
+			from === 'stuNo' ||
+			(roles.includes(3) && roles.length === 1))
+	)
 	let index = 0
 	let str = ''
 	for (let org of orgs) {
