@@ -29,13 +29,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from '../../uni_modules/lime-shared/vue';
+import { ref, watch } from '../../uni_modules/lime-shared/vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 
 const total = ref(0)
 const consume = ref(0)
 const orgIds = ref<string[]>([])
+const orgNames = ref('')
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
@@ -55,38 +56,77 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 	}
 }
 
-onMounted(async () => {
-	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
-	orgIds.value = orgs.map(org => org._id)
-	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, orgIds.value)
-	entries.forEach(entry => {
-		total.value += entry.total
-		consume.value += entry.consume
-	})
-})
-
-const orgNames = computed(() => {
+const loaddata = async () => {
 	const userId = usersStore.owner._id
-	const roles = usersStore.owner.roles ?? []
 	const from = usersStore.owner.from
-	const orgs = useOrgs.orgs.filter(
-		org => org.studentIds?.includes(props.id) &&
-			(org.creatorId === userId || 
-			org.teacherIds?.includes(userId) || 
-			from === 'stuNo' ||
-			(roles.includes(3) && roles.length === 1))
-	)
+	const roles = usersStore.owner.roles ?? []
+	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
+	const createOrgIds = useOrgs.orgs.filter(org => org.creatorId === userId).map(org => org._id)
+	const anonymousOrgId = useOrgs.anonymousOrg._id
+	const oIds:string[] = []
+	const s = orgs.map(org => org._id)
+	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
+	let totalCourse = 0
+	let consumeCourse = 0
+	entries.forEach(entry => {
+		// 1. 角色-机构管理员, 课程属于自己所创建的机构
+		const isOrgCourse = roles.includes(1) && createOrgIds.includes(entry.orgId)
+		// 2. 角色-老师, 课程属于自己所教授的课程以及自己匿名机构的课程
+		const isTeacherCourse = roles.includes(2) && (entry.teacherId === userId || entry.orgId === anonymousOrgId)
+		// 3. 角色-家长, 课程属于学员绑定的课程
+		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
+		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
+			totalCourse += entry.total
+			consumeCourse += entry.consume
+		}
+	})
+	orgs.forEach(org => {
+		// 1. 角色-机构管理员, 学员属于自己所创建的机构
+		const isOrgCourse = roles.includes(1) && createOrgIds.includes(org._id)
+		// 2. 角色-老师, 学员属于自己所任教的机构
+		const isTeacherCourse = roles.includes(2) && org.teacherIds?.includes(userId)
+		// 3. 角色-家长, 学员属于自己加入的机构
+		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
+		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
+			const index = oIds.findIndex(id => id === org._id)
+			if (index === -1) {
+				oIds.push(org._id)
+			}
+		}
+	})
+	orgIds.value = oIds
+	total.value = totalCourse
+	consume.value = consumeCourse
+}
+
+watch([usersStore.entries, usersStore.owner], () => {
+	loaddata()
+}, {immediate:true})
+
+watch(orgIds, async (oIds) => {
+	let names = ''
 	let index = 0
-	let str = ''
-	for (let org of orgs) {
-		str += org.name + " "
-		index++
-		if (index > 2) {
-			str += "等"
-			break
+	for (const orgId of oIds) {
+		const res = useOrgs.orgs.filter(org => org._id === orgId)
+		if (res.length === 1) {
+			const org = res[0]
+			if (org.type === 0) {
+				names += org.name + " "
+			} else {
+				const users = await usersStore.fetchUsers([org.creatorId])
+				if (users.length === 1) {
+					const creator = users[0]
+					names += creator.nickName + " "
+				}
+			}
+			index++
+			if (index > 2) {
+				names += "等"
+				break
+			}
 		}
 	}
-	return str
+	orgNames.value = names
 })
 	
 </script>

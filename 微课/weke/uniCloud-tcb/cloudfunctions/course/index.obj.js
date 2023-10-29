@@ -172,10 +172,13 @@ module.exports = {
 					studentId: dbCmd.in(studentNos)
 				}).get()
 				if (res.data.length > 0) {
+					const courseIds = res.data.map(entry => entry.courseId)
+					res = await db.collection('wk-mapping').where({
+						courseId: dbCmd.in(courseIds)
+					}).get()
 					forParents.push(...res.data)
 				}
 			}
-			
 			s.push(...forCreator, ...forTeacher, ...forParents)
 		} else if (from === 'stuNo') {
 			const forStudents = []
@@ -183,6 +186,10 @@ module.exports = {
 				studentId: studentNo
 			}).get()
 			if (res.data.length > 0) {
+				const courseIds = res.data.map(entry => entry.courseId)
+				res = await db.collection('wk-mapping').where({
+					courseId: dbCmd.in(courseIds)
+				}).get()
 				forStudents.push(...res.data)
 			}
 			s.push(...forStudents)
@@ -195,5 +202,21 @@ module.exports = {
 			}
 		})
 		return entries
+	},
+	/**
+	 * 变更课程老师
+	 */
+	async changeCourseTeacher(entryId, teacherId) {
+		if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+			typeof(teacherId) === 'undefined' || teacherId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-mapping').where({
+			_id: entryId
+		}).update({
+			teacherId
+		})
+		return result.updated === 1
 	}
 }

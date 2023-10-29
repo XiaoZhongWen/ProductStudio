@@ -167,8 +167,7 @@ export const useOrgsStore = defineStore('orgs', {
 			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
 				const orgs = await orgs_co.fetchOrgs(
-					usersStore.owner._id, 
-					usersStore.owner.roles, 
+					usersStore.owner._id,
 					didLoadedOrgIds,
 					usersStore.owner.from
 				)
@@ -254,7 +253,10 @@ export const useOrgsStore = defineStore('orgs', {
 			return orgs
 		},
 		fetchOrgById(orgId:string) {
-			const result = this.orgs.filter(org => org._id === orgId)
+			let result = this.orgs.filter(org => org._id === orgId)
+			if (result.length === 0 && this.anonymousOrg._id === orgId) {
+				result = [this.anonymousOrg]
+			}
 			return result[0]
 		},
 		/**
@@ -301,7 +303,10 @@ export const useOrgsStore = defineStore('orgs', {
 				typeof(courseId) === 'undefined' || courseId.length === 0) {
 				return false
 			}
-			const res = this.orgs.filter(org => org._id === orgId)
+			let res = this.orgs.filter(org => org._id === orgId)
+			if (res.length === 0 && this.anonymousOrg._id === orgId) {
+				res = [this.anonymousOrg]
+			}
 			if (res.length > 0) {
 				const org = res[0]
 				if (!org.courseIds?.includes(courseId)) {
@@ -367,7 +372,10 @@ export const useOrgsStore = defineStore('orgs', {
 				typeof(courseId) === 'undefined' || courseId.length === 0) {
 				return false
 			}
-			const res = this.orgs.filter(org => org._id === orgId)
+			let res = this.orgs.filter(org => org._id === orgId)
+			if (res.length === 0 && this.anonymousOrg._id === orgId) {
+				res = [this.anonymousOrg]
+			}
 			if (res.length > 0) {
 				const org = res[0]
 				if (!org.courseIds?.includes(courseId)) {

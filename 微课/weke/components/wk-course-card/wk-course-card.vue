@@ -3,7 +3,12 @@
 		<view class="top">
 			<view :class="course.icon"></view>
 			<text class="text">{{course.name}}</text>
-			<wk-circle-progress v-if="props.forStudent" class="circle-progress"></wk-circle-progress>
+			<wk-circle-progress 
+				v-if="props.forStudent" 
+				class="circle-progress"
+				:total="props.total"
+				:consume="props.consume">
+			</wk-circle-progress>
 		</view>
 		<view class="duration">
 			<text>课程时长: {{course.duration}}分钟</text>
@@ -16,23 +21,41 @@
 					:url="teacher.avatarUrl"
 					:text="teacher.nickName">
 				</wk-icon>
-				<uni-icons type="loop" class="replace" color="#5073D6" v-if="isCreator"></uni-icons>
+				<uni-icons 
+					type="loop" 
+					class="replace" 
+					color="#5073D6" 
+					@tap="onReplaceTap"
+					v-if="canReplaceTeacher">
+				</uni-icons>
 			</view>
 		</view>
-		<view class="operation" v-if="props.forStudent && isCreator">
+		<view class="operation" v-if="props.forStudent && isCreator && hasAdminOrTeacherRole">
 			<view class="left">
-				<text>{{org.name}}</text>
+				<text>{{orgName}}</text>
 			</view>
-			<view class="right">
-				<text class="action">续课</text>
-				<text class="action finish">结课</text>
-				<text class="action revoke">退课</text>
+			<view class="right" @tap="onActionTap">
+				<text class="action" id="renew">续课</text>
+				<text class="action finish" id="finish">结课</text>
+				<text class="action revoke" id="revoke">退课</text>
 			</view>
 		</view>
 		<view class="bottom" v-else>
-			<text>{{org.name}}</text>
+			<text>{{orgName}}</text>
 			<text>{{type}}</text>
 		</view>
+		
+		<uni-popup ref="popup" type="bottom">
+			<wk-choose-teacher 
+				:entryId="props.entryId"
+				@onConfirm="onConfirm">
+			</wk-choose-teacher>
+		</uni-popup>
+		
+		<uni-popup ref="renewPopup" type="bottom">
+			<wk-renew-course></wk-renew-course>
+		</uni-popup>
+		
 	</view>
 </template>
 
@@ -49,23 +72,38 @@ const course = ref<Course>()
 const teacher = ref<User>()
 const org = ref<Org>()
 const type = ref('')
+const orgName = ref('')
 const display = ref(false)
 const isCreator = ref(false)
+const hasAdminOrTeacherRole = ref(false)
+const canReplaceTeacher = ref(false)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
-const props = defineProps(['forStudent', 'courseId', 'teacherId', 'orgId'])
+const props = defineProps(['forStudent', 'entryId', 'courseId', 'teacherId', 'orgId', 'total', 'consume'])
+const global = getApp().globalData!
+
+const popup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+const renewPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
 onMounted(async () => {
 	if (typeof(props.forStudent) !== 'undefined' && 
 		props.forStudent &&
 		typeof(props.teacherId) !== 'undefined' && 
 		props.teacherId.length > 0) {
 		const res = await usersStore.fetchUsers([props.teacherId]) as User[]
-		if (res.length > 0) [
+		if (res.length > 0) {
 			teacher.value = res[0]
-		]
+		}
 	}
 	if (typeof(props.courseId) !== 'undefined' && 
 		props.courseId.length > 0) {
@@ -91,12 +129,66 @@ onMounted(async () => {
 		props.orgId.length > 0) {
 		org.value = useOrgs.fetchOrgById(props.orgId)
 		isCreator.value = org.value.creatorId === usersStore.owner._id
+		const roles = usersStore.owner.roles ?? []
+		hasAdminOrTeacherRole.value = roles.includes(1) || roles.includes(2)
+		const teacherIds = org.value.teacherIds ?? []
+		canReplaceTeacher.value = isCreator.value && hasAdminOrTeacherRole.value && teacherIds.length > 1
+		if (org.value.type === 0) {
+			orgName.value = org.value.name
+		} else {
+			const users = await usersStore.fetchUsers([org.value.creatorId])
+			if (users.length === 1) {
+				const creator = users[0]
+				orgName.value = creator.nickName
+			}
+		}
 	}
 })
 
 const isShowTeacher = computed(() => {
 	return props.forStudent && typeof(teacher.value) !== 'undefined'
 })
+
+const onReplaceTap = () => {
+	popup.value?.open()
+}
+
+const onConfirm = async (data: {teacherId: string}) => {
+	const teacherId = data.teacherId
+	const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
+	if (entries.length === 1) {
+		const entry = entries[0]
+		uni.showLoading({
+			title:"正在变更"
+		})
+		const result = await courseStore.changeCourseTeacher(entry._id, teacherId)
+		if (result) {
+			entry.teacherId = teacherId
+			const teachers = await usersStore.fetchUsers([teacherId]) as User[]
+			if (teachers.length === 1) {
+				teacher.value = teachers[0]
+			}
+		}
+		uni.hideLoading()
+		uni.showToast({
+			title: result?"变更成功":"变更失败",
+			duration: global.duration_toast,
+			icon: result?"success":"error"
+		})
+	}
+	popup.value?.close()
+}
+
+const onActionTap = (e:UniHelper.EventTarget) => {
+	const { id } = e.target
+	if (id === 'renew') {
+		console.info("renew")
+	} else if (id === 'finish') {
+		console.info("finish")
+	} else if (id === 'revoke') {
+		console.info("revoke")
+	}
+}
 
 </script>
 

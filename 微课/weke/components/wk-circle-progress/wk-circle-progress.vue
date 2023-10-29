@@ -19,7 +19,8 @@ import { computed, ref } from "vue";
 const props = defineProps(['total', 'consume'])
 const percent = ref(0)
 if (props.total > 0) {
-	percent.value = props.consume / props.total
+	const progress = ((props.consume / props.total) * 100).toFixed(1)
+	percent.value = parseFloat(progress)
 }
 
 // @ts-ignore

@@ -111,8 +111,8 @@ export const useCourseStore = defineStore('course', {
 				typeof(consume) === 'undefined' || consume < 0) {
 				return ''
 			}
-			const result = await course_co.bindCourse(param)
-			return result
+			const entryId = await course_co.bindCourse(param)
+			return entryId
 		},
 		async addPaymentRecord(param: {
 			orgId: string,
@@ -132,6 +132,14 @@ export const useCourseStore = defineStore('course', {
 				return false
 			}
 			const result = await course_co.addPaymentRecord(param)
+			return result
+		},
+		async changeCourseTeacher(entryId:string, teacherId: string) {
+			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(teacherId) === 'undefined' || teacherId.length === 0) {
+				return false
+			}
+			const result = await course_co.changeCourseTeacher(entryId, teacherId)
 			return result
 		}
 	}

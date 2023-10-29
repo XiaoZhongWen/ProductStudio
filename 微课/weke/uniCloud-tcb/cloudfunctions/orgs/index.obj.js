@@ -87,12 +87,10 @@ module.exports = {
 	/**
 	 * 获取所有与用户相关的机构信息
 	 * @param {userId} 机构创建者id
-	 * @param {roles} 角色id集合
 	 * @param {excludes} 排除的机构id集合
 	 */
-	async fetchOrgs(userId, roles, excludes, from="wx") {
-		if (typeof(userId) === 'undefined' || userId.length === 0 ||
-			(from === 'wx' && (typeof(roles) === 'undefined' || roles.length === 0))) {
+	async fetchOrgs(userId, excludes, from="wx") {
+		if (typeof(userId) === 'undefined' || userId.length === 0) {
 			return []
 		}
 		const db = uniCloud.database()
@@ -106,14 +104,12 @@ module.exports = {
 		res_creator = await db.collection("wk-orgs").where({
 			_id: dbCmd.nin(excludes),
 			creatorId: userId,
-			type: 0
 		}).get()
 		
 		// 2. 老师
 		res_teacher = await db.collection("wk-orgs").where({
 			_id: dbCmd.nin(excludes),
 			teacherIds: userId,
-			type: 0
 		}).get()
 		
 		// 3. 家长
@@ -124,7 +120,6 @@ module.exports = {
 			const res = await db.collection("wk-orgs").where({
 				_id: dbCmd.nin(excludes),
 				studentIds: student._id,
-				type: 0
 			}).get()
 			res_parents.data.push(...res.data)
 		}
@@ -134,7 +129,6 @@ module.exports = {
 			res_students = await db.collection("wk-orgs").where({
 				_id: dbCmd.nin(excludes),
 				studentIds: userId,
-				type: 0
 			}).get()
 		}
 		

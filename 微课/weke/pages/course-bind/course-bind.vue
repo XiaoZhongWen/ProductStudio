@@ -4,9 +4,12 @@
 	<template v-for="entry in entries" :key="entry._id">
 		<wk-course-card
 			forStudent
+			:entryId="entry._id"
 			:courseId="entry.courseId"
 			:teacherId="entry.teacherId"
-			:orgId="entry.orgId">
+			:orgId="entry.orgId"
+			:total="entry.total"
+			:consume="entry.consume">
 		</wk-course-card>
 	</template>
 	<uni-section title="绑定课程" type="line" v-if="canBindCourse">
@@ -39,7 +42,7 @@
 				<text class="text title">{{courseType}}</text>
 			</view>
 		</view>
-		<view class="org">
+		<view class="org" v-if="!isAnonymousOrg">
 			<view class="left">
 				<text class="text title">机构名称</text>
 			</view>
@@ -124,6 +127,7 @@ const price = ref()
 const date = ref()
 const entries = ref<Entry[]>([])
 const canBindCourse = ref(false)
+const isAnonymousOrg = ref(false)
 
 onLoad(async (option) => {
 	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string}
@@ -142,12 +146,8 @@ onMounted(async () => {
 	}
 	const id = usersStore.owner._id
 	orgs = useOrgs.orgs.filter(org => org.creatorId === id && oIds.includes(org._id))
-	if (usersStore.owner.roles?.includes(1) && orgs.length > 0) {
-		canBindCourse.value = true
-	}
-	
-	if (oIds.includes(useOrgs.anonymousOrg._id)) {
-		orgs.push(useOrgs.anonymousOrg)
+	if ((usersStore.owner.roles?.includes(1) ||
+		usersStore.owner.roles?.includes(2)) && orgs.length > 0) {
 		canBindCourse.value = true
 	}
 	
@@ -219,7 +219,17 @@ const onChange = (e:string) => {
 	const result = orgs.filter(org => org.courseIds?.includes(selectedCourseId.value))
 	if (result.length === 1) {
 		const org = result[0]
-		orgName.value = org.name
+		if (org._id !== useOrgs.anonymousOrg._id) {
+			orgName.value = org.name
+		} else {
+			isAnonymousOrg.value = true
+			teacherSelectorData.value = [{
+				value: usersStore.owner._id,
+				text: usersStore.owner.nickName
+			}]
+			selectedTeacherId.value = usersStore.owner._id
+			return
+		}
 		if (org.creatorId === usersStore.owner._id) {
 			// 2. 对于机构负责人
 			teachers.forEach(teacher => {
@@ -332,6 +342,7 @@ const onBindCourse = async () => {
 			consume: parseInt(consume.value)
 		}
 		entries.value.push(entry)
+		usersStore.entries.push(entry)
 		reset()
 	}
 }
