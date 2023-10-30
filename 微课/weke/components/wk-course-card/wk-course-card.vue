@@ -30,7 +30,10 @@
 				</uni-icons>
 			</view>
 		</view>
-		<view class="operation" v-if="props.forStudent && isCreator && hasAdminOrTeacherRole">
+		<view class="operation" v-if="props.forStudent && 
+											isCreator && 
+											hasAdminOrTeacherRole &&
+											course.type !== 3">
 			<view class="left">
 				<text>{{orgName}}</text>
 			</view>
@@ -42,7 +45,7 @@
 		</view>
 		<view class="bottom" v-else>
 			<text>{{orgName}}</text>
-			<text>{{type}}</text>
+			<text>{{typeName}}</text>
 		</view>
 		
 		<uni-popup ref="popup" type="bottom">
@@ -53,9 +56,11 @@
 		</uni-popup>
 		
 		<uni-popup ref="renewPopup" type="bottom">
-			<wk-renew-course></wk-renew-course>
+			<wk-renew-course 
+				:entryId="props.entryId"
+				@onConfirm="onRenewConfirm">
+			</wk-renew-course>
 		</uni-popup>
-		
 	</view>
 </template>
 
@@ -71,7 +76,7 @@ import { useOrgsStore } from '@/store/orgs'
 const course = ref<Course>()
 const teacher = ref<User>()
 const org = ref<Org>()
-const type = ref('')
+const typeName = ref('')
 const orgName = ref('')
 const display = ref(false)
 const isCreator = ref(false)
@@ -111,16 +116,16 @@ onMounted(async () => {
 		if (res.length > 0) {
 			course.value = res[0]
 			if (course.value.type === 0) {
-				type.value = "一对一"
+				typeName.value = "一对一"
 			}
 			if (course.value.type === 1) {
-				type.value = "班课"
+				typeName.value = "班课"
 			}
 			if (course.value.type === 2) {
-				type.value = "次课"
+				typeName.value = "次课"
 			}
 			if (course.value.type === 3) {
-				type.value = "试听课"
+				typeName.value = "试听课"
 			}
 			display.value = true
 		}
@@ -179,10 +184,14 @@ const onConfirm = async (data: {teacherId: string}) => {
 	popup.value?.close()
 }
 
+const onRenewConfirm = (data: {count:number}) => {
+	renewPopup.value?.close()
+}
+
 const onActionTap = (e:UniHelper.EventTarget) => {
 	const { id } = e.target
 	if (id === 'renew') {
-		console.info("renew")
+		renewPopup.value?.open()
 	} else if (id === 'finish') {
 		console.info("finish")
 	} else if (id === 'revoke') {

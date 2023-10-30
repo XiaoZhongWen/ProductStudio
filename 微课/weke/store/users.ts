@@ -377,7 +377,7 @@ export const useUsersStore = defineStore('users', {
 			if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
 				return {}
 			}
-			let index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
+			let index = this.students.findIndex(stu => stu.studentNo === studentNo)
 			if (index !== -1) {
 				return this.students[index]
 			}
@@ -385,7 +385,7 @@ export const useUsersStore = defineStore('users', {
 			if (typeof(student) === 'undefined' || JSON.stringify(student) === '{}') {
 				return {}
 			}
-			index = this.students.findIndex(stu => stu.studentNo === student.studentNo)
+			index = this.students.findIndex(stu => stu.studentNo === studentNo)
 			if (index === -1) {
 				this.students.push(student)
 			}

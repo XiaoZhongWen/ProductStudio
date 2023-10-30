@@ -96,7 +96,7 @@ module.exports = {
 		}
 	},
 	async addPaymentRecord(param) {
-		const { orgId, studentId, date, courseId, count, price } = param
+		const { orgId, studentId, date, courseId, count, price, remark } = param
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
@@ -105,6 +105,9 @@ module.exports = {
 			typeof(price) === 'undefined' || price < 0) {
 			return false
 		}
+		if (typeof(remark) === 'undefined') {
+			remark = ''
+		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-payment-records').add({
 			orgId,
@@ -112,10 +115,33 @@ module.exports = {
 			courseId,
 			date,
 			count,
-			price
+			price,
+			remark
 		})
-		const { inserted } = result
-		return inserted === 1
+		const { id } = result
+		return id
+	},
+	async removePaymentRecord(id) {
+		if (typeof(id) === 'undefined' || id.length === 0) {
+			return
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-payment-records').remove({
+			_id:id
+		})
+		return result.deleted === 1
+	},
+	async fetchLastestPaymentRecord(studentId, courseId) {
+		if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(courseId) === 'undefined' || courseId.length === 0) {
+			return {}
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-payment-records').where({
+			studentId,
+			courseId,
+		}).orderBy("date", "desc").limit(1).get()
+		return result.data
 	},
 	async fetchEntriesWithStudentNo(studentNo, ordIds) {
 		if (typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
@@ -216,6 +242,20 @@ module.exports = {
 			_id: entryId
 		}).update({
 			teacherId
+		})
+		return result.updated === 1
+	},
+	async renewCourse(entryId, count) {
+		if (typeof(entryId) === 'undefined' ||
+			entryId.length === 0 || 
+			count <= 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-mapping').where({
+			_id: entryId
+		}).update({
+			total: count
 		})
 		return result.updated === 1
 	}

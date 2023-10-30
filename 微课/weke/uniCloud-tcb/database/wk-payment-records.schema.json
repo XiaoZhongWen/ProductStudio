@@ -38,6 +38,11 @@
 		"price": {
 			"bsonType": "double",
 			"description": "缴费金额"
+		},
+		"remark": {
+			"bsonType": "string",
+			"description": "备注",
+			"defaultValue": ""
 		}
 	}
 }

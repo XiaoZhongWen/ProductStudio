@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { Course } from '@/types/course'
+import { PaymentRecord } from '../types/PaymentRecord'
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true
@@ -8,7 +9,8 @@ const course_co = uniCloud.importObject('course', {
 export const useCourseStore = defineStore('course', {
 	state: () => {
 		return {
-			course:[] as Course[]
+			course:[] as Course[],
+			paymentRecords:[] as PaymentRecord[]
 		}
 	},
 	getters: {
@@ -120,7 +122,8 @@ export const useCourseStore = defineStore('course', {
 			date: number,
 			courseId: string,
 			count: number,
-			price: number
+			price: number,
+			remark: string
 		}) {
 			const { orgId, studentId, date, courseId, count, price } = param
 			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
@@ -131,8 +134,29 @@ export const useCourseStore = defineStore('course', {
 				typeof(price) === 'undefined' || price < 0) {
 				return false
 			}
-			const result = await course_co.addPaymentRecord(param)
-			return result
+			const id = await course_co.addPaymentRecord(param)
+			if (typeof(id) !== 'undefined' && id.length > 0) {
+				const index = this.paymentRecords.findIndex(r => r._id === id)
+				if (index === -1) {
+					const r: PaymentRecord = {
+						_id: id,
+						orgId,
+						studentId,
+						date,
+						courseId,
+						count,
+						price
+					}
+					this.paymentRecords.push(r)
+				}
+			}
+			return id
+		},
+		async removePaymentRecord(id:string) {
+			if (typeof(id) === 'undefined' || id.length === 0) {
+				return
+			}
+			
 		},
 		async changeCourseTeacher(entryId:string, teacherId: string) {
 			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
@@ -141,6 +165,35 @@ export const useCourseStore = defineStore('course', {
 			}
 			const result = await course_co.changeCourseTeacher(entryId, teacherId)
 			return result
+		},
+		async fetchLastestPaymentRecord(studentId:string, courseId:string) {
+			if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return {}
+			}
+			const records = this.paymentRecords.filter(r => r.studentId === studentId && r.courseId === courseId)
+			if (records.length > 0) {
+				records.sort((r1, r2) => {
+					return r2.date - r1.date
+				})
+				return records[0]
+			} else {
+				const res = await course_co.fetchLastestPaymentRecord(studentId, courseId)
+				if (res.length > 0) {
+					this.paymentRecords.push(...res)
+					return res[0]
+				}
+			}
+			return {}
+		},
+		async renewCourse(entryId:string, count:number) {
+			if (typeof(entryId) === 'undefined' || 
+				entryId.length === 0 || 
+				count <= 0) {
+				return false
+			}
+			const res = await course_co.renewCourse(entryId, count)
+			return res
 		}
 	}
 })
