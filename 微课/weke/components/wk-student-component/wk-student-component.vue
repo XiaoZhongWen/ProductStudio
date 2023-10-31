@@ -1,5 +1,5 @@
 <template>
-	<view class="student-component-container" v-if="useOrgs.orgs.length > 0">
+	<view class="student-component-container" v-if="usersStore.isLogin && useOrgs.orgs.length > 0">
 		<template v-for="student in students" :key="student._id">
 			<wk-student-card 
 			:id="student._id"

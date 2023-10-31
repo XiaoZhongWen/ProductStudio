@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
@@ -42,10 +42,10 @@ const orgs = computed({
 			let res:Org[] = []
 			if (usersStore.owner.from === 'wx') {
 				const forCreator = useOrgs.orgs.filter(org => {
-					return org.creatorId === userId.value
+					return org.creatorId === userId.value && org.type === 0
 				})
 				const forTeacher = useOrgs.orgs.filter(org => {
-					return org.teacherIds?.includes(userId.value)
+					return org.teacherIds?.includes(userId.value) && org.type === 0
 				})
 				if (usersStore.owner.roles?.includes(1)) {
 					res.push(...forCreator)
@@ -64,14 +64,14 @@ const orgs = computed({
 			} else {
 				// 学生
 				const forStudent = useOrgs.orgs.filter(org => {
-					return org.studentIds?.includes(userId.value)
+					return org.studentIds?.includes(userId.value) && org.type === 0
 				})
 				res.push(...forStudent)
 			}
 			return res
 		} else {
 			// 家长, 这里的userId指的是被关联学员的userId
-			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
+			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value) && org.type === 0)
 		}
 	}
 })
