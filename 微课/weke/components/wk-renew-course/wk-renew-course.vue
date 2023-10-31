@@ -52,7 +52,7 @@
 				<view class="section">
 					<text class="title">{{type === 2?"剩余课次":"剩余课时"}}</text>
 					<view class="desc">
-						{{total - consume}}
+						{{typeof(entry) !== 'undefined'?(entry.total - entry.consume):0}}
 					</view>
 				</view>
 				<view class="section">
@@ -94,6 +94,7 @@ import { useOrgsStore } from '@/store/orgs'
 import { computed, onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { Student, User } from "../../types/user";
 import { PaymentRecord } from "../../types/PaymentRecord";
+import { Entry } from "../../types/entry";
 
 const props = defineProps(['entryId'])
 const usersStore = useUsersStore()
@@ -113,11 +114,10 @@ const courseIcon = ref('')
 const courseName = ref('')
 const type = ref(0)
 const typeName = ref('')
-const total = ref(0)
-const consume = ref(0)
 const price = ref(0.0)
 const renewCount = ref(20)
 const remark = ref<string>()
+const entry = ref<Entry>()
 
 const emit = defineEmits(['onConfirm'])
 
@@ -127,35 +127,35 @@ onMounted(async () => {
 	if (typeof(props.entryId) !== 'undefined' && props.entryId.length > 0) {
 		const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
 		if (entries.length === 1) {
-			const entry = entries[0]
-			total.value = entry.total
-			consume.value = entry.consume
-			
-			const paymentRecord = await courseStore.fetchLastestPaymentRecord(entry.studentId, entry.courseId) as PaymentRecord
+			entry.value = entries[0]
+			if (typeof(entry.value) === 'undefined') {
+				return
+			}
+			const paymentRecord = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
 			if (JSON.stringify(paymentRecord) !== '{}') {
 				price.value = paymentRecord.price
 			}
 			
-			const student = await usersStore.fetchStudentByNo(entry.studentId) as Student
+			const student = await usersStore.fetchStudentByNo(entry.value.studentId) as Student
 			studentAvatarUrl.value = student.avatarUrl ?? ''
 			studentNickname.value = student.nickName
 			studentNo.value = student.studentNo
 			
-			const teachers = await usersStore.fetchUsers([entry.teacherId]) as User[]
+			const teachers = await usersStore.fetchUsers([entry.value.teacherId]) as User[]
 			if (teachers.length === 1) {
 				const teacher = teachers[0]
 				teacherAvatarUrl.value = teacher.avatarUrl ?? ''
 				teacherNickname.value = teacher.nickName
 			}
-			const orgs = useOrgs.orgs.filter(org => org._id === entry.orgId)
+			const orgs = useOrgs.orgs.filter(org => org._id === entry.value.orgId)
 			if (orgs.length === 1) {
 				const org = orgs[0]
 				orgName.value = org.name
 				orgType.value = org.type
 				orgId.value = org._id
 			}
-			const courses = await courseStore.fetchCourses([entry.courseId])
-			if (courses.length === 1) {
+			const courses = await courseStore.fetchCourses([entry.value.courseId])
+			if (courses.length > 0) {
 				const course = courses[0]
 				courseId.value = course._id
 				courseIcon.value = course.icon
@@ -219,17 +219,20 @@ const onConfirm = async () => {
 		remark: remark.value ?? ''
 	})
 	let result = false
-	if (typeof(id) !== 'undefined' && id.length > 0) {
-		const res = await courseStore.renewCourse(props.entryId, total.value + renewCount.value)
+	if (typeof(id) !== 'undefined' && 
+		id.length > 0 && 
+		typeof(entry.value) !== 'undefined') {
+		const operatorId = usersStore.owner._id
+		const res = await courseStore.renewCourse(props.entryId, entry.value.total + renewCount.value, operatorId)
 		if (res) {
 			result = true
-			total.value += renewCount.value
-			const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
-			if (entries.length === 1) {
-				const entry = entries[0]
-				entry.total += renewCount.value
-				emit('onConfirm', {count:renewCount.value})
+			entry.value.total += renewCount.value
+			entry.value.info = {
+				status: 0,
+				date: Date.now(),
+				operator: operatorId
 			}
+			emit('onConfirm', {count:renewCount.value})
 		} else {
 			courseStore.removePaymentRecord(id)
 		}

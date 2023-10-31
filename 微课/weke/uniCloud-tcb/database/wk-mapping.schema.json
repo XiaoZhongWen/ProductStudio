@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["orgId","teacherId", "studentId", "courseId", "total", "consume"],
+	"required": ["orgId","teacherId", "studentId", "courseId", "total", "consume", "info"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -41,6 +41,10 @@
 			"bsonType": "int",
 			"description": "学生已耗课时数",
 			"defaultValue": 0
+		},
+		"info": {
+			"bsonType": "object",
+			"description": "课程操作信息"
 		}
 	}
 }

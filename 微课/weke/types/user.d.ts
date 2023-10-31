@@ -26,7 +26,6 @@ export type Student = {
 	mobile?: string,
 	signature?: string,
 	associateIds?: string[]
-	status: number,
 	identity: string,
 	orgIds?:string[]
 }

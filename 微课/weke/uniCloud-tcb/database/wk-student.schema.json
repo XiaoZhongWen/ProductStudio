@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["studentNo", "nickName", "registerDate", "status", "pwd", "identity"],
+	"required": ["studentNo", "nickName", "registerDate", "pwd", "identity"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -51,11 +51,6 @@
 			"bsonType": "array",
 			"description": "关联的id集合",
 			"maxLength": 5
-		},
-		"status": {
-			"bsonType": "int",
-			"description": "学生状态：0 在读 1 结课 2 退费",
-			"defaultValue": 0
 		},
 		"pwd": {
 			"bsonType": "string",

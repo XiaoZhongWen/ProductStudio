@@ -113,7 +113,7 @@ module.exports = {
 	*/
    async updateStudent(student) {
 	   let update = {}
-	   const { studentNo, nickName, avatarId, mobile, status, signature, pwd } = student
+	   const { studentNo, nickName, avatarId, mobile, signature, pwd } = student
 	   if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
 		   return {}
 	   }
@@ -125,9 +125,6 @@ module.exports = {
 	   }
 	   if (typeof(mobile) !== 'undefined' && mobile.length !== 0) {
 	   		update.mobile = mobile
-	   }
-	   if (typeof(status) !== 'undefined') {
-	   		update.status = status
 	   }
 	   if (typeof(signature) !== 'undefined' && signature.length !== 0) {
 	   		update.signature = signature
@@ -478,7 +475,6 @@ module.exports = {
 			registerDate: Date.now(),
 			pwd: md5(studentNo),
 			identity: identity,
-			status: 0
 		})
 		if (res.inserted === 1) {
 			return {

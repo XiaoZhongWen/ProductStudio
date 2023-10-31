@@ -5,5 +5,6 @@ export type Entry = {
 	studentId: string,
 	courseId: string,
 	total: number,
-	consume: number
+	consume: number,
+	info: {status: number, date:number, operator:string}
 }

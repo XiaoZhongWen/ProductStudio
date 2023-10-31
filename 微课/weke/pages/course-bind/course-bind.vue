@@ -160,10 +160,13 @@ onMounted(async () => {
 	const orgCourses = await courseStore.fetchCourses(courseIds ?? [])
 	courses = orgCourses
 	courses.forEach(course => {
-		courseSelectorData.value.push({
-			value: course._id,
-			text: course.name
-		})
+		const index = courseSelectorData.value.findIndex(item => item.value === course._id)
+		if (index == -1) {
+			courseSelectorData.value.push({
+				value: course._id,
+				text: course.name
+			})
+		}
 	})
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
 	if (courses.length === 0 && canBindCourse.value === true) {
@@ -306,13 +309,19 @@ const onBindCourse = async () => {
 	uni.showLoading({
 		title:"正在绑定..."
 	})
+	const info = {
+		status: 0,
+		date: Date.now(),
+		operator: usersStore.owner._id
+	}
 	const entryId = await courseStore.bindCourse({
 		orgId: org._id,
 		teacherId: selectedTeacherId.value,
 		studentId: stuNo,
 		courseId: selectedCourseId.value,
 		total: parseInt(totle.value),
-		consume: parseInt(consume.value)
+		consume: parseInt(consume.value),
+		info
 	})
 	let result = false
 	if (entryId.length > 0) {
@@ -322,7 +331,8 @@ const onBindCourse = async () => {
 			date: date.value,
 			courseId: selectedCourseId.value,
 			count: parseInt(totle.value),
-			price: parseFloat(price.value)
+			price: parseFloat(price.value),
+			remark:''
 		})
 	}
 	uni.hideLoading()
@@ -339,7 +349,8 @@ const onBindCourse = async () => {
 			studentId: stuNo,
 			courseId: selectedCourseId.value,
 			total: parseInt(totle.value),
-			consume: parseInt(consume.value)
+			consume: parseInt(consume.value),
+			info
 		}
 		entries.value.push(entry)
 		usersStore.entries.push(entry)

@@ -20,6 +20,7 @@
 		onHide: function() {
 		},
 		globalData: {
+			appName: '嗒嗒课吧',
 			duration_toast: 2000,
 			login_failure_toast: "登录失败",
 			auth_request_failure_toast: "个人信息获取失败",

@@ -14,14 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 const props = defineProps(['total', 'consume'])
-const percent = ref(0)
-if (props.total > 0) {
-	const progress = ((props.consume / props.total) * 100).toFixed(1)
-	percent.value = parseFloat(progress)
-}
+
+const percent = computed(() => {
+	if (props.total > 0) {
+		const progress = ((props.consume / props.total) * 100).toFixed(1)
+		return parseFloat(progress)
+	}
+	return 0
+})
 
 // @ts-ignore
 const style = computed({

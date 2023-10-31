@@ -102,15 +102,17 @@ export const useCourseStore = defineStore('course', {
 			studentId: string,
 			courseId: string,
 			total: number,
-			consume: number
+			consume: number,
+			info: {status:number, date:number, operator:string}
 		}) {
-			const { orgId, teacherId, studentId, courseId, total, consume } = param
+			const { orgId, teacherId, studentId, courseId, total, consume, info } = param
 			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(studentId) === 'undefined' || studentId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 || 
 				typeof(total) === 'undefined' || total <= 0 || 
-				typeof(consume) === 'undefined' || consume < 0) {
+				typeof(consume) === 'undefined' || consume < 0 ||
+				typeof(info) === 'undefined') {
 				return ''
 			}
 			const entryId = await course_co.bindCourse(param)
@@ -135,6 +137,42 @@ export const useCourseStore = defineStore('course', {
 				return false
 			}
 			const id = await course_co.addPaymentRecord(param)
+			if (typeof(id) !== 'undefined' && id.length > 0) {
+				const index = this.paymentRecords.findIndex(r => r._id === id)
+				if (index === -1) {
+					const r: PaymentRecord = {
+						_id: id,
+						orgId,
+						studentId,
+						date,
+						courseId,
+						count,
+						price
+					}
+					this.paymentRecords.push(r)
+				}
+			}
+			return id
+		},
+		async revokePaymentRecord(param: {
+			orgId: string,
+			studentId: string,
+			date: number,
+			courseId: string,
+			count: number,
+			price: number,
+			remark: string
+		}) {
+			const { orgId, studentId, date, courseId, count, price } = param
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(date) === 'undefined' ||
+				typeof(count) === 'undefined' || count >= 0 ||
+				typeof(price) === 'undefined' || price < 0) {
+				return false
+			}
+			const id = await course_co.revokePaymentRecord(param)
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const index = this.paymentRecords.findIndex(r => r._id === id)
 				if (index === -1) {
@@ -186,13 +224,31 @@ export const useCourseStore = defineStore('course', {
 			}
 			return {}
 		},
-		async renewCourse(entryId:string, count:number) {
+		async renewCourse(entryId:string, count:number, operator:string) {
 			if (typeof(entryId) === 'undefined' || 
 				entryId.length === 0 || 
+				typeof(operator) === 'undefined' ||
+				operator.length === 0 ||
 				count <= 0) {
 				return false
 			}
-			const res = await course_co.renewCourse(entryId, count)
+			const res = await course_co.renewCourse(entryId, count, operator)
+			return res
+		},
+		async finishCourse(entryId: string, operatorId:string) {
+			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(operatorId) === 'undefined' || operatorId.length === 0) {
+				return false
+			}
+			const res = await course_co.finishCourse(entryId, operatorId)
+			return res
+		},
+		async revokeCourse(entryId: string, operatorId:string, total:number) {
+			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(operatorId) === 'undefined' || operatorId.length === 0) {
+				return false
+			}
+			const res = await course_co.revokeCourse(entryId, operatorId, total)
 			return res
 		}
 	}
