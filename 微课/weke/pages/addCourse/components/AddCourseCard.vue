@@ -152,7 +152,6 @@ const onTapCourseIcon = () => {
 }
 
 const onCourseTap = (courseId:string) => {
-	console.info("onCourseTap...")
 	const res = courses.value.filter(course => course._id === courseId)
 	if (res.length === 1) {
 		const course = res[0]
@@ -275,7 +274,7 @@ const createCourse = async () => {
 		icon: selectedIconId.value,
 		desc: courseDesc.value,
 		type: type.value,
-		duration: minutes
+		duration: type.value !== 2?minutes:courseCount.value
 	})
 	let result = false
 	if (typeof(cId) !== 'undefined' && cId.length > 0) {
@@ -295,7 +294,7 @@ const createCourse = async () => {
 			desc: courseDesc.value,
 			icon: selectedIconId.value,
 			type: type.value,
-			duration: minutes
+			duration: type.value !== 2?minutes:courseCount.value
 		}
 		courses.value.push(course)
 		reset()

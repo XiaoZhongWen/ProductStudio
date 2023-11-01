@@ -1,5 +1,9 @@
 <template>
 	<view class="course-component-container" v-if="usersStore.isLogin">
+		<template v-for="item in items" :key="item.courseId">
+			<wk-course-item :courseId="item.courseId" :orgId="item.orgId">
+			</wk-course-item>
+		</template>
 	</view>
 </template>
 
@@ -7,15 +11,30 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
-import { onMounted } from "../../uni_modules/lime-shared/vue";
+import { onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { Org } from "../../types/org";
 import { Entry } from "../../types/entry";
+
+type CourseItem = {
+	courseId: string,
+	orgId: string
+}
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
-onMounted(() => {
+const forStudent = ref(true)
+const entries = ref<Entry[]>([])
+const items = ref<CourseItem[]>([])
+
+onMounted(async () => {
+	uni.showLoading({
+		title:"加载中"
+	})
+	await usersStore.loadAllEntries()
+	uni.hideLoading()
+	
 	loadAllCourses()
 })
 
@@ -32,9 +51,15 @@ const loadAllCourses = () => {
 					const index = courseIds.findIndex(id => id === courseId)
 					if (index === -1) {
 						courseIds.push(courseId)
+						const item = {
+							courseId,
+							orgId: org._id
+						}
+						items.value.push(item)
 					}
 				})
 			})
+			forStudent.value = false
 		}
 		if (roles?.includes(2)) {
 			// 老师 - 获取所有教授的课程以及自己匿名机构的所有课程
@@ -44,6 +69,11 @@ const loadAllCourses = () => {
 					const index = courseIds.findIndex(id => id === courseId)
 					if (index === -1) {
 						courseIds.push(courseId)
+						const item = {
+							courseId,
+							orgId: org._id
+						}
+						items.value.push(item)
 					}
 				})
 			})
@@ -52,33 +82,27 @@ const loadAllCourses = () => {
 				const index = courseIds.findIndex(id => id === entry.courseId)
 				if (index === -1) {
 					courseIds.push(entry.courseId)
+					const item = {
+						courseId: entry.courseId,
+						orgId: entry.orgId
+					}
+					items.value.push(item)
 				}
 			})
+			forStudent.value = false
 		}
 		if (roles?.length === 1 && roles.includes(3)) {
 			// 家长 - 孩子上的所有课程
 			const students = usersStore.students.filter(student => student.associateIds?.includes(userId))
 			students.forEach(student => {
-				const entries:Entry[] = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
-				entries.forEach(entry => {
-					const index = courseIds.findIndex(id => id === entry.courseId)
-					if (index === -1) {
-						courseIds.push(entry.courseId)
-					}
-				})
+				const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
+				entries.value.push(...result)
 			})
 		}
 	} else {
 		// 获取学生上的所有课程
-		const courseIds:string[] = []
 		const studentNo = usersStore.owner.studentNo
-		const entries:Entry[] = usersStore.entries.filter(entry => entry.studentId === studentNo)
-		entries.forEach(entry => {
-			const index = courseIds.findIndex(id => id === entry.courseId)
-			if (index === -1) {
-				courseIds.push(entry.courseId)
-			}
-		})
+		entries.value = usersStore.entries.filter(entry => entry.studentId === studentNo)
 	}
 }
 
