@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../types/user';
@@ -21,15 +21,23 @@ import { Student } from '../../types/user';
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 
+const students = ref<Student[]>()
+
 onMounted(async() => {
 	uni.showLoading({
 		title:"加载中"
 	})
 	await usersStore.loadAllEntries()
 	uni.hideLoading()
+	
+	loadStudents()
 })
 
-const students = computed(() => {
+watch(usersStore.owner, () => {
+	loadStudents()
+})
+
+const loadStudents = () => {
 	const stus:Student[] = []
 	if (usersStore.owner.from === 'wx') {
 		if (usersStore.owner.roles?.includes(1)) {
@@ -70,8 +78,8 @@ const students = computed(() => {
 		const res = loadClassmate(usersStore.owner.studentNo)
 		stus.push(...res)
 	}
-	return stus
-})
+	students.value = stus
+}
 
 const loadOrgStudent = () => {
 	const students:Student[] = []

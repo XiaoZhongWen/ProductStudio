@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from '../../uni_modules/lime-shared/vue';
+import { onBeforeUpdate, onMounted, ref } from '../../uni_modules/lime-shared/vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 
@@ -43,6 +43,16 @@ const useOrgs = useOrgsStore()
 const props = defineProps([
 	'id', 'url', 'name', 'studentNo', 'signature'
 ])
+
+onMounted(() => {
+	console.info("wk-student-card onMounted")
+	loaddata()
+})
+
+onBeforeUpdate(() => {
+	console.info("wk-student-card onBeforeUpdate")
+	loaddata()
+})
 
 const onIconTap = (e:UniHelper.EventTarget) => {
 	const { id } = e.target
@@ -97,16 +107,14 @@ const loaddata = async () => {
 	orgIds.value = oIds
 	total.value = totalCourse
 	consume.value = consumeCourse
+	
+	fetchOrgName()
 }
 
-watch([usersStore.entries, usersStore.owner], () => {
-	loaddata()
-}, {immediate:true})
-
-watch(orgIds, async (oIds) => {
+const fetchOrgName = async () => {
 	let names = ''
 	let index = 0
-	for (const orgId of oIds) {
+	for (const orgId of orgIds.value) {
 		const res = useOrgs.orgs.filter(org => org._id === orgId)
 		if (res.length === 1) {
 			const org = res[0]
@@ -127,7 +135,7 @@ watch(orgIds, async (oIds) => {
 		}
 	}
 	orgNames.value = names
-})
+}
 	
 </script>
 

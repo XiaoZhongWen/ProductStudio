@@ -11,7 +11,7 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
-import { onMounted, ref } from "../../uni_modules/lime-shared/vue";
+import { onMounted, ref, watch } from "../../uni_modules/lime-shared/vue";
 import { Org } from "../../types/org";
 import { Entry } from "../../types/entry";
 
