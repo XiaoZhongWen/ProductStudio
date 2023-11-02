@@ -45,12 +45,6 @@ const props = defineProps([
 ])
 
 onMounted(() => {
-	console.info("wk-student-card onMounted")
-	loaddata()
-})
-
-onBeforeUpdate(() => {
-	console.info("wk-student-card onBeforeUpdate")
 	loaddata()
 })
 
@@ -66,7 +60,7 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 	}
 }
 
-const loaddata = async () => {
+const loaddata = () => {
 	const userId = usersStore.owner._id
 	const from = usersStore.owner.from
 	const roles = usersStore.owner.roles ?? []
@@ -75,7 +69,7 @@ const loaddata = async () => {
 	const anonymousOrgId = useOrgs.anonymousOrg._id
 	const oIds:string[] = []
 	const s = orgs.map(org => org._id)
-	const entries = await usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
+	const entries = usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
 	let totalCourse = 0
 	let consumeCourse = 0
 	entries.forEach(entry => {
@@ -136,6 +130,10 @@ const fetchOrgName = async () => {
 	}
 	orgNames.value = names
 }
+
+defineExpose({
+	loaddata
+})
 	
 </script>
 

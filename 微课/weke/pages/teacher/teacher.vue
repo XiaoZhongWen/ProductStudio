@@ -2,8 +2,7 @@
 	<view class="teacher-container">
 		<template v-for="teacher in teachers" :key="teacher._id">
 			<TeacherCard 
-				:teacherId="teacher._id" 
-				:orgIds="teacher.orgIds" 
+				:teacherId="teacher._id"
 				:forStudent="forStudent"/>
 		</template>
 		<button
@@ -46,23 +45,27 @@ onLoad((option) => {
 
 onMounted(async () => {
 	if (usersStore.isLogin) {
+		uni.showLoading({
+			title: "加载老师数据"
+		})
 		if (organizationId.length > 0) {
 			// 从机构详情进入
-			loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))
+			await loaddata(useOrgs.myOrgs.filter(org => org._id === organizationId))
 		} else if (studentId.length > 0) {
 			// 家长从孩子页面进入
-			loadEntries(studentId)
+			await loadEntries(studentId)
 		} else {
 			// 从我的页面进入
 			if (usersStore.owner.roles?.includes(1)) {
 				// 机构负责人
-				loaddata(useOrgs.myOrgs)
+				await loaddata(useOrgs.myOrgs)
 			}
 			if (usersStore.owner.from === 'stuNo') {
 				// 学生
-				loadEntries(usersStore.owner.studentNo)
+				await loadEntries(usersStore.owner.studentNo)
 			}
 		}
+		uni.hideLoading()
 	}
 })
 
@@ -86,52 +89,31 @@ uni.$on("modify-teacher-success", () => {
 	loaddata(useOrgs.myOrgs)
 })
 
-const loaddata = (orgs:Org[]) => {
-	teachers.value.splice(0, teachers.value.length)
-	orgs.forEach(async org => {
-		const teacherIds:string[] = Array.from(org.teacherIds?.values() ?? [])
-		const users = await usersStore.fetchUsers(teacherIds) as User[]
-		if (users.length > 0) {
-			users.forEach(user => {
-				if (typeof(user.orgIds) === 'undefined' || user.orgIds.length === 0) {
-					user.orgIds = [org._id]
-				} else if (!user.orgIds.includes(org._id)) {
-					user.orgIds.push(org._id)
-				}
-			})
-			users.forEach(user => {
-				const index = teachers.value.findIndex(t => t._id === user._id)
-				if (index === -1) {
-					teachers.value.push(user)
-				}
-			})
-		}
+const loaddata = async (orgs:Org[]) => {
+	const teacherIds:string[] = []
+	orgs.forEach(org => {
+		org.teacherIds?.forEach(id => {
+			const index = teacherIds.findIndex(tId => tId === id)
+			if (index === -1) {
+				teacherIds.push(id)
+			}
+		})
 	})
+	teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
 }
 
 const loadEntries = async (studentId:string) => {
 	// 1. 获取孩子所有授课老师id
-	const res = await usersStore.fetchEntriesWithStudentNo(studentId)
-	const teacherIds:string[] = res.map(entry => entry.teacherId)
+	const res = usersStore.fetchEntriesWithStudentNo(studentId)
+	const teacherIds:string[] = []
+	res.forEach(entry => {
+		const index = teacherIds.findIndex(tId => tId === entry.teacherId)
+		if (index === -1) {
+			teacherIds.push(entry.teacherId)
+		}
+	})
 	// 2. 获取相应老师信息
-	const users = await usersStore.fetchUsers(teacherIds) as User[]
-	if (users.length > 0) {
-		users.forEach(user => {
-			const orgIds:string[] = []
-			res.forEach(entry => {
-				if (entry.teacherId === user._id && !orgIds.includes(entry.orgId)) {
-					orgIds.push(entry.orgId)
-				}
-			})
-			user.orgIds = orgIds
-		})
-		users.forEach(user => {
-			const index = teachers.value.findIndex(t => t._id === user._id)
-			if (index === -1) {
-				teachers.value.push(user)
-			}
-		})
-	}
+	teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
 }
 
 </script>

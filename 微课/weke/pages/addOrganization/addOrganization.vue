@@ -304,6 +304,7 @@ const onTapAdd = async () => {
 			duration:global.duration_toast
 		})
 		uni.navigateBack()
+		uni.$emit(global.event_name.didUpdateOrgData)
 	} else {
 		uni.showToast({
 			title: orgId.value.length === 0? "机构创建失败": "机构更新失败",

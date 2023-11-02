@@ -1,7 +1,8 @@
 <template>
 	<view class="student-component-container" v-if="usersStore.isLogin && useOrgs.orgs.length > 0">
-		<template v-for="student in students" :key="student._id">
+		<template v-for="(student, index) in students" :key="student._id">
 			<wk-student-card 
+			:ref="el => setItemRef[index] = el"
 			:id="student._id"
 			:url="student.avatarUrl"
 			:name="student.nickName"
@@ -13,24 +14,33 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
-import { Student } from '../../types/user';
+import { Student } from '../../types/user'
+import wkStudentCardVue from '../wk-student-card/wk-student-card.vue';
+
+
+const global = getApp().globalData!
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 
+const setItemRef = ref([])
 const students = ref<Student[]>()
 
 onMounted(async() => {
-	uni.showLoading({
-		title:"加载中"
-	})
-	await usersStore.loadAllEntries()
-	uni.hideLoading()
-	
 	loadStudents()
+	uni.$on(global.event_name.didRevokeCourse, (data: {studentNo:string}) => {
+		const { studentNo } = data
+		if (typeof(studentNo) !== 'undefined' && studentNo.length > 0) {
+			const index = students.value?.findIndex(student => student.studentNo === studentNo)
+			if (typeof(index) !== 'undefined' && index !== -1) {
+				const card: InstanceType<typeof wkStudentCardVue> = setItemRef.value[index]
+				card.loaddata()
+			}
+		}
+	})
 })
 
 watch(usersStore.owner, () => {

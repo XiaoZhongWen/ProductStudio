@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { useOrgsStore } from "@/store/orgs"
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
@@ -139,9 +138,11 @@ export const useUsersStore = defineStore('users', {
 							})
 							const { tempFileURL } = result.fileList[0]
 							this.updateAvatarUrl(tempFileURL)
-							this.fetchStudents()
-							useOrgsStore().loadOrgData()
-							useOrgsStore().fetchAnonymousOrg()
+							
+							const index = this.users.findIndex(user => user._id === _id)
+							if (index === -1) {
+								this.users.push(this.owner)
+							}
 						} else {
 							this.owner.openid = openid
 							this.owner.unionid = unionid
@@ -171,8 +172,6 @@ export const useUsersStore = defineStore('users', {
 							this.owner.studentNo = studentNo
 							this.owner.from = 'stuNo'
 							this.owner.signature = signature
-							this.fetchStudents()
-							useOrgsStore().loadOrgData()
 							if (typeof(avatarId) !== 'undefined' && avatarId.length > 0) {
 								this.owner.avatarId = avatarId
 								const result = await uniCloud.getTempFileURL({
@@ -194,6 +193,7 @@ export const useUsersStore = defineStore('users', {
 			} else {
 				console.info("用户是已登录状态")
 			}
+			return this.isLogin
 		},
 		// 更改密码
 		async changePassword(studentNo:string, originalPwd:string, pwd:string) {
@@ -257,9 +257,6 @@ export const useUsersStore = defineStore('users', {
 				}
 				if (this.isLogin === false) {
 					this.isLogin = true
-					this.fetchStudents()
-					useOrgsStore().loadOrgData()
-					useOrgsStore().fetchAnonymousOrg()
 				}
 				result = true
 			} catch (e) {
@@ -335,7 +332,7 @@ export const useUsersStore = defineStore('users', {
 			this.owner.roles = roleIds
 			const res = await users_co.updateRoles(this.owner._id, roleIds)
 			if (res === true) {
-				useOrgsStore().createAnonymousOrg()
+				// useOrgsStore().createAnonymousOrg()
 			}
 		},
 		// 更新个性签名
@@ -549,22 +546,20 @@ export const useUsersStore = defineStore('users', {
 				})
 			}
 		},
-		async fetchEntriesWithStudentNo(studentNo: string, orgIds:string[] = []) {
+		fetchEntriesWithStudentNo(studentNo: string, orgIds:string[] = []) {
 			if (typeof(studentNo) === 'undefined' || studentNo.length === 0) {
 				return []
 			}
-			await this.loadAllEntries()
 			const data:Entry[] = this.entries.filter(
 				entry => entry.studentId === studentNo && 
 				(orgIds.length > 0? orgIds.includes(entry.orgId): true)
 			)
 			return data
 		},
-		async fetchEntriesWithTeacherId(teacherId: string, orgIds:string[] = []) {
+		fetchEntriesWithTeacherId(teacherId: string, orgIds:string[] = []) {
 			if (typeof(teacherId) === 'undefined' || teacherId.length === 0) {
 				return []
 			}
-			await this.loadAllEntries()
 			const data:Entry[] = this.entries.filter(
 				entry => entry.teacherId === teacherId && 
 				(orgIds.length > 0? orgIds.includes(entry.orgId): true)

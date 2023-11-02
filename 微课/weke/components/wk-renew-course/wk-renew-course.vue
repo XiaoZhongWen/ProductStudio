@@ -233,6 +233,7 @@ const onConfirm = async () => {
 				operator: operatorId
 			}
 			emit('onConfirm', {count:renewCount.value})
+			uni.$emit(global.event_name.didRevokeCourse, {studentNo: entry.value.studentId})
 		} else {
 			courseStore.removePaymentRecord(id)
 		}

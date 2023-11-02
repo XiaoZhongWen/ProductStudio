@@ -11,7 +11,7 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
-import { onMounted, ref, watch } from "../../uni_modules/lime-shared/vue";
+import { onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { Org } from "../../types/org";
 import { Entry } from "../../types/entry";
 
@@ -30,19 +30,18 @@ const items = ref<CourseItem[]>([])
 
 onMounted(async () => {
 	uni.showLoading({
-		title:"加载中"
+		title: "加载课程数据"
 	})
-	await usersStore.loadAllEntries()
+	await loadAllCourses()
 	uni.hideLoading()
-	
-	loadAllCourses()
 })
 
-const loadAllCourses = () => {
+const loadAllCourses = async () => {
+	const courseIds:string[] = []
+	const courseItems:CourseItem[] = []
 	if (usersStore.owner.from === 'wx') {
 		const userId = usersStore.owner._id
 		const roles = usersStore.owner.roles
-		const courseIds:string[] = []
 		if (roles?.includes(1)) {
 			// 机构负责人 - 获取机构所有课程
 			const orgs:Org[] = useOrgs.orgs.filter(org => org.creatorId === userId)
@@ -55,7 +54,7 @@ const loadAllCourses = () => {
 							courseId,
 							orgId: org._id
 						}
-						items.value.push(item)
+						courseItems.push(item)
 					}
 				})
 			})
@@ -73,7 +72,7 @@ const loadAllCourses = () => {
 							courseId,
 							orgId: org._id
 						}
-						items.value.push(item)
+						courseItems.push(item)
 					}
 				})
 			})
@@ -86,7 +85,7 @@ const loadAllCourses = () => {
 						courseId: entry.courseId,
 						orgId: entry.orgId
 					}
-					items.value.push(item)
+					courseItems.push(item)
 				}
 			})
 			forStudent.value = false
@@ -97,13 +96,27 @@ const loadAllCourses = () => {
 			students.forEach(student => {
 				const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
 				entries.value.push(...result)
+				result.forEach(entry => {
+					const index = courseIds.findIndex(id => id === entry.courseId)
+					if (index === -1) {
+						courseIds.push(entry.courseId)
+					}
+				})
 			})
 		}
 	} else {
 		// 获取学生上的所有课程
 		const studentNo = usersStore.owner.studentNo
 		entries.value = usersStore.entries.filter(entry => entry.studentId === studentNo)
+		entries.value.forEach(entry => {
+			const index = courseIds.findIndex(id => id === entry.courseId)
+			if (index === -1) {
+				courseIds.push(entry.courseId)
+			}
+		})
 	}
+	await courseStore.fetchCourses(courseIds)
+	items.value = courseItems
 }
 
 </script>

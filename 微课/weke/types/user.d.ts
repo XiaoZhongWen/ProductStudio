@@ -13,7 +13,6 @@ export type User = {
 	mobile?: string,
 	expireDate: number,
 	signature?: string,
-	orgIds?:string[]
 }
 
 export type Student = {
@@ -27,7 +26,6 @@ export type Student = {
 	signature?: string,
 	associateIds?: string[]
 	identity: string,
-	orgIds?:string[]
 }
 
 export type WxIdentity = {

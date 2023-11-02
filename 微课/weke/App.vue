@@ -1,5 +1,6 @@
 <script>
 	import { useUsersStore } from "@/store/users"
+	import { useOrgsStore } from "@/store/orgs"
 	import navigateInterceptor from './libs/interceptor/navigateInterceptor'
 	export default {
 		onLaunch: function() {
@@ -8,11 +9,34 @@
 		onShow: function() {
 			uni.getStorage({
 				key: 'wk-login',
-				success: (res) => {
+				success: async (res) => {
 					const data = res.data
 					if (data.from === 'wx') {
+						uni.showLoading({
+							title: "正在登录",
+							mask: true
+						})
 						const usersStore = useUsersStore()
-						usersStore.login()
+						const orgsStore = useOrgsStore()
+						const result = await usersStore.login()
+						uni.hideLoading()
+						uni.showToast({
+							title: result? "登录成功": "登录失败",
+							duration: this.globalData.duration_toast
+						})
+						if (result) {
+							uni.showLoading({
+								title: "加载初始数据",
+								mask: true
+							})
+							await usersStore.fetchStudents()
+							await usersStore.loadAllEntries()
+							await orgsStore.loadOrgData()
+							if (usersStore.owner.from === 'wx') {
+								await orgsStore.fetchAnonymousOrg()
+							}
+							uni.hideLoading()
+						}
 					}
 				}
 			})
@@ -33,7 +57,10 @@
 				showSelectRole: "showSelectRole",
 				didSelectedRole: "didSelectedRole",
 				onGradientChanged: "onGradientChanged",
-				didSelectedIcon: "didSelectedIcon"
+				didSelectedIcon: "didSelectedIcon",
+				didRenewCourse: "didRenewCourse",
+				didRevokeCourse: "didRevokeCourse",
+				didUpdateOrgData: "didUpdateOrgData"
 			}
 		}
 	}

@@ -31,16 +31,17 @@ import { onMounted, ref } from "../../../uni_modules/lime-shared/vue";
 import { Org } from "../../../types/org";
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
-const props = defineProps(['teacherId', 'orgIds', 'forStudent'])
+const props = defineProps(['teacherId', 'forStudent'])
 const user = usersStore.users.filter(user => user._id === props.teacherId)[0]
 const orgNames = ref('')
 const total = ref(0)
 const consume = ref(0)
 
-onMounted(async () => {
-	const orgs = await useOrgs.fetchOrgsByIds(props.orgIds) as Org[]
+onMounted(() => {
+	const orgs = useOrgs.orgs.filter(org => org.teacherIds?.includes(props.teacherId))
 	handleOrgNames(orgs)
-	const entries = await usersStore.fetchEntriesWithTeacherId(props.teacherId, props.orgIds)
+	const orgIds = orgs.map(org => org._id)
+	const entries = usersStore.fetchEntriesWithTeacherId(props.teacherId, orgIds)
 	entries.forEach(entry => {
 		total.value += entry.total
 		consume.value += entry.consume

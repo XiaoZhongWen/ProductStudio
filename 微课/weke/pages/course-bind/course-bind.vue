@@ -129,7 +129,7 @@ const entries = ref<Entry[]>([])
 const canBindCourse = ref(false)
 const isAnonymousOrg = ref(false)
 
-onLoad(async (option) => {
+onLoad((option) => {
 	const {studentNo, orgIds} = option as {studentNo:string, orgIds:string}
 	if (typeof(studentNo) !== 'undefined') {
 		stuNo = studentNo
@@ -137,7 +137,7 @@ onLoad(async (option) => {
 	if (typeof(orgIds) !== 'undefined') {
 		oIds = orgIds.split(',')
 	}
-	entries.value = await usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
+	entries.value = usersStore.fetchEntriesWithStudentNo(studentNo, oIds)
 })
 
 onMounted(async () => {

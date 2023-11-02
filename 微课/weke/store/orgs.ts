@@ -51,6 +51,7 @@ export const useOrgsStore = defineStore('orgs', {
 					if (org.name === curOrg.name &&
 						org.tel === curOrg.tel &&
 						org.desc === curOrg.desc &&
+						org.addr === curOrg.addr &&
 						org.logoId === curOrg.logoId &&
 						org.createDate === curOrg.createDate &&
 						org.gradient.toString() === curOrg.gradient.toString()) {
@@ -223,33 +224,15 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 		},
-		async fetchOrgsByIds(orgIds:string[]) {
+		fetchOrgsByIds(orgIds:string[]) {
 			if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
 				return []
 			}
 			const orgs:Org[] = []
-			const other:string[] = []
 			orgIds.forEach(orgId => {
 				const index = this.orgs.findIndex(org => org._id === orgId)
-				if (index === -1) {
-					other.push(orgId)
-				} else {
-					orgs.push(this.orgs[index])
-				}
+				orgs.push(this.orgs[index])
 			})
-			if (other.length > 0) {
-				const s = await orgs_co.fetchOrgsByIds(other) as Org[]
-				s.forEach(org => {
-					let index = orgs.findIndex(o => o._id === org._id)
-					if (index === -1) {
-						orgs.push(org)
-					}
-					index = this.orgs.findIndex(o => o._id === org._id)
-					if (index === -1) {
-						this.orgs.push(org)
-					}
-				})
-			}
 			return orgs
 		},
 		fetchOrgById(orgId:string) {

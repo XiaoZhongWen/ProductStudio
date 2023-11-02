@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed, watchEffect } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onLoad } from '@dcloudio/uni-app'
 import Profile from "./components/Profile.vue"
@@ -116,12 +116,14 @@ import LoginOption from './components/LoginOption.vue'
 import Login from './components/Login.vue'
 import SelectRole from './components/SelectRole.vue'
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from "@/store/orgs"
 import { Student } from '../../types/user'
 // @ts-ignore
 import md5 from 'js-md5'
 
 const is_mask_click = ref(false)
 const usersStore = useUsersStore()
+const orgsStore = useOrgsStore()
 const global = getApp().globalData!
 
 let inviteOrgId = ''
@@ -426,6 +428,7 @@ uni.$on(global.event_name.login, async (data) => {
 			if (isUpdated) {
 				// 7. 退出界面
 				onPopup()
+				loadInitialData()
 			} else {
 				uni.showToast({
 					title:"用户信息更新失败",
@@ -468,6 +471,7 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 	uni.hideLoading()
 	if (usersStore.isLogin) {
 		loginStuNoPopup.value?.close()
+		loadInitialData()
 	} else {
 		uni.showToast({
 			title:"学号或密码错误",
@@ -491,6 +495,20 @@ uni.$on(global.event_name.selectRole, () => {
 	showSelectRole()
 	uni.hideTabBar()
 })
+
+const loadInitialData = async () => {
+	uni.showLoading({
+		title: "正在加载初始数据",
+		mask: true
+	})
+	await usersStore.fetchStudents()
+	await usersStore.loadAllEntries()
+	await orgsStore.loadOrgData()
+	if (usersStore.owner.from === 'wx') {
+		await orgsStore.fetchAnonymousOrg()
+	}
+	uni.hideLoading()
+}
 
 </script>
 

@@ -17,15 +17,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { onLoad } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 import { Org } from "../../types/org";
 
+const global = getApp().globalData!
+
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const userId = ref(usersStore.owner._id)
+
+const orgs = ref<Org[]>([])
 
 onLoad(async (option) => {
 	const { id } = option as {id:string}
@@ -34,46 +38,12 @@ onLoad(async (option) => {
 	}
 })
 
-// @ts-ignore
-const orgs = computed({
-	get() {
-		if (userId.value === usersStore.owner._id) {
-			// 机构负责人 | 老师
-			let res:Org[] = []
-			if (usersStore.owner.from === 'wx') {
-				const forCreator = useOrgs.orgs.filter(org => {
-					return org.creatorId === userId.value && org.type === 0
-				})
-				const forTeacher = useOrgs.orgs.filter(org => {
-					return org.teacherIds?.includes(userId.value) && org.type === 0
-				})
-				if (usersStore.owner.roles?.includes(1)) {
-					res.push(...forCreator)
-				}
-				if (usersStore.owner.roles?.includes(2)) {
-					let orgIds:string[] = []
-					if (res.length > 0) {
-						orgIds = res.map(item => item._id)
-					}
-					forTeacher.forEach(item => {
-						if (!orgIds.includes(item._id)) {
-							res.push(item)
-						}
-					})
-				}
-			} else {
-				// 学生
-				const forStudent = useOrgs.orgs.filter(org => {
-					return org.studentIds?.includes(userId.value) && org.type === 0
-				})
-				res.push(...forStudent)
-			}
-			return res
-		} else {
-			// 家长, 这里的userId指的是被关联学员的userId
-			return useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value) && org.type === 0)
-		}
-	}
+onMounted(() => {
+	loadOrgs()
+	
+	uni.$on(global.event_name.didUpdateOrgData, () => {
+		loadOrgs()
+	})
 })
 
 const isShowAddBtn = computed(() => {
@@ -91,6 +61,45 @@ const onOrgCardTap = (orgId:string) => {
 	uni.navigateTo({
 		url: "/pages/addOrganization/addOrganization?orgId="+orgId
 	})
+}
+
+const loadOrgs = () => {
+	if (userId.value === usersStore.owner._id) {
+		// 机构负责人 | 老师
+		let res:Org[] = []
+		if (usersStore.owner.from === 'wx') {
+			const forCreator = useOrgs.orgs.filter(org => {
+				return org.creatorId === userId.value && org.type === 0
+			})
+			const forTeacher = useOrgs.orgs.filter(org => {
+				return org.teacherIds?.includes(userId.value) && org.type === 0
+			})
+			if (usersStore.owner.roles?.includes(1)) {
+				res.push(...forCreator)
+			}
+			if (usersStore.owner.roles?.includes(2)) {
+				let orgIds:string[] = []
+				if (res.length > 0) {
+					orgIds = res.map(item => item._id)
+				}
+				forTeacher.forEach(item => {
+					if (!orgIds.includes(item._id)) {
+						res.push(item)
+					}
+				})
+			}
+		} else {
+			// 学生
+			const forStudent = useOrgs.orgs.filter(org => {
+				return org.studentIds?.includes(userId.value) && org.type === 0
+			})
+			res.push(...forStudent)
+		}
+		orgs.value = res
+	} else {
+		// 家长, 这里的userId指的是被关联学员的userId
+		orgs.value = useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value) && org.type === 0)
+	}
 }
 
 </script>
