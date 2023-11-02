@@ -1,20 +1,18 @@
 <template>
 	<view class="student-component-container" v-if="usersStore.isLogin && useOrgs.orgs.length > 0">
-		<template v-for="(student, index) in students" :key="student._id">
-			<wk-student-card 
-			:ref="el => setItemRef[index] = el"
-			:id="student._id"
-			:url="student.avatarUrl"
-			:name="student.nickName"
-			:studentNo="student.studentNo"
-			:signature="student.signature">
-			</wk-student-card>
-		</template>
+		<wk-student-card v-for="(student, index) in students" :key="student._id"
+		ref="refs"
+		:id="student._id"
+		:url="student.avatarUrl"
+		:name="student.nickName"
+		:studentNo="student.studentNo"
+		:signature="student.signature">
+		</wk-student-card>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUpdated, ref, watch } from 'vue'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../types/user'
@@ -26,25 +24,41 @@ const global = getApp().globalData!
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 
-const setItemRef = ref([])
+const refs = ref([])
 const students = ref<Student[]>()
+let refresh = false
 
-onMounted(async() => {
+onMounted(() => {
 	loadStudents()
-	uni.$on(global.event_name.didRevokeCourse, (data: {studentNo:string}) => {
+	uni.$on(global.event_name.didUpdateCourseData, (data: {studentNo:string}) => {
 		const { studentNo } = data
 		if (typeof(studentNo) !== 'undefined' && studentNo.length > 0) {
 			const index = students.value?.findIndex(student => student.studentNo === studentNo)
 			if (typeof(index) !== 'undefined' && index !== -1) {
-				const card: InstanceType<typeof wkStudentCardVue> = setItemRef.value[index]
-				card.loaddata()
+				const card: InstanceType<typeof wkStudentCardVue> = refs.value[index]
+				if (card) {
+					card.loaddata()
+				}
 			}
 		}
 	})
 })
 
+onUpdated(() => {
+	if (refresh) {
+		refs.value.forEach(item => {
+			const card: InstanceType<typeof wkStudentCardVue> = item
+			if (card) {
+				card.loaddata()
+			}
+		})
+		refresh = false
+	}
+})
+
 watch(usersStore.owner, () => {
 	loadStudents()
+	refresh = true
 })
 
 const loadStudents = () => {

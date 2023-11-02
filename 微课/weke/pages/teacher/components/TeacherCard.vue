@@ -38,7 +38,10 @@ const total = ref(0)
 const consume = ref(0)
 
 onMounted(() => {
-	const orgs = useOrgs.orgs.filter(org => org.teacherIds?.includes(props.teacherId))
+	let orgs = useOrgs.orgs.filter(org => org.teacherIds?.includes(props.teacherId))
+	if (!props.forStudent) {
+		orgs = orgs.filter(org => org.creatorId === usersStore.owner._id)
+	}
 	handleOrgNames(orgs)
 	const orgIds = orgs.map(org => org._id)
 	const entries = usersStore.fetchEntriesWithTeacherId(props.teacherId, orgIds)

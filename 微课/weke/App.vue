@@ -59,7 +59,7 @@
 				onGradientChanged: "onGradientChanged",
 				didSelectedIcon: "didSelectedIcon",
 				didRenewCourse: "didRenewCourse",
-				didRevokeCourse: "didRevokeCourse",
+				didUpdateCourseData: "didUpdateCourseData",
 				didUpdateOrgData: "didUpdateOrgData"
 			}
 		}

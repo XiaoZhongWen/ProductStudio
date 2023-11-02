@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUpdate, onMounted, ref } from '../../uni_modules/lime-shared/vue';
+import { onMounted, ref } from '../../uni_modules/lime-shared/vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 
@@ -72,6 +72,7 @@ const loaddata = () => {
 	const entries = usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
 	let totalCourse = 0
 	let consumeCourse = 0
+	debugger
 	entries.forEach(entry => {
 		// 1. 角色-机构管理员, 课程属于自己所创建的机构
 		const isOrgCourse = roles.includes(1) && createOrgIds.includes(entry.orgId)
@@ -88,7 +89,7 @@ const loaddata = () => {
 		// 1. 角色-机构管理员, 学员属于自己所创建的机构
 		const isOrgCourse = roles.includes(1) && createOrgIds.includes(org._id)
 		// 2. 角色-老师, 学员属于自己所任教的机构
-		const isTeacherCourse = roles.includes(2) && org.teacherIds?.includes(userId)
+		const isTeacherCourse = roles.includes(2) && (org.teacherIds?.includes(userId) || org._id === anonymousOrgId)
 		// 3. 角色-家长, 学员属于自己加入的机构
 		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
 		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
