@@ -195,6 +195,15 @@ export const useCourseStore = defineStore('course', {
 			}
 			
 		},
+		async modifyPaymentRecord(id:string, price:number) {
+			if (typeof(id) === 'undefined' || 
+				id.length === 0 || 
+				typeof(price) === 'undefined') {
+				return false
+			}
+			const result = await course_co.modifyPaymentRecord(id, price)
+			return result
+		},
 		async changeCourseTeacher(entryId:string, teacherId: string) {
 			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0) {
@@ -248,6 +257,14 @@ export const useCourseStore = defineStore('course', {
 				return false
 			}
 			const res = await course_co.revokeCourse(entryId, operatorId, total)
+			return res
+		},
+		async modifyCourseCount(entryId: string, total:number, consume:number) {
+			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(total) === 'undefined' || typeof(consume) === 'undefined') {
+				return false
+			}
+			const res = await course_co.modifyCourseCount(entryId, total, consume)
 			return res
 		}
 	}

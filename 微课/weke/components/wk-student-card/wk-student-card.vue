@@ -72,7 +72,6 @@ const loaddata = () => {
 	const entries = usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
 	let totalCourse = 0
 	let consumeCourse = 0
-	debugger
 	entries.forEach(entry => {
 		// 1. 角色-机构管理员, 课程属于自己所创建的机构
 		const isOrgCourse = roles.includes(1) && createOrgIds.includes(entry.orgId)

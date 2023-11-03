@@ -158,6 +158,20 @@ module.exports = {
 		})
 		return result.deleted === 1
 	},
+	async modifyPaymentRecord(id, price) {
+		if (typeof(id) === 'undefined' ||
+			id.length === 0 || 
+			typeof(price) === 'undefined') {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-payment-records').where({
+			_id: id
+		}).update({
+			price
+		})
+		return result.updated === 1
+	},
 	async fetchLastestPaymentRecord(studentId, courseId) {
 		if (typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0) {
@@ -327,6 +341,20 @@ module.exports = {
 				date: Date.now(),
 				operator: operatorId
 			}
+		})
+		return result.updated === 1
+	},
+	async modifyCourseCount(entryId, total, consume) {
+		if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
+			typeof(total) === 'undefined' || typeof(consume) === 'undefined') {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-mapping').where({
+			_id: entryId
+		}).update({
+			total,
+			consume
 		})
 		return result.updated === 1
 	}

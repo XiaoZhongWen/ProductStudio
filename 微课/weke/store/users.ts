@@ -484,6 +484,19 @@ export const useUsersStore = defineStore('users', {
 				const index = this.students.findIndex(stu => stu._id === student._id)
 				if (index === -1) {
 					this.students.push(student)
+					if (typeof(student.avatarId) !== 'undefined' && 
+						student.avatarId.length > 0 &&
+						(typeof(student.avatarUrl) === 'undefined' || student.avatarUrl.length === 0)) {
+						const response = await uniCloud.getTempFileURL({
+							fileList:[student.avatarId]
+						})
+						const fileList = response.fileList as {code:string, fileID:string, tempFileURL:string}[]
+						fileList.forEach(item => {
+							if (item.code === "SUCCESS" && item.fileID === student.avatarId) {
+								student.avatarUrl = item.tempFileURL
+							}
+						})
+					}
 				}
 				return student._id
 			} else {

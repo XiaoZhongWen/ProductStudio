@@ -153,15 +153,24 @@ onMounted(async () => {
 	
 	const courseIds:string[] = []
 	const teacherIds:string[] = []
+	const didBindCourseIds = entries.value.map(entry => entry.courseId)
 	orgs.forEach(org => {
-		courseIds.push(...org.courseIds ?? [])
-		teacherIds.push(...org.teacherIds ?? [])
+		org.courseIds?.forEach(id => {
+			if (!courseIds.includes(id) && !didBindCourseIds.includes(id)) {
+				courseIds.push(id)
+			}
+		})
+		org.teacherIds?.forEach(id => {
+			if (!teacherIds.includes(id)) {
+				teacherIds.push(id)
+			}
+		})
 	})
 	const orgCourses = await courseStore.fetchCourses(courseIds ?? [])
 	courses = orgCourses
 	courses.forEach(course => {
 		const index = courseSelectorData.value.findIndex(item => item.value === course._id)
-		if (index == -1) {
+		if (index === -1) {
 			courseSelectorData.value.push({
 				value: course._id,
 				text: course.name
@@ -355,6 +364,7 @@ const onBindCourse = async () => {
 		entries.value.push(entry)
 		usersStore.entries.push(entry)
 		reset()
+		uni.$emit(global.event_name.didUpdateCourseData, {studentNo:stuNo})
 	}
 }
 

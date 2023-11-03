@@ -1,7 +1,7 @@
 <template>
 	<view class="renew-course-container">
 		<view class="header">
-			<text>续课</text>
+			<text>{{props.isRenew?"续课":"编辑"}}</text>
 		</view>
 		<view class="body">
 			<view class="top">
@@ -49,25 +49,41 @@
 						{{typeName}}
 					</view>
 				</view>
-				<view class="section">
-					<text class="title">{{type === 2?"剩余课次":"剩余课时"}}</text>
-					<view class="desc">
-						{{typeof(entry) !== 'undefined'?(entry.total - entry.consume):0}}
+				<template v-if="props.isRenew">
+					<view class="section">
+						<text class="title">{{type === 2?"剩余课次":"剩余课时"}}</text>
+						<view class="desc">
+							{{typeof(entry) !== 'undefined'?(entry.total - entry.consume):0}}
+						</view>
 					</view>
-				</view>
+				</template>
+				<template v-else>
+					<view class="section">
+						<text class="title">{{type === 2?"总课次数":"总课时数"}}</text>
+						<view class="desc">
+							<input class="input" type="number" v-model="total"/>
+						</view>
+					</view>
+					<view class="section">
+						<text class="title">{{type === 2?"消耗课次数":"消耗课时数"}}</text>
+						<view class="desc">
+							<input class="input" type="number" v-model="consume"/>
+						</view>
+					</view>
+				</template>
 				<view class="section">
 					<text class="title">{{type === 2?"课次单价":"课时单价"}}</text>
 					<view class="desc">
 						<input class="input" type="number" v-model="price"/>
 					</view>
 				</view>
-				<view class="section">
+				<view class="section" v-if="props.isRenew">
 					<text class="title">{{type === 2?"续课次数":"续课时数"}}</text>
 					<view class="desc">
 						<uni-number-box v-model="renewCount" background="#5073D6" color="#fff" />
 					</view>
 				</view>
-				<view class="remark">
+				<view class="remark" v-if="props.isRenew">
 					<textarea
 						v-model="remark"
 						class="textarea" 
@@ -78,6 +94,8 @@
 				</view>
 			</view>
 			<button 
+				:disabled="isRenewing"
+				:loading="isRenewing"
 				type="default" 
 				class="btn" 
 				@tap="onConfirm">确定</button>
@@ -91,12 +109,12 @@
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
-import { computed, onMounted, ref } from "../../uni_modules/lime-shared/vue";
+import { computed, onMounted, ref } from "vue";
 import { Student, User } from "../../types/user";
 import { PaymentRecord } from "../../types/PaymentRecord";
 import { Entry } from "../../types/entry";
 
-const props = defineProps(['entryId'])
+const props = defineProps(['entryId', 'isRenew'])
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
@@ -118,6 +136,10 @@ const price = ref(0.0)
 const renewCount = ref(20)
 const remark = ref<string>()
 const entry = ref<Entry>()
+const paymentRecord = ref<PaymentRecord>()
+const isRenewing = ref(false)
+const total = ref(0)
+const consume = ref(0)
 
 const emit = defineEmits(['onConfirm'])
 
@@ -131,9 +153,11 @@ onMounted(async () => {
 			if (typeof(entry.value) === 'undefined') {
 				return
 			}
-			const paymentRecord = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
-			if (JSON.stringify(paymentRecord) !== '{}') {
-				price.value = paymentRecord.price
+			total.value = entry.value.total
+			consume.value = entry.value.consume
+			paymentRecord.value = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
+			if (typeof(paymentRecord.value) !== 'undefined') {
+				price.value = paymentRecord.value.price
 			}
 			
 			const student = await usersStore.fetchStudentByNo(entry.value.studentId) as Student
@@ -193,13 +217,31 @@ const number = computed(() => {
 })
 
 const onConfirm = async () => {
+	if (props.isRenew) {
+		await renewCourse()
+	} else {
+		await editCourse()
+	}
+}
+
+const renewCourse = async () => {
+	if (!isFinite(total.value) ||
+		!isFinite(consume.value) ||
+		!isFinite(price.value)) {
+		uni.showToast({
+			title:"请输入正确格式的数字",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		return
+	}
 	if (price.value < 0) {
 		uni.showToast({
 			title:"课程单价不能小于0",
 			duration:global.duration_toast,
 			icon:"error"
 		})
-		return
+		return false
 	}
 	if (renewCount.value <= 0) {
 		uni.showToast({
@@ -207,8 +249,9 @@ const onConfirm = async () => {
 			duration:global.duration_toast,
 			icon:"error"
 		})
-		return
+		return false
 	}
+	isRenewing.value = true
 	const id = await courseStore.addPaymentRecord({
 		orgId: orgId.value,
 		studentId: studentNo.value,
@@ -232,7 +275,7 @@ const onConfirm = async () => {
 				date: Date.now(),
 				operator: operatorId
 			}
-			emit('onConfirm', {count:renewCount.value})
+			emit('onConfirm', {isRenew:props.isRenew, count:renewCount.value})
 			uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
 		} else {
 			courseStore.removePaymentRecord(id)
@@ -243,6 +286,74 @@ const onConfirm = async () => {
 		duration:global.duration_toast,
 		icon:result?"success":"error"
 	})
+	isRenewing.value = false
+	return result
+}
+
+const editCourse = async () => {
+	if (!isFinite(total.value) ||
+		!isFinite(consume.value) ||
+		!isFinite(price.value)) {
+		uni.showToast({
+			title:"请输入正确格式的数字",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		return
+	}
+	if (total.value < 0) {
+		uni.showToast({
+			title:"总课数不能小于0",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		return
+	}
+	if (consume.value < 0) {
+		uni.showToast({
+			title:"耗课数不能小于0",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		return
+	}
+	if (total.value < consume.value) {
+		uni.showToast({
+			title:"总课数不能小于耗课数",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		return
+	}
+	if (price.value < 0) {
+		uni.showToast({
+			title:"课程单价不能小于0",
+			duration:global.duration_toast,
+			icon:"error"
+		})
+		return
+	}
+	let result = true
+	if (price.value === paymentRecord.value?.price &&
+		total.value === entry.value?.total &&
+		consume.value === entry.value.consume) {
+		result = false
+	} else {
+		if (price.value !== paymentRecord.value?.price) {
+			result = await courseStore.modifyPaymentRecord(paymentRecord.value?._id ?? '', price.value)
+		}
+		if (total.value !== entry.value?.total || 
+			consume.value !== entry.value.consume) {
+			result = await courseStore.modifyCourseCount(entry.value?._id ?? '', total.value, consume.value)
+		}
+	}
+	if (result) {
+		emit('onConfirm', {isRenew:props.isRenew, total:total.value, consume:consume.value, updated:true})
+		uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value?.studentId})
+	} else {
+		emit('onConfirm', {isRenew:props.isRenew, updated:false})
+	}
+	return result
 }
 
 </script>

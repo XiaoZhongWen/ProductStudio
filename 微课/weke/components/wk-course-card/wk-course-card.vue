@@ -4,11 +4,18 @@
 			<view :class="course.icon"></view>
 			<text class="text">{{course.name}}</text>
 			<text v-if="statusDesc.length > 0" :class="statusClass">{{statusDesc}}</text>
+			<uni-icons 
+				@tap="onEditTap"
+				type="undo" 
+				class="undo" 
+				color="#f0ad4e" 
+				v-if="status === 0">
+			</uni-icons>
 			<wk-circle-progress 
 				v-if="props.forStudent" 
 				class="circle-progress"
 				:total="totalCourse"
-				:consume="props.consume">
+				:consume="consumeCourse">
 			</wk-circle-progress>
 		</view>
 		<view class="duration" v-if="status === 0">
@@ -63,7 +70,8 @@
 		</uni-popup>
 		
 		<uni-popup ref="renewPopup" type="bottom">
-			<wk-renew-course 
+			<wk-renew-course
+				:isRenew="isRenew"
 				:entryId="props.entryId"
 				@onConfirm="onRenewConfirm">
 			</wk-renew-course>
@@ -96,6 +104,7 @@ const isCreator = ref(false)
 const hasAdminOrTeacherRole = ref(false)
 const canReplaceTeacher = ref(false)
 const status = ref(0)
+const isRenew = ref(true)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
@@ -105,6 +114,7 @@ const props = defineProps(['forStudent', 'entryId', 'courseId', 'teacherId', 'or
 const global = getApp().globalData!
 
 const totalCourse = ref<number>(props.total)
+const consumeCourse = ref<number>(props.consume)
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -253,21 +263,40 @@ const onConfirm = async (data: {teacherId: string}) => {
 	popup.value?.close()
 }
 
-const onRenewConfirm = (data: {count:number}) => {
+const onRenewConfirm = (data: {
+							isRenew:boolean, 
+							updated:boolean, 
+							count:number, 
+							total:number, 
+							consume:number}) => {
 	renewPopup.value?.close()
-	status.value = 0
-	totalCourse.value += data.count
+	const { isRenew, updated, count, total, consume } = data
+	if (isRenew) {
+		status.value = 0
+		totalCourse.value += count
+	} else {
+		if (updated) {
+			totalCourse.value = total
+			consumeCourse.value = consume
+		}
+	}
 }
 
 const onActionTap = (e:UniHelper.EventTarget) => {
 	const { id } = e.target
 	if (id === 'renew') {
+		isRenew.value = true
 		renewPopup.value?.open()
 	} else if (id === 'finish') {
 		finishCourse()
 	} else if (id === 'revoke') {
 		revokeCourse()
 	}
+}
+
+const onEditTap = () => {
+	isRenew.value = false
+	renewPopup.value?.open()
 }
 
 const finishCourse = async () => {
@@ -394,6 +423,9 @@ const revokeCourse = async () => {
 		.text {
 			margin-left: $uni-spacing-row-sm;
 			font-size: $uni-font-size-base;
+		}
+		.undo {
+			margin-left: $uni-spacing-row-sm;
 		}
 		.circle-progress {
 			width: 37px;

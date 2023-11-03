@@ -18,7 +18,6 @@ import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../types/user'
 import wkStudentCardVue from '../wk-student-card/wk-student-card.vue';
 
-
 const global = getApp().globalData!
 
 const usersStore = useUsersStore()
@@ -41,6 +40,10 @@ onMounted(() => {
 				}
 			}
 		}
+	})
+	uni.$on(global.event_name.didUpdateOrgData, () => {
+		loadStudents()
+		refresh = true
 	})
 })
 

@@ -54,6 +54,24 @@ const onLongPress = (e) => {
 }
 
 const onDeleteTap = async () => {
+	const res = students.value.filter(student => student._id === selectedId.value)
+	if (res.length === 0) {
+		return
+	}
+	const student = res[0]
+	const entries = usersStore.entries.filter(entry => entry.orgId === props.orgId &&
+								entry.studentId === student.studentNo &&
+								entry.info.status === 0 &&
+								entry.total > entry.consume)
+	if (entries.length > 0) {
+		uni.showToast({
+			title: student.nickName + "还未结课, 不能删除",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+		selectedId.value = ''
+		return
+	}
 	uni.showLoading({
 		title:"正在删除"
 	})
@@ -65,6 +83,9 @@ const onDeleteTap = async () => {
 		icon:result?"success":"error"
 	})
 	selectedId.value = ''
+	if (result) {
+		uni.$emit(global.event_name.didUpdateOrgData)
+	}
 }
 
 </script>

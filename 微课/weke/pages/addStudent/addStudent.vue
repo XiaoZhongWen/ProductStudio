@@ -114,6 +114,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			// 2. 将该学员记录id添加到相应的机构里
 			if (id.length > 0) {
 				useOrgs.addStudents(orgId, [id])
+				uni.$emit(global.event_name.didUpdateOrgData)
 			}
 		} else {
 			uni.showToast({
