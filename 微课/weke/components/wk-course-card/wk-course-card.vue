@@ -4,13 +4,13 @@
 			<view :class="course.icon"></view>
 			<text class="text">{{course.name}}</text>
 			<text v-if="statusDesc.length > 0" :class="statusClass">{{statusDesc}}</text>
-			<uni-icons 
+			<!-- <uni-icons 
 				@tap="onEditTap"
 				type="undo" 
 				class="undo" 
 				color="#f0ad4e" 
 				v-if="status === 0">
-			</uni-icons>
+			</uni-icons> -->
 			<wk-circle-progress 
 				v-if="props.forStudent" 
 				class="circle-progress"
@@ -294,10 +294,10 @@ const onActionTap = (e:UniHelper.EventTarget) => {
 	}
 }
 
-const onEditTap = () => {
-	isRenew.value = false
-	renewPopup.value?.open()
-}
+// const onEditTap = () => {
+// 	isRenew.value = false
+// 	renewPopup.value?.open()
+// }
 
 const finishCourse = async () => {
 	// 1. 检查剩余课时

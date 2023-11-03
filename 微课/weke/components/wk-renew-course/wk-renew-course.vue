@@ -220,7 +220,7 @@ const onConfirm = async () => {
 	if (props.isRenew) {
 		await renewCourse()
 	} else {
-		await editCourse()
+		// await editCourse()
 	}
 }
 
@@ -290,71 +290,84 @@ const renewCourse = async () => {
 	return result
 }
 
-const editCourse = async () => {
-	if (!isFinite(total.value) ||
-		!isFinite(consume.value) ||
-		!isFinite(price.value)) {
-		uni.showToast({
-			title:"请输入正确格式的数字",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	if (total.value < 0) {
-		uni.showToast({
-			title:"总课数不能小于0",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	if (consume.value < 0) {
-		uni.showToast({
-			title:"耗课数不能小于0",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	if (total.value < consume.value) {
-		uni.showToast({
-			title:"总课数不能小于耗课数",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	if (price.value < 0) {
-		uni.showToast({
-			title:"课程单价不能小于0",
-			duration:global.duration_toast,
-			icon:"error"
-		})
-		return
-	}
-	let result = true
-	if (price.value === paymentRecord.value?.price &&
-		total.value === entry.value?.total &&
-		consume.value === entry.value.consume) {
-		result = false
-	} else {
-		if (price.value !== paymentRecord.value?.price) {
-			result = await courseStore.modifyPaymentRecord(paymentRecord.value?._id ?? '', price.value)
-		}
-		if (total.value !== entry.value?.total || 
-			consume.value !== entry.value.consume) {
-			result = await courseStore.modifyCourseCount(entry.value?._id ?? '', total.value, consume.value)
-		}
-	}
-	if (result) {
-		emit('onConfirm', {isRenew:props.isRenew, total:total.value, consume:consume.value, updated:true})
-		uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value?.studentId})
-	} else {
-		emit('onConfirm', {isRenew:props.isRenew, updated:false})
-	}
-	return result
-}
+// const editCourse = async () => {
+// 	if (!isFinite(total.value) ||
+// 		!isFinite(consume.value) ||
+// 		!isFinite(price.value)) {
+// 		uni.showToast({
+// 			title:"请输入正确格式的数字",
+// 			duration:global.duration_toast,
+// 			icon:"none"
+// 		})
+// 		return
+// 	}
+// 	if (total.value < 0) {
+// 		uni.showToast({
+// 			title:"总课数不能小于0",
+// 			duration:global.duration_toast,
+// 			icon:"none"
+// 		})
+// 		return
+// 	}
+// 	if (consume.value < 0) {
+// 		uni.showToast({
+// 			title:"耗课数不能小于0",
+// 			duration:global.duration_toast,
+// 			icon:"none"
+// 		})
+// 		return
+// 	}
+// 	if (total.value < consume.value) {
+// 		uni.showToast({
+// 			title:"总课数不能小于耗课数",
+// 			duration:global.duration_toast,
+// 			icon:"none"
+// 		})
+// 		return
+// 	}
+// 	if (price.value < 0) {
+// 		uni.showToast({
+// 			title:"课程单价不能小于0",
+// 			duration:global.duration_toast,
+// 			icon:"none"
+// 		})
+// 		return
+// 	}
+// 	let result = true
+// 	if (price.value === paymentRecord.value?.price &&
+// 		total.value === entry.value?.total &&
+// 		consume.value === entry.value.consume) {
+// 		result = false
+// 	} else {
+// 		if (price.value !== paymentRecord.value?.price) {
+// 			result = await courseStore.modifyPaymentRecord(paymentRecord.value?._id ?? '', price.value)
+// 			if (paymentRecord.value && result) {
+// 				paymentRecord.value.price = price.value
+// 			}
+// 			uni.showToast({
+// 				title:"课程价格修改为" + price.value,
+// 				duration:global.duration_toast,
+// 				icon:"none"
+// 			})
+// 		}
+// 		if (total.value !== entry.value?.total || 
+// 			consume.value !== entry.value.consume) {
+// 			debugger
+// 			result = await courseStore.modifyCourseCount(entry.value?._id ?? '', total.value, consume.value)
+// 			if (entry.value && result) {
+// 				entry.value.total = total.value
+// 				entry.value.consume = consume.value
+// 			}
+// 		}
+// 	}
+// 	if (result) {
+// 		emit('onConfirm', {isRenew:props.isRenew, total:total.value, consume:consume.value, updated:true})
+// 		uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value?.studentId})
+// 	} else {
+// 		emit('onConfirm', {isRenew:props.isRenew, updated:false})
+// 	}
+// 	return result
+// }
 
 </script>
 
