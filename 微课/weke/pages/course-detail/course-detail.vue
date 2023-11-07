@@ -49,19 +49,9 @@
 			</uni-segmented-control>
 			<view class="content">
 				<uni-list v-show="current === 0">
-					<uni-list-item>
+					<uni-list-item v-for="r in courseConsumeRecords" :key="r._id">
 						<template v-slot:body>
-							<wk-course-record class="course-record"></wk-course-record>
-						</template>
-					</uni-list-item>
-					<uni-list-item>
-						<template v-slot:body>
-							<wk-course-record class="course-record"></wk-course-record>
-						</template>
-					</uni-list-item>
-					<uni-list-item>
-						<template v-slot:body>
-							<wk-course-record class="course-record"></wk-course-record>
+							<wk-course-record class="course-record" :rId="r._id"></wk-course-record>
 						</template>
 					</uni-list-item>
 				</uni-list>
@@ -73,6 +63,9 @@
 				</view>
 			</view>
 		</view>
+		<view class="placeholder" v-if="isShow">
+			暂无记录
+		</view>
 	</view>
 </template>
 
@@ -81,8 +74,8 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
-import { ref } from 'vue';
-import { Course } from '../../types/course';
+import { computed, ref } from 'vue';
+import { Course, CourseConsumeRecord } from '../../types/course';
 import { Student, User } from '../../types/user';
 import { Org } from '../../types/org';
 import { Entry } from '../../types/entry';
@@ -96,6 +89,8 @@ const typeName = ref('')
 const orgName = ref('')
 const current = ref(0)
 const options = ["课程记录", "续课记录", "请假记录"]
+
+const courseConsumeRecords = ref<CourseConsumeRecord[]>([])
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
@@ -154,6 +149,8 @@ onLoad(async (option) => {
 			orgName.value = creator.nickName
 		}
 	}
+	
+	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, studentId)
 })
 
 const onClickItem = (e: { currentIndex:number }) => {
@@ -161,6 +158,10 @@ const onClickItem = (e: { currentIndex:number }) => {
 		current.value = e.currentIndex
 	}
 }
+
+const isShow = computed(() => {
+	return current.value === 0 && courseConsumeRecords.value.length === 0
+})
 
 </script>
 
@@ -240,6 +241,14 @@ const onClickItem = (e: { currentIndex:number }) => {
 		.course-record {
 			width: 100%;
 		}
+	}
+	.placeholder {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: $wk-text-color-grey;
+		font-size: $uni-font-size-base;
+		margin-top: 100px;
 	}
 }
 

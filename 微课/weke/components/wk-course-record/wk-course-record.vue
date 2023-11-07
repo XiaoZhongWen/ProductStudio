@@ -1,38 +1,53 @@
 <template>
-	<view class="course-record-container">
+	<view class="course-record-container" v-if="r">
 		<view class="section">
 			<text class="title">开始时间:</text>
-			<text class="desc">2023-11-22 15:36</text>
+			<text class="desc">{{format(r.startTime)}}</text>
 		</view>
 		<view class="section">
 			<text class="title">结束时间:</text>
-			<text class="desc">2023-11-22 16:36</text>
+			<text class="desc">{{format(r.endTime)}}</text>
 		</view>
 		<view class="section">
 			<text class="title">消耗课时:</text>
-			<text class="desc">1</text>
+			<text class="desc">{{r.count}}</text>
 		</view>
 		<view class="section area">
 			<text class="title">课程内容:</text>
-			<text class="content">{{test}}</text>
+			<text class="content">{{r.content}}</text>
 		</view>
 		<view class="section area">
 			<text class="title">课后作业:</text>
-			<text class="content">{{test}}</text>
+			<text class="content">{{r.assignment}}</text>
 		</view>
 		<view class="section area">
 			<text class="title">课程反馈:</text>
-			<text class="content">{{test}}</text>
+			<text class="content">{{r.feedback}}</text>
 		</view>
 		<view class="bottom">
-			<uni-icons type="undo" color="#dd524d" class="icon" size="20"></uni-icons>
+			<uni-icons type="undo" color="#5073D6" class="icon" size="20"></uni-icons>
 			<uni-icons type="compose" color="#5073D6" class="icon" size="20"></uni-icons>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
-const test = "1. 第一\n2. 第二\n3. 第三\n"
+import { onMounted, ref } from 'vue';
+import { CourseConsumeRecord } from '../../types/course';
+import { useCourseStore } from "@/store/course"
+import { format } from '@/utils/wk-date'
+
+const props = defineProps(['rId'])
+const r = ref<CourseConsumeRecord>()
+const courseStore = useCourseStore()
+
+onMounted(() => {
+	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
+	if (res.length > 0) {
+		r.value = res[0]
+	}
+})
+
 </script>
 
 <style lang="scss" scoped>

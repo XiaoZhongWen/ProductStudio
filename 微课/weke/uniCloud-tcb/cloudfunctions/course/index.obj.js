@@ -357,5 +357,17 @@ module.exports = {
 			consume
 		})
 		return result.updated === 1
+	},
+	async fetchCourseConsumeRecords(courseId, studentId) {
+		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(studentId) === 'undefined' || studentId.length === 0) {
+			return []
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-course-records').where({
+			courseId,
+			studentId
+		}).get()
+		return result.data
 	}
 }

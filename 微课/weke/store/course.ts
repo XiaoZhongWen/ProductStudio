@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Course } from '@/types/course'
+import { Course, CourseConsumeRecord } from '@/types/course'
 import { PaymentRecord } from '../types/PaymentRecord'
 
 const course_co = uniCloud.importObject('course', {
@@ -10,7 +10,8 @@ export const useCourseStore = defineStore('course', {
 	state: () => {
 		return {
 			course:[] as Course[],
-			paymentRecords:[] as PaymentRecord[]
+			paymentRecords:[] as PaymentRecord[],
+			courseConsumeRecords: [] as CourseConsumeRecord[]
 		}
 	},
 	getters: {
@@ -266,6 +267,22 @@ export const useCourseStore = defineStore('course', {
 			}
 			const res = await course_co.modifyCourseCount(entryId, total, consume)
 			return res
+		},
+		async fetchCourseConsumeRecords(courseId: string, studentId: string) {
+			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0) {
+				return []
+			}
+			const records = this.courseConsumeRecords.filter(r => r.courseId === courseId && r.studentId === studentId)
+			if (courseId.length === 0) {
+				const res = await course_co.fetchCourseConsumeRecords(courseId, studentId)
+				if (res.length > 0) {
+					this.courseConsumeRecords.push(...res)
+				}
+				return res
+			} else {
+				return records
+			}
 		}
 	}
 })

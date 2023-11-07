@@ -49,7 +49,7 @@
 			"bsonType": "array",
 			"description": "老师的课程反馈"
 		},
-		"courseContent": {
+		"content": {
 			"bsonType": "string",
 			"description": "上课内容",
 			"maxLength": 1000
