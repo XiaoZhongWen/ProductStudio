@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["courseId", "teacherId", "startTime", "endTime"],
+	"required": ["courseId", "teacherId", "startTime", "endTime", "count", "status", "modifyDate", "operatorId"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -53,6 +53,29 @@
 			"bsonType": "string",
 			"description": "上课内容",
 			"maxLength": 1000
+		},
+		"assignment":{
+			"bsonType": "string",
+			"description": "作业",
+			"maxLength": 1000
+		},
+		"count": {
+			"bsonType": "int",
+			"description": "消耗课时数",
+			"defaultValue": 1
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "0：正常、1：撤销、2：编辑",
+			"defaultValue": 0
+		},
+		"modifyDate": {
+			"bsonType": "timestamp",
+			"description": "变更时间戳"
+		},
+		"operatorId": {
+			"bsonType": "string",
+			"description": "操作人id"
 		}
 	}
 }

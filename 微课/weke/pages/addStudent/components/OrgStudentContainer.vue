@@ -61,7 +61,7 @@ const onDeleteTap = async () => {
 	const student = res[0]
 	const entries = usersStore.entries.filter(entry => entry.orgId === props.orgId &&
 								entry.studentId === student.studentNo &&
-								entry.info.status === 0 &&
+								entry.status === 0 &&
 								entry.total > entry.consume)
 	if (entries.length > 0) {
 		uni.showToast({

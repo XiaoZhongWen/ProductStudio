@@ -235,6 +235,16 @@
 				"backgroundColor": "#F2F4FD"
             }
         }
+        ,{
+            "path" : "pages/course-detail/course-detail",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "课程详情",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

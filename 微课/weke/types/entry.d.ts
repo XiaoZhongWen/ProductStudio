@@ -6,5 +6,7 @@ export type Entry = {
 	courseId: string,
 	total: number,
 	consume: number,
-	info: {status: number, date:number, operator:string}
+	status: number,
+	modifyDate: number,
+	operatorId: string
 }

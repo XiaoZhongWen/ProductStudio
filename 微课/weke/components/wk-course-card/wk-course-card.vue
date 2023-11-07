@@ -1,5 +1,5 @@
 <template>
-	<view class="course-card" v-if="display">
+	<view class="course-card" v-if="display" @tap="onCourseTap">
 		<view class="top">
 			<view :class="course.icon"></view>
 			<text class="text">{{course.name}}</text>
@@ -177,12 +177,12 @@ onMounted(async () => {
 	const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
 	if (entries.length > 0) {
 		entry.value = entries[0]
-		status.value = entry.value.info.status
-		const operatorId = entry.value.info.operator
+		status.value = entry.value.status
+		const operatorId = entry.value.operatorId
 		const users = await usersStore.fetchUsers([operatorId]) as User[]
 		if (users.length > 0) {
 			operator.value = users[0]
-			const timestamp = entry.value.info.date
+			const timestamp = entry.value.modifyDate
 			const date = new Date(timestamp)
 			operateTime.value = format(date)
 		}
@@ -237,6 +237,12 @@ const revokeClass = computed(() => {
 
 const onReplaceTap = () => {
 	popup.value?.open()
+}
+
+const onCourseTap = () => {
+	uni.navigateTo({
+		url: "/pages/course-detail/course-detail?entryId="+entry.value?._id
+	})
 }
 
 const onConfirm = async (data: {teacherId: string}) => {
@@ -327,11 +333,9 @@ const finishCourse = async () => {
 						if (result) {
 							status.value = 1
 							operateTime.value = format(new Date())
-							entry.value.info = {
-								status: 1,
-								date: Date.now(),
-								operator
-							}
+							entry.value.status = 1
+							entry.value.modifyDate = Date.now()
+							entry.value.operatorId = operator
 						}
 						uni.showToast({
 							title:result?"结课成功":"结课失败",
@@ -374,11 +378,9 @@ const revokeCourse = async () => {
 							totalCourse.value = entry.value.consume
 							entry.value.total = entry.value.consume
 							operateTime.value = format(new Date())
-							entry.value.info = {
-								status: 2,
-								date: Date.now(),
-								operator
-							}
+							entry.value.status = 2
+							entry.value.modifyDate = Date.now()
+							entry.value.operatorId = operator
 							const paymentRecord = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
 							courseStore.revokePaymentRecord({
 								orgId: entry.value.orgId,

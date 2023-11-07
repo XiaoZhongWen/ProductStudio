@@ -270,11 +270,9 @@ const renewCourse = async () => {
 		if (res) {
 			result = true
 			entry.value.total += renewCount.value
-			entry.value.info = {
-				status: 0,
-				date: Date.now(),
-				operator: operatorId
-			}
+			entry.value.status = 0
+			entry.value.modifyDate = Date.now()
+			entry.value.operatorId = operatorId
 			emit('onConfirm', {isRenew:props.isRenew, count:renewCount.value})
 			uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
 		} else {
