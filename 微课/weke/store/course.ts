@@ -274,7 +274,7 @@ export const useCourseStore = defineStore('course', {
 				return []
 			}
 			const records = this.courseConsumeRecords.filter(r => r.courseId === courseId && r.studentId === studentId)
-			if (courseId.length === 0) {
+			if (records.length === 0) {
 				const res = await course_co.fetchCourseConsumeRecords(courseId, studentId)
 				if (res.length > 0) {
 					this.courseConsumeRecords.push(...res)
@@ -283,6 +283,52 @@ export const useCourseStore = defineStore('course', {
 			} else {
 				return records
 			}
+		},
+		async modifyCourseConsumeRecord(
+			param:{
+				_id:string, 
+				startTime:number,
+				endTime: number,
+				count: number,
+				content: string,
+				assignment: string,
+				feedback: string
+		}) {
+			debugger
+			const { _id, startTime, endTime, count } = param
+			if (typeof(_id) === 'undefined' || 
+				_id.length === 0 ||
+				typeof(startTime) === 'undefined' || 
+				typeof(endTime) === 'undefined' ||
+				typeof(count) === 'undefined') {
+				return false
+			}
+			let { content, assignment, feedback } = param
+			if (typeof(content) === 'undefined') {
+				content = ''
+			}
+			if (typeof(assignment) === 'undefined') {
+				assignment = ''
+			}
+			if (typeof(feedback) === 'undefined') {
+				feedback = ''
+			}
+			const result = await course_co.modifyCourseConsumeRecord({
+				_id, startTime, endTime, count, content, assignment, feedback
+			})
+			if (result) {
+				const records = this.courseConsumeRecords.filter(r => r._id === _id)
+				if (records.length > 0) {
+					const r = records[0]
+					r.startTime = startTime
+					r.endTime = endTime
+					r.count = count
+					r.content = content
+					r.assignment = assignment
+					r.feedback = feedback
+				}
+			}
+			return result
 		}
 	}
 })

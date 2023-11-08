@@ -1,5 +1,5 @@
 <template>
-	<view class="course-card" v-if="display" @tap="onCourseTap">
+	<view class="course-card" id="course-card" v-if="display" @tap="onCourseTap">
 		<view class="top">
 			<view :class="course.icon"></view>
 			<text class="text">{{course.name}}</text>
@@ -33,7 +33,7 @@
 					type="loop" 
 					class="replace" 
 					color="#5073D6" 
-					@tap="onReplaceTap"
+					@tap.stop="onReplaceTap"
 					v-if="canReplaceTeacher">
 				</uni-icons>
 			</view>
@@ -51,7 +51,7 @@
 			<view class="left">
 				<text>{{orgName}}</text>
 			</view>
-			<view class="right" @tap="onActionTap">
+			<view class="right" @tap.stop="onActionTap">
 				<text class="action" id="renew">续课</text>
 				<text :class="finishClass" id="finish" v-if="status !== 2">{{status === 1?"已结课":"结课"}}</text>
 				<text :class="revokeClass" id="revoke" v-if="status !== 1">{{status === 2?"已退课":"退课"}}</text>
@@ -62,15 +62,17 @@
 			<text>{{typeName}}</text>
 		</view>
 		
-		<uni-popup ref="popup" type="bottom">
-			<wk-choose-teacher 
+		<uni-popup ref="popup" type="bottom" id="popup">
+			<wk-choose-teacher
+				id="teacher"
 				:entryId="props.entryId"
 				@onConfirm="onConfirm">
 			</wk-choose-teacher>
 		</uni-popup>
 		
-		<uni-popup ref="renewPopup" type="bottom">
+		<uni-popup ref="renewPopup" type="bottom" id="renewPopup">
 			<wk-renew-course
+				id="course"
 				:isRenew="isRenew"
 				:entryId="props.entryId"
 				@onConfirm="onRenewConfirm">
@@ -239,7 +241,11 @@ const onReplaceTap = () => {
 	popup.value?.open()
 }
 
-const onCourseTap = () => {
+const onCourseTap = (e:{target:{id:string}}) => {
+	const { id } = e.target
+	if (id.length > 0) {
+		return
+	}
 	uni.navigateTo({
 		url: "/pages/course-detail/course-detail?entryId="+entry.value?._id
 	})
@@ -294,9 +300,13 @@ const onActionTap = (e:UniHelper.EventTarget) => {
 		isRenew.value = true
 		renewPopup.value?.open()
 	} else if (id === 'finish') {
-		finishCourse()
+		if (status.value !== 1) {
+			finishCourse()
+		}
 	} else if (id === 'revoke') {
-		revokeCourse()
+		if (status.value !== 2) {
+			revokeCourse()
+		}
 	}
 }
 

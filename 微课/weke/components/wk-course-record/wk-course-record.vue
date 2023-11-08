@@ -2,11 +2,11 @@
 	<view class="course-record-container" v-if="r">
 		<view class="section">
 			<text class="title">开始时间:</text>
-			<text class="desc">{{format(r.startTime)}}</text>
+			<text class="desc">{{format(new Date(r.startTime))}}</text>
 		</view>
 		<view class="section">
 			<text class="title">结束时间:</text>
-			<text class="desc">{{format(r.endTime)}}</text>
+			<text class="desc">{{format(new Date(r.endTime))}}</text>
 		</view>
 		<view class="section">
 			<text class="title">消耗课时:</text>
@@ -25,8 +25,8 @@
 			<text class="content">{{r.feedback}}</text>
 		</view>
 		<view class="bottom">
-			<uni-icons type="undo" color="#5073D6" class="icon" size="20"></uni-icons>
-			<uni-icons type="compose" color="#5073D6" class="icon" size="20"></uni-icons>
+			<text class="action" @tap="onEditTap">编辑</text>
+			<text class="action revoke" @tap="onRevokeTap">撤销</text>
 		</view>
 	</view>
 </template>
@@ -38,6 +38,7 @@ import { useCourseStore } from "@/store/course"
 import { format } from '@/utils/wk-date'
 
 const props = defineProps(['rId'])
+const emit = defineEmits(['editAction', 'revokeAction'])
 const r = ref<CourseConsumeRecord>()
 const courseStore = useCourseStore()
 
@@ -47,6 +48,14 @@ onMounted(() => {
 		r.value = res[0]
 	}
 })
+
+const onEditTap = () => {
+	emit('editAction', {'id': props.rId})
+}
+
+const onRevokeTap = () => {
+	emit('revokeAction', {'id': props.rId})
+}
 
 </script>
 
@@ -81,8 +90,16 @@ onMounted(() => {
 		display: flex;
 		justify-content: flex-end;
 		margin-top: $uni-spacing-col-base;
-		.icon {
-			margin-left: $uni-spacing-col-lg;
+		.action {
+			margin-left: $uni-spacing-row-lg;
+			background-color: $wk-theme-color;
+			color: white;
+			font-size: $uni-font-size-sm;
+			padding: $uni-padding-sm $uni-padding-base;
+			border-radius: $uni-border-radius-base;
+		}
+		.revoke {
+			background-color: $uni-color-error;
 		}
 	}
 }

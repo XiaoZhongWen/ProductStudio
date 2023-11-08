@@ -369,5 +369,27 @@ module.exports = {
 			studentId
 		}).get()
 		return result.data
+	},
+	async modifyCourseConsumeRecord(param) {
+		const { _id, startTime, endTime, count, content, assignment, feedback } = param
+		if (typeof(_id) === 'undefined' ||
+			_id.length === 0 ||
+			typeof(startTime) === 'undefined' || 
+			typeof(endTime) === 'undefined' ||
+			typeof(count) === 'undefined') {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-course-records').where({
+			_id
+		}).update({
+			startTime,
+			endTime,
+			count,
+			content,
+			assignment,
+			feedback
+		})
+		return result.updated === 1
 	}
 }

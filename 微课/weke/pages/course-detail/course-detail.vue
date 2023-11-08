@@ -13,7 +13,10 @@
 			<view class="duration" v-if="course">
 				<text>课程时长: {{course.duration}}分钟</text>
 			</view>
-			<view class="student" v-if="student">
+			<view class="duration" v-if="student">
+				<text>上课学员: {{student.nickName}}</text>
+			</view>
+			<!-- <view class="student" v-if="student">
 				<text>上课学员: </text>
 				<view class="student-cell">
 					<wk-icon
@@ -22,7 +25,7 @@
 						:text="student.nickName">
 					</wk-icon>
 				</view>
-			</view>
+			</view> -->
 			<view class="teacher" v-if="teacher">
 				<text>授课老师: </text>
 				<view class="teacher-cell">
@@ -51,7 +54,12 @@
 				<uni-list v-show="current === 0">
 					<uni-list-item v-for="r in courseConsumeRecords" :key="r._id">
 						<template v-slot:body>
-							<wk-course-record class="course-record" :rId="r._id"></wk-course-record>
+							<wk-course-record 
+								class="course-record" 
+								:rId="r._id"
+								@editAction="onEditAction"
+								@revokeAction="onRevokeAction">
+							</wk-course-record>
 						</template>
 					</uni-list-item>
 				</uni-list>
@@ -67,6 +75,12 @@
 			暂无记录
 		</view>
 	</view>
+	<uni-popup ref="editCourseRecordPopup" type="bottom">
+		<EditCourseRecord 
+			ref="recordRef" 
+			:rId="selectedRId" 
+			@change="onChange" />
+	</uni-popup>
 </template>
 
 <script setup lang="ts">
@@ -79,6 +93,7 @@ import { Course, CourseConsumeRecord } from '../../types/course';
 import { Student, User } from '../../types/user';
 import { Org } from '../../types/org';
 import { Entry } from '../../types/entry';
+import EditCourseRecord from './components/EditCourseRecord.vue'
 
 const entry = ref<Entry>()
 const course = ref<Course>()
@@ -91,10 +106,17 @@ const current = ref(0)
 const options = ["课程记录", "续课记录", "请假记录"]
 
 const courseConsumeRecords = ref<CourseConsumeRecord[]>([])
+const selectedRId = ref('')
+const recordRef = ref(null)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
+
+const editCourseRecordPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
 
 onLoad(async (option) => {
 	const { entryId } = option as { entryId:string }
@@ -149,14 +171,73 @@ onLoad(async (option) => {
 			orgName.value = creator.nickName
 		}
 	}
-	
-	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, studentId)
+	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
 })
 
 const onClickItem = (e: { currentIndex:number }) => {
 	if (current.value !== e.currentIndex) {
 		current.value = e.currentIndex
 	}
+}
+
+const onEditAction = (param:{id:string}) => {
+	const { id } = param
+	if (typeof(id) === 'undefined' || id.length === 0) {
+		return
+	}
+	if (recordRef.value) {
+		const instance:InstanceType<typeof EditCourseRecord> = recordRef.value
+		instance.initial()
+	}
+	selectedRId.value = id
+	editCourseRecordPopup.value?.open()
+}
+
+const onRevokeAction = (param:{id:string}) => {
+	const { id } = param
+	if (typeof(id) === 'undefined' || id.length === 0) {
+		return
+	}
+}
+
+const onChange = async (
+	param:{
+		_id:string, 
+		startTime:number,
+		endTime: number,
+		count: number,
+		content: string,
+		assignment: string,
+		feedback: string
+	}) => {
+	const { _id, startTime, endTime, count, content, assignment, feedback } = param
+	const res = courseConsumeRecords.value.filter(r => r._id === _id)
+	if (res.length > 0) {
+		const r = res[0]
+		if (r.startTime !== startTime ||
+			r.endTime !== endTime ||
+			r.count !== count ||
+			r.content !== content ||
+			r.assignment !== assignment ||
+			r.feedback !== feedback) {
+			const delta = r.count - count
+			debugger
+			const result = await courseStore.modifyCourseConsumeRecord({...param})
+			if (result && delta !== 0) {
+				if (entry.value) {
+					let consume = entry.value.consume
+					consume -= delta
+					const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
+					if (res) {
+						entry.value.consume = consume
+						usersStore.entries
+						debugger
+					}
+				}
+			}
+		}
+	}
+	editCourseRecordPopup.value?.close()
 }
 
 const isShow = computed(() => {
@@ -205,7 +286,6 @@ const isShow = computed(() => {
 			height: 28px;
 			font-size: $uni-font-size-sm;
 			color: $wk-text-color-grey;
-			margin-top: $uni-spacing-row-sm;
 			.teacher-cell, .student-cell {
 				display: flex;
 				flex-direction: row;
