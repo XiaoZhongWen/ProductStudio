@@ -294,7 +294,6 @@ export const useCourseStore = defineStore('course', {
 				assignment: string,
 				feedback: string
 		}) {
-			debugger
 			const { _id, startTime, endTime, count } = param
 			if (typeof(_id) === 'undefined' || 
 				_id.length === 0 ||

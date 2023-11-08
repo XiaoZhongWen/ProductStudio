@@ -63,13 +63,12 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUpdate, ref } from 'vue';
+import { ref } from 'vue';
 import { useCourseStore } from "@/store/course"
 import { CourseConsumeRecord } from '../../../types/course';
 
 const global = getApp().globalData!
 
-const props = defineProps(['rId'])
 const emit = defineEmits(['change'])
 const courseStore = useCourseStore()
 
@@ -82,22 +81,14 @@ const count = ref<number>(1)
 const content = ref('')
 const assignment = ref('')
 const feedback = ref('')
-let isInitial = false
 
-const initial = () => {
-	isInitial = true
-}
-
-defineExpose({
-	isInitial,
-	initial
-})
-
-onBeforeUpdate(() => {
-	if (!isInitial) {
+let rId = ''
+const initial = (id:string) => {
+	if (typeof(id) === 'undefined' || id.length === 0) {
 		return
 	}
-	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
+	rId = id
+	const res = courseStore.courseConsumeRecords.filter(r => r._id === rId)
 	if (res.length > 0) {
 		record.value = res[0]
 		start.value = record.value.startTime
@@ -106,13 +97,16 @@ onBeforeUpdate(() => {
 		content.value = record.value.content ?? ''
 		assignment.value = record.value.assignment ?? ''
 		feedback.value = record.value.feedback ?? ''
-		isInitial = false
 	}
+}
+
+defineExpose({
+	initial
 })
 
 const onTap = () => {
 	const record = {
-		_id: props.rId,
+		_id: rId,
 		startTime: start.value,
 		endTime: end.value,
 		count: count.value,
@@ -131,6 +125,14 @@ const onTap = () => {
 	if (end.value.toString().length === 0) {
 		uni.showToast({
 			title: "请选择结束时间",
+			duration: global.duration_toast,
+			icon:'none'
+		})
+		return
+	}
+	if (start.value >= end.value) {
+		uni.showToast({
+			title: "开始时间要小于结束时间",
 			duration: global.duration_toast,
 			icon:'none'
 		})

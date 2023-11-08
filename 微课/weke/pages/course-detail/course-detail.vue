@@ -77,8 +77,7 @@
 	</view>
 	<uni-popup ref="editCourseRecordPopup" type="bottom">
 		<EditCourseRecord 
-			ref="recordRef" 
-			:rId="selectedRId" 
+			ref="recordRef"
 			@change="onChange" />
 	</uni-popup>
 </template>
@@ -95,6 +94,8 @@ import { Org } from '../../types/org';
 import { Entry } from '../../types/entry';
 import EditCourseRecord from './components/EditCourseRecord.vue'
 
+const global = getApp().globalData!
+
 const entry = ref<Entry>()
 const course = ref<Course>()
 const student = ref<Student>()
@@ -106,7 +107,6 @@ const current = ref(0)
 const options = ["课程记录", "续课记录", "请假记录"]
 
 const courseConsumeRecords = ref<CourseConsumeRecord[]>([])
-const selectedRId = ref('')
 const recordRef = ref(null)
 
 const usersStore = useUsersStore()
@@ -187,9 +187,8 @@ const onEditAction = (param:{id:string}) => {
 	}
 	if (recordRef.value) {
 		const instance:InstanceType<typeof EditCourseRecord> = recordRef.value
-		instance.initial()
+		instance.initial(id)
 	}
-	selectedRId.value = id
 	editCourseRecordPopup.value?.open()
 }
 
@@ -212,6 +211,7 @@ const onChange = async (
 	}) => {
 	const { _id, startTime, endTime, count, content, assignment, feedback } = param
 	const res = courseConsumeRecords.value.filter(r => r._id === _id)
+	let flag = false
 	if (res.length > 0) {
 		const r = res[0]
 		if (r.startTime !== startTime ||
@@ -221,7 +221,6 @@ const onChange = async (
 			r.assignment !== assignment ||
 			r.feedback !== feedback) {
 			const delta = r.count - count
-			debugger
 			const result = await courseStore.modifyCourseConsumeRecord({...param})
 			if (result && delta !== 0) {
 				if (entry.value) {
@@ -231,13 +230,21 @@ const onChange = async (
 					if (res) {
 						entry.value.consume = consume
 						usersStore.entries
-						debugger
+						uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+						flag = true
 					}
 				}
+			} else {
+				flag = true
 			}
 		}
 	}
 	editCourseRecordPopup.value?.close()
+	uni.showToast({
+		title: flag? "修改成功": "修改失败",
+		duration: global.duration_toast,
+		icon:flag?"success":"error"
+	})
 }
 
 const isShow = computed(() => {
