@@ -155,7 +155,7 @@ onMounted(async () => {
 			}
 			total.value = entry.value.total
 			consume.value = entry.value.consume
-			paymentRecord.value = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
+			paymentRecord.value = await fetchLastestPaymentRecord(entry.value.courseId, entry.value.studentId) as PaymentRecord
 			if (typeof(paymentRecord.value) !== 'undefined') {
 				price.value = paymentRecord.value.price
 			}
@@ -286,6 +286,18 @@ const renewCourse = async () => {
 	})
 	isRenewing.value = false
 	return result
+}
+
+const fetchLastestPaymentRecord = async (courseId:string, studentId:string) => {
+	const records = await courseStore.fetchPaymentRecords(courseId, studentId)
+	if (records.length > 0) {
+		records.sort((r1, r2) => {
+			return r2.date - r1.date
+		})
+		return records[0]
+	} else {
+		return {}
+	}
 }
 
 // const editCourse = async () => {

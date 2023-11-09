@@ -46,7 +46,7 @@
 		},
 		"status": {
 			"bsonType": "int",
-			"description": "0：正常、1：撤销、2：编辑",
+			"description": "0：正常、1：编辑、2：撤销",
 			"defaultValue": 0
 		},
 		"modifyDate": {

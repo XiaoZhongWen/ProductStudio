@@ -6,4 +6,8 @@ export type PaymentRecord = {
 	courseId: string,
 	count: number,
 	price: number
+	status: number,
+	operatorId: string,
+	modifyDate: number,
+	remark?: string
 }

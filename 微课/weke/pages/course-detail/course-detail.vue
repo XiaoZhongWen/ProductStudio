@@ -63,9 +63,18 @@
 						</template>
 					</uni-list-item>
 				</uni-list>
-				<view v-show="current === 1">
-					Content of Tab 2
-				</view>
+				<uni-list v-show="current === 1">
+					<uni-list-item v-for="r in paymentRecords" :key="r._id">
+						<template v-slot:body>
+							<wk-payment-records
+								class="payment-record" 
+								:rId="r._id"
+								@editPaymentAction="onEditPaymentAction"
+								@revokePaymentAction="onRevokePaymentAction">
+							</wk-payment-records>
+						</template>
+					</uni-list-item>
+				</uni-list>
 				<view v-show="current === 2">
 					Content of Tab 3
 				</view>
@@ -80,6 +89,11 @@
 			ref="recordRef"
 			@change="onChange" />
 	</uni-popup>
+	<uni-popup ref="editPaymentRecordPopup" type="bottom">
+		<EditPaymentRecord 
+			ref="paymentRecordRef"
+			@change="onPaymentChange" />
+	</uni-popup>
 </template>
 
 <script setup lang="ts">
@@ -93,6 +107,8 @@ import { Student, User } from '../../types/user';
 import { Org } from '../../types/org';
 import { Entry } from '../../types/entry';
 import EditCourseRecord from './components/EditCourseRecord.vue'
+import EditPaymentRecord from './components/EditPaymentRecord.vue'
+import { PaymentRecord } from '../../types/PaymentRecord';
 
 const global = getApp().globalData!
 
@@ -107,13 +123,20 @@ const current = ref(0)
 const options = ["课程记录", "续课记录", "请假记录"]
 
 const courseConsumeRecords = ref<CourseConsumeRecord[]>([])
+const paymentRecords = ref<PaymentRecord[]>([])
 const recordRef = ref(null)
+const paymentRecordRef = ref(null)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
 const editCourseRecordPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
+const editPaymentRecordPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
@@ -172,6 +195,7 @@ onLoad(async (option) => {
 		}
 	}
 	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
+	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value.studentNo)
 })
 
 const onClickItem = (e: { currentIndex:number }) => {
@@ -192,11 +216,50 @@ const onEditAction = (param:{id:string}) => {
 	editCourseRecordPopup.value?.open()
 }
 
-const onRevokeAction = (param:{id:string}) => {
+const onRevokeAction = async (param:{id:string}) => {
 	const { id } = param
 	if (typeof(id) === 'undefined' || id.length === 0) {
 		return
 	}
+	const res = courseConsumeRecords.value.filter(r => r._id === id)
+	let flag = false
+	if (res.length > 0) {
+		const r = res[0]
+		const result = await courseStore.revokeCourseConsumeRecord(id)
+		if (result) {
+			if (entry.value) {
+				let consume = entry.value.consume
+				consume -= r.count
+				const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
+				if (res) {
+					entry.value.consume = consume
+					uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+					flag = true
+				}
+			}
+		}
+	}
+	uni.showToast({
+		title: flag? "撤销成功": "撤销失败",
+		duration: global.duration_toast,
+		icon:flag?"success":"error"
+	})
+}
+
+const onEditPaymentAction = (param:{id:string}) => {
+	const { id } = param
+	if (typeof(id) === 'undefined' || id.length === 0) {
+		return
+	}
+	if (paymentRecordRef.value) {
+		const instance:InstanceType<typeof EditPaymentRecord> = paymentRecordRef.value
+		instance.initial(id)
+	}
+	editPaymentRecordPopup.value?.open()
+}
+
+const onRevokePaymentAction = async (param:{id:string}) => {
+	
 }
 
 const onChange = async (
@@ -222,22 +285,24 @@ const onChange = async (
 			r.feedback !== feedback) {
 			const delta = r.count - count
 			const result = await courseStore.modifyCourseConsumeRecord({...param})
-			if (result && delta !== 0) {
-				if (entry.value) {
+			if (result) {
+				if (entry.value && delta !== 0) {
 					let consume = entry.value.consume
 					consume -= delta
 					const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
 					if (res) {
 						entry.value.consume = consume
-						usersStore.entries
 						uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
 						flag = true
 					}
+				} else {
+					flag = true
 				}
-			} else {
-				flag = true
 			}
 		}
+	} else {
+		editCourseRecordPopup.value?.close()
+		return
 	}
 	editCourseRecordPopup.value?.close()
 	uni.showToast({
@@ -247,8 +312,54 @@ const onChange = async (
 	})
 }
 
+const onPaymentChange = async (param:{
+		_id:string, 
+		date:number,
+		count: number,
+		price: number,
+		remark: string
+	}) => {
+	const { _id, date, count, price, remark } = param
+	const res = paymentRecords.value.filter(r => r._id === _id)
+	let flag = false
+	if (res.length > 0) {
+		const r = res[0]
+		if (r.date !== date ||
+			r.count !== count ||
+			r.price !== price ||
+			r.remark !== remark) {
+			const delta = r.count - count
+			const result = await courseStore.modifyPaymentRecord({...param})
+			if (result) {
+				if (entry.value && delta !== 0) {
+					let total = entry.value.total
+					total -= delta
+					const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
+					if (res) {
+						entry.value.total = total
+						uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+						flag = true
+					}
+				} else {
+					flag = true
+				}
+			}
+		}
+	} else {
+		editPaymentRecordPopup.value?.close()
+		return
+	}
+	editPaymentRecordPopup.value?.close()
+	uni.showToast({
+		title: flag? "修改成功": "修改失败",
+		duration: global.duration_toast,
+		icon:flag?"success":"error"
+	})
+}
+
 const isShow = computed(() => {
-	return current.value === 0 && courseConsumeRecords.value.length === 0
+	return (current.value === 0 && courseConsumeRecords.value.length === 0) ||
+			(current.value === 1 && paymentRecords.value.length === 0)
 })
 
 </script>
@@ -325,7 +436,7 @@ const isShow = computed(() => {
 		.segmented {
 			font-size: $uni-font-size-base;
 		}
-		.course-record {
+		.course-record, .payment-record {
 			width: 100%;
 		}
 	}

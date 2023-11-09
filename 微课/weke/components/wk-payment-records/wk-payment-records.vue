@@ -1,5 +1,5 @@
 <template>
-	<view class="course-record-container" v-if="r">
+	<view class="payment-records-container" v-if="r">
 		<view class="section">
 			<text class="title">状态:</text>
 			<text :class="statusCls">{{statusDesc}}</text>
@@ -13,28 +13,20 @@
 			<text class="desc">{{format(new Date(r.modifyDate))}}</text>
 		</view>
 		<view class="section">
-			<text class="title">开始时间:</text>
-			<text class="desc">{{format(new Date(r.startTime))}}</text>
+			<text class="title">续课时间:</text>
+			<text class="desc">{{format(new Date(r.date))}}</text>
 		</view>
 		<view class="section">
-			<text class="title">结束时间:</text>
-			<text class="desc">{{format(new Date(r.endTime))}}</text>
-		</view>
-		<view class="section">
-			<text class="title">消耗课时:</text>
+			<text class="title">续课时数:</text>
 			<text class="desc">{{r.count}}</text>
 		</view>
-		<view class="section area">
-			<text class="title">课程内容:</text>
-			<text class="content">{{r.content}}</text>
+		<view class="section">
+			<text class="title">课程价格:</text>
+			<text class="desc">{{r.price}}</text>
 		</view>
-		<view class="section area">
-			<text class="title">课后作业:</text>
-			<text class="content">{{r.assignment}}</text>
-		</view>
-		<view class="section area">
-			<text class="title">课程反馈:</text>
-			<text class="content">{{r.feedback}}</text>
+		<view class="section area" v-if="r.remark && r.remark.length > 0">
+			<text class="title">备注:</text>
+			<text class="content">{{r.remark}}</text>
 		</view>
 		<view class="bottom" v-if="isValidate && r.status !== 2">
 			<text class="action" @tap="onEditTap">编辑</text>
@@ -44,27 +36,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { CourseConsumeRecord } from '../../types/course';
-import { useCourseStore } from "@/store/course"
+import { computed, onMounted, ref } from 'vue'
 import { useUsersStore } from "@/store/users"
+import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
+import { PaymentRecord } from '../../types/PaymentRecord'
+import { User } from '../../types/user'
 import { format } from '@/utils/wk-date'
-import { User } from '../../types/user';
 
-const global = getApp().globalData!
+const courseStore = useCourseStore()
 
 const props = defineProps(['rId'])
-const emit = defineEmits(['editAction', 'revokeAction'])
-const r = ref<CourseConsumeRecord>()
-const courseStore = useCourseStore()
+const emit = defineEmits(['editPaymentAction', 'revokePaymentAction'])
+const r = ref<PaymentRecord>()
 const operator = ref<User>()
 const isValidate = ref(false)
 
 onMounted(() => {
-	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
-	if (res.length > 0) {
-		r.value = res[0]
+	const records = courseStore.paymentRecords.filter(r => r._id === props.rId)
+	if (records.length > 0) {
+		r.value = records[0]
 	}
 	const usersStore = useUsersStore()
 	const users = usersStore.users.filter(user => user._id === r.value?.operatorId)
@@ -81,6 +72,14 @@ onMounted(() => {
 		}
 	}
 })
+
+const onEditTap = () => {
+	emit('editPaymentAction', {'id': props.rId})
+}
+
+const onRevokeTap = () => {
+	
+}
 
 const statusCls = computed(() => {
 	let cls = "desc"
@@ -108,28 +107,10 @@ const statusDesc = computed(() => {
 	return desc
 })
 
-const onEditTap = () => {
-	emit('editAction', {'id': props.rId})
-}
-
-const onRevokeTap = () => {
-	const count = r.value?.count ?? 0
-	const content = "该记录保存了课消" + count + "课时, 撤销将返还课时, 确定撤销吗?"
-	uni.showModal({
-		title: global.appName,
-		content: content,
-		success: (res) => {
-			if (res.confirm) {
-				emit('revokeAction', {'id': props.rId})
-			}
-		}
-	})
-}
-
 </script>
 
 <style lang="scss" scoped>
-.course-record-container {
+.payment-records-container {
 	display: flex;
 	flex-direction: column;
 	background-color: white;

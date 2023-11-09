@@ -12,10 +12,10 @@
 				v-if="status === 0">
 			</uni-icons> -->
 			<wk-circle-progress 
-				v-if="props.forStudent" 
+				v-if="props.forStudent && entry" 
 				class="circle-progress"
-				:total="totalCourse"
-				:consume="consumeCourse">
+				:total="entry.total"
+				:consume="entry.consume">
 			</wk-circle-progress>
 		</view>
 		<view class="duration" v-if="status === 0">
@@ -114,9 +114,6 @@ const useOrgs = useOrgsStore()
 
 const props = defineProps(['forStudent', 'entryId', 'courseId', 'teacherId', 'orgId', 'total', 'consume'])
 const global = getApp().globalData!
-
-const totalCourse = ref<number>(props.total)
-const consumeCourse = ref<number>(props.consume)
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -282,15 +279,9 @@ const onRenewConfirm = (data: {
 							total:number, 
 							consume:number}) => {
 	renewPopup.value?.close()
-	const { isRenew, updated, count, total, consume } = data
+	const { isRenew } = data
 	if (isRenew) {
 		status.value = 0
-		totalCourse.value += count
-	} else {
-		if (updated) {
-			totalCourse.value = total
-			consumeCourse.value = consume
-		}
 	}
 }
 
@@ -385,13 +376,11 @@ const revokeCourse = async () => {
 						const result = await courseStore.revokeCourse(entryId, operator, entry.value.consume)
 						if (result) {
 							status.value = 2
-							totalCourse.value = entry.value.consume
-							entry.value.total = entry.value.consume
 							operateTime.value = format(new Date())
 							entry.value.status = 2
 							entry.value.modifyDate = Date.now()
 							entry.value.operatorId = operator
-							const paymentRecord = await courseStore.fetchLastestPaymentRecord(entry.value.studentId, entry.value.courseId) as PaymentRecord
+							const paymentRecord = await fetchLastestPaymentRecord(entry.value.courseId, entry.value.studentId) as PaymentRecord
 							courseStore.revokePaymentRecord({
 								orgId: entry.value.orgId,
 								studentId: entry.value.studentId,
@@ -412,6 +401,18 @@ const revokeCourse = async () => {
 				}
 			});
 		}
+	}
+}
+
+const fetchLastestPaymentRecord = async (courseId:string, studentId:string) => {
+	const records = await courseStore.fetchPaymentRecords(courseId, studentId)
+	if (records.length > 0) {
+		records.sort((r1, r2) => {
+			return r2.date - r1.date
+		})
+		return records[0]
+	} else {
+		return {}
 	}
 }
 
