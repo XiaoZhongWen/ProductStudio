@@ -259,7 +259,33 @@ const onEditPaymentAction = (param:{id:string}) => {
 }
 
 const onRevokePaymentAction = async (param:{id:string}) => {
-	
+	const { id } = param
+	if (typeof(id) === 'undefined' || id.length === 0) {
+		return
+	}
+	const res = paymentRecords.value.filter(r => r._id === id)
+	let flag = false
+	if (res.length > 0) {
+		const r = res[0]
+		const result = await courseStore.revokePaymentRecord(id)
+		if (result) {
+			if (entry.value) {
+				let total = entry.value.total
+				total -= r.count
+				const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
+				if (res) {
+					entry.value.total = total
+					uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+					flag = true
+				}
+			}
+		}
+	}
+	uni.showToast({
+		title: flag? "撤销成功": "撤销失败",
+		duration: global.duration_toast,
+		icon:flag?"success":"error"
+	})
 }
 
 const onChange = async (

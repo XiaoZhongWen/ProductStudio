@@ -39,10 +39,10 @@
 			</view>
 		</view>
 		<view class="operator" v-if="status !== 0">
-			<text>执行人: {{typeof(operator) !== 'undefined'?operator.nickName:""}}</text>
+			<text>操作人: {{typeof(operator) !== 'undefined'?operator.nickName:""}}</text>
 		</view>
 		<view class="operateTime" v-if="status !== 0">
-			<text>执行时间: {{operateTime}}</text>
+			<text>操作时间: {{operateTime}}</text>
 		</view>
 		<view class="operation" v-if="props.forStudent && 
 											isCreator && 
@@ -380,15 +380,10 @@ const revokeCourse = async () => {
 							entry.value.status = 2
 							entry.value.modifyDate = Date.now()
 							entry.value.operatorId = operator
-							const paymentRecord = await fetchLastestPaymentRecord(entry.value.courseId, entry.value.studentId) as PaymentRecord
-							courseStore.revokePaymentRecord({
+							courseStore.revokeAllPaymentRecords({
 								orgId: entry.value.orgId,
 								studentId: entry.value.studentId,
-								date: Date.now(),
-								courseId: entry.value.courseId,
-								count: -count,
-								price: paymentRecord.price,
-								remark: ''
+								courseId: entry.value.courseId
 							})
 							uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
 						}
@@ -401,18 +396,6 @@ const revokeCourse = async () => {
 				}
 			});
 		}
-	}
-}
-
-const fetchLastestPaymentRecord = async (courseId:string, studentId:string) => {
-	const records = await courseStore.fetchPaymentRecords(courseId, studentId)
-	if (records.length > 0) {
-		records.sort((r1, r2) => {
-			return r2.date - r1.date
-		})
-		return records[0]
-	} else {
-		return {}
 	}
 }
 

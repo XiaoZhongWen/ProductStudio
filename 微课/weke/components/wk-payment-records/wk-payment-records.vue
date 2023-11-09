@@ -44,6 +44,7 @@ import { PaymentRecord } from '../../types/PaymentRecord'
 import { User } from '../../types/user'
 import { format } from '@/utils/wk-date'
 
+const global = getApp().globalData!
 const courseStore = useCourseStore()
 
 const props = defineProps(['rId'])
@@ -78,7 +79,17 @@ const onEditTap = () => {
 }
 
 const onRevokeTap = () => {
-	
+	const count = r.value?.count ?? 0
+	const content = "该记录保存了续课" + count + "课时, 撤销将扣除相应课时数, 确定撤销吗?"
+	uni.showModal({
+		title: global.appName,
+		content: content,
+		success: (res) => {
+			if (res.confirm) {
+				emit('revokePaymentAction', {'id': props.rId})
+			}
+		}
+	})
 }
 
 const statusCls = computed(() => {

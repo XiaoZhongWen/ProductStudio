@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { Course, CourseConsumeRecord } from '@/types/course'
 import { PaymentRecord } from '../types/PaymentRecord'
 import { useUsersStore } from "@/store/users"
-import { type } from 'os'
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true
@@ -138,59 +137,73 @@ export const useCourseStore = defineStore('course', {
 				typeof(price) === 'undefined' || price < 0) {
 				return false
 			}
-			const id = await course_co.addPaymentRecord(param)
+			const usersStore = useUsersStore()
+			const id = await course_co.addPaymentRecord({
+				orgId, studentId, date, courseId, count, price, 
+				operatorId: usersStore.owner._id
+			})
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const index = this.paymentRecords.findIndex(r => r._id === id)
 				if (index === -1) {
-					const r: PaymentRecord = {
+					const r:PaymentRecord = {
 						_id: id,
 						orgId,
 						studentId,
 						date,
 						courseId,
 						count,
-						price
+						price,
+						operatorId: usersStore.owner._id,
+						modifyDate: Date.now(),
+						status: 0
 					}
 					this.paymentRecords.push(r)
 				}
 			}
 			return id
 		},
-		async revokePaymentRecord(param: {
-			orgId: string,
-			studentId: string,
-			date: number,
-			courseId: string,
-			count: number,
-			price: number,
-			remark: string
-		}) {
-			const { orgId, studentId, date, courseId, count, price } = param
-			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-				typeof(studentId) === 'undefined' || studentId.length === 0 ||
-				typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(date) === 'undefined' ||
-				typeof(count) === 'undefined' || count >= 0 ||
-				typeof(price) === 'undefined' || price < 0) {
+		async revokePaymentRecord(id:string) {
+			if (typeof(id) === 'undefined' || id.length === 0) {
 				return false
 			}
-			const id = await course_co.revokePaymentRecord(param)
-			if (typeof(id) !== 'undefined' && id.length > 0) {
-				const index = this.paymentRecords.findIndex(r => r._id === id)
-				if (index === -1) {
-					const r: PaymentRecord = {
-						_id: id,
-						orgId,
-						studentId,
-						date,
-						courseId,
-						count,
-						price
+			const usersStore = useUsersStore()
+			const res = await course_co.revokePaymentRecord(id, usersStore.owner._id)
+			if (res) {
+				this.paymentRecords.forEach(r => {
+					if (r._id === id) {
+						r.operatorId = usersStore.owner._id
+						r.modifyDate = Date.now()
+						r.status = 2
 					}
-					this.paymentRecords.push(r)
-				}
+				})
 			}
-			return id
+			return res
+		},
+		async revokeAllPaymentRecords(param: {
+			orgId: string,
+			studentId: string,
+			courseId: string
+		}) {
+			const { orgId, studentId, courseId } = param
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0) {
+				return false
+			}
+			const usersStore = useUsersStore()
+			const res = await course_co.revokeAllPaymentRecords(orgId, studentId, courseId, usersStore.owner._id)
+			if (res) {
+				this.paymentRecords.forEach(r => {
+					if (r.orgId === orgId &&
+						r.studentId === studentId &&
+						r.courseId === courseId) {
+						r.operatorId = usersStore.owner._id
+						r.modifyDate = Date.now()
+						r.status = 2
+					}
+				})
+			}
+			return res
 		},
 		async removePaymentRecord(id:string) {
 			if (typeof(id) === 'undefined' || id.length === 0) {
@@ -219,9 +232,22 @@ export const useCourseStore = defineStore('course', {
 			}
 			const usersStore = useUsersStore()
 			const result = await course_co.modifyPaymentRecord({
-				_id, date, count, price,
+				_id, date, count, price, remark,
 				operatorId: usersStore.owner._id
 			})
+			if (result) {
+				const records = this.paymentRecords.filter(r => r._id === _id)
+				if (records.length > 0) {
+					const r = records[0]
+					r.date = date
+					r.count = count
+					r.price = price
+					r.remark = remark
+					r.operatorId = usersStore.owner._id
+					r.modifyDate = Date.now()
+					r.status = 1
+				}
+			}
 			return result
 		},
 		async changeCourseTeacher(entryId:string, teacherId: string) {
