@@ -65,7 +65,7 @@ const onOrgCardTap = (orgId:string) => {
 
 const loadOrgs = () => {
 	if (userId.value === usersStore.owner._id) {
-		// 机构负责人 | 老师
+		// 管理员 | 老师
 		let res:Org[] = []
 		if (usersStore.owner.from === 'wx') {
 			const forCreator = useOrgs.orgs.filter(org => {

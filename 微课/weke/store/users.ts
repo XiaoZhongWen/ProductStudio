@@ -55,7 +55,7 @@ export const useUsersStore = defineStore('users', {
 				let name = ''
 				switch(roleId) {
 					case 1:
-						name = "机构负责人"
+						name = "管理员"
 						break
 					case 2:
 						name = "老师"
@@ -340,7 +340,7 @@ export const useUsersStore = defineStore('users', {
 			this.owner.signature = signature
 			users_co.updateSignature(this.owner._id, signature, this.owner.from)
 		},
-		// 机构负责人 - 获取机构所有学员
+		// 管理员 - 获取机构所有学员
 		// 老师 - 获取匿名机构所有学员 + 有教学关系的学员
 		// 家长 - 获取与孩子学习相同课程的学员
 		// 学员 - 获取学习相同课程的学员

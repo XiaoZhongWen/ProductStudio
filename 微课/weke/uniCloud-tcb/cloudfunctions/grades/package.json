@@ -1,0 +1,7 @@
+{
+  "name": "grades",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

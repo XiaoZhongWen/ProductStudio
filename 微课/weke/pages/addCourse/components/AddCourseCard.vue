@@ -231,7 +231,7 @@ const validate = () => {
 		})
 		return false
 	}
-	if (courseName.value.length === 0) {
+	if (courseName.value.trim().length === 0) {
 		uni.showToast({
 			title: "请输入课程名称",
 			duration: global.duration_toast,

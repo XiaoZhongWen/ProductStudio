@@ -20,12 +20,13 @@
 		"desc": {
 			"bsonType": "string",
 			"description": "班级简介",
-			"maxLength": 1000
+			"maxLength": 100
 		},
 		"icon": {
 			"bsonType": "string",
 			"description": "班级字体图标",
-			"maxLength": 50
+			"maxLength": 50,
+			"defaultValue": ".t-icon .t-icon-shetuan"
 		}
 	}
 }

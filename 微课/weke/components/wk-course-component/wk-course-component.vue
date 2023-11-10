@@ -43,7 +43,7 @@ const loadAllCourses = async () => {
 		const userId = usersStore.owner._id
 		const roles = usersStore.owner.roles
 		if (roles?.includes(1)) {
-			// 机构负责人 - 获取机构所有课程
+			// 管理员 - 获取机构所有课程
 			const orgs:Org[] = useOrgs.orgs.filter(org => org.creatorId === userId)
 			orgs.forEach(org => {
 				org.courseIds?.forEach(courseId => {

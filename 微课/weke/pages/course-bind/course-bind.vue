@@ -243,7 +243,7 @@ const onChange = (e:string) => {
 			return
 		}
 		if (org.creatorId === usersStore.owner._id) {
-			// 2. 对于机构负责人
+			// 2. 对于管理员
 			teachers.forEach(teacher => {
 				if (org.teacherIds?.includes(teacher._id)) {
 					teacherSelectorData.value.push({

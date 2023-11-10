@@ -27,7 +27,7 @@ const global = getApp().globalData!
 const roles = ref([
 	{
 		value: 1,
-		text: '机构负责人',
+		text: '管理员',
 	},
 	{
 		value: 2,

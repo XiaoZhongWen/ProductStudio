@@ -57,7 +57,7 @@ onMounted(async () => {
 		} else {
 			// 从我的页面进入
 			if (usersStore.owner.roles?.includes(1)) {
-				// 机构负责人
+				// 管理员
 				await loaddata(useOrgs.myOrgs)
 			}
 			if (usersStore.owner.from === 'stuNo') {

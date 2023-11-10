@@ -245,6 +245,16 @@
             }
             
         }
+        ,{
+            "path" : "pages/addGrade/addGrade",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "添加班级",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

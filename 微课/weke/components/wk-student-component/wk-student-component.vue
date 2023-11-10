@@ -111,7 +111,7 @@ const loadStudents = () => {
 const loadOrgStudent = () => {
 	const students:Student[] = []
 	const userId = usersStore.owner._id
-	// 机构负责人 - 获取机构所有学员
+	// 管理员 - 获取机构所有学员
 	const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
 	orgs.forEach(org => {
 		const studentIds = org.studentIds ?? []

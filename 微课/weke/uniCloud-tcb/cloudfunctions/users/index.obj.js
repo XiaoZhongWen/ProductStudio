@@ -257,7 +257,7 @@ module.exports = {
    },
    
    /**
-	* 机构负责人 - 获取机构所有学员
+	* 管理员 - 获取机构所有学员
 	* 老师 - 获取匿名机构所有学员 + 有教学关系的学员
 	* 家长 - 获取与孩子学习相同课程的学员
 	* 学员 - 获取学习相同课程的学员
@@ -275,7 +275,7 @@ module.exports = {
 		   if (typeof(userId) === 'undefined' || userId.length === 0) {
 			   return []
 		   }
-		   // 机构负责人
+		   // 管理员
 		   let res = await db.collection('wk-orgs').where({
 		   		creatorId: userId
 		   }).get()

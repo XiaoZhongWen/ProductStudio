@@ -24,7 +24,7 @@ export const useOrgsStore = defineStore('orgs', {
 		myOrgs(state) {
 			const usersStore = useUsersStore()
 			if (usersStore.owner.roles?.includes(1)) {
-				// 机构负责人
+				// 管理员
 				return state.orgs.filter(org => org.creatorId === usersStore.owner._id)
 			}
 			if (usersStore.owner.from === 'stuNo') {

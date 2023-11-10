@@ -5,7 +5,7 @@
 				<text style="color: #5073D6; font-size: 14px;">微信登录</text>
 			</view>
 			<view class="container">
-				<text style="color: #c6c8cf; font-size: 12px;">如果您是机构负责人、老师、家长, 请通过微信授权登录</text>
+				<text style="color: #c6c8cf; font-size: 12px;">如果您是管理员、老师、家长, 请通过微信授权登录</text>
 			</view>
 		</view>
 		<view class="stu-num" id="stu-num" @tap="onTap">

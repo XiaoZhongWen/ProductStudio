@@ -13,7 +13,7 @@
 				<text class="text ownerName">
 					{{props.org?.nickname}}
 				</text>
-				<text class="text identity">机构负责人</text>
+				<text class="text identity">管理员</text>
 			</template>
 		</view>
 		<view class="right">

@@ -273,7 +273,9 @@ export const useCourseStore = defineStore('course', {
 					}
 				}
 			}
-			return records
+			return records.sort((r1, r2) => {
+					return r2.date - r1.date
+				})
 		},
 		async renewCourse(entryId:string, count:number, operator:string) {
 			if (typeof(entryId) === 'undefined' || 
@@ -325,13 +327,17 @@ export const useCourseStore = defineStore('course', {
 			}
 			const records = this.courseConsumeRecords.filter(r => r.courseId === courseId && r.studentId === studentId)
 			if (records.length === 0) {
-				const res = await course_co.fetchCourseConsumeRecords(courseId, studentId)
+				const res:CourseConsumeRecord[] = await course_co.fetchCourseConsumeRecords(courseId, studentId)
 				if (res.length > 0) {
 					this.courseConsumeRecords.push(...res)
 				}
-				return res
+				return res.sort((r1, r2) => {
+					return r2.startTime - r1.startTime
+				})
 			} else {
-				return records
+				return records.sort((r1, r2) => {
+					return r2.startTime - r1.startTime
+				})
 			}
 		},
 		async modifyCourseConsumeRecord(
