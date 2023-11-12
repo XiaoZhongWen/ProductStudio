@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
+import { useOrgsStore } from '@/store/orgs'
 import { computed, onMounted, ref } from 'vue';
 import { Grade } from "../../../types/grade";
 import { Org } from "../../../types/org";
@@ -65,6 +66,7 @@ import { Org } from "../../../types/org";
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
 const gradesStore = useGradesStore()
+const useOrgs = useOrgsStore()
 
 const props = defineProps(['org'])
 
@@ -95,7 +97,7 @@ const nickNameBrief = () => {
 }
 
 const gradeStyle = (gradeId:string) => {
-	return ""
+	return selectedGradeId.value === gradeId? '.grade-cell .grade-cell-selected': '.grade-cell'
 }
 
 const onGradeTap = (gradeId:string) => {
@@ -139,14 +141,18 @@ const createGrade = async () => {
 	uni.showLoading({
 		title:"添加中"
 	})
-	const id = await gradesStore.addGrade(name, icon, desc)	
+	const id = await gradesStore.addGrade(name, icon, desc)
+	let result = false
+	if (typeof(id) !== 'undefined' && id.length > 0) {
+		result = await useOrgs.addGrade(props.org._id, id)
+	}
 	uni.hideLoading()
 	uni.showToast({
-		title: id.length > 0?"添加成功":"添加失败",
+		title: result?"添加成功":"添加失败",
 		duration: global.duration_toast,
-		icon: id.length > 0?"success":"error"
+		icon: result?"success":"error"
 	})
-	if (id.length > 0) {
+	if (result) {
 		const grade = {
 			_id: id,
 			name: name,
