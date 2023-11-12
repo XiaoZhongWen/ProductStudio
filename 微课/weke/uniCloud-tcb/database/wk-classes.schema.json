@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name"],
+	"required": ["name", "icon"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -27,6 +27,18 @@
 			"description": "班级字体图标",
 			"maxLength": 50,
 			"defaultValue": ".t-icon .t-icon-shetuan"
+		},
+		"teacherId": {
+			"bsonType": "string",
+			"description": "老师id"
+		},
+		"courseId": {
+			"bsonType": "string",
+			"description": "课程id"
+		},
+		"studentIds": {
+			"bsonType": "array",
+			"description": "学生id集合"
 		}
 	}
 }
