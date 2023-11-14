@@ -68,6 +68,7 @@
 
 <style lang="scss">
 @import url("static/iconfont-weapp-icon.css");
+@import url("static/iconfont/iconfont.css");
 .t-icon {
 	width: 30px;
 	height: 30px;

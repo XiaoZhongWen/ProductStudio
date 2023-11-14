@@ -36,6 +36,42 @@
 			<view class="gradeName">
 				<input class="input" type="text" v-model="gradeName" placeholder="班级名称" />
 			</view>
+			<view class="course-selector">
+				<uni-data-select
+					@change="onChange"
+					class="selector"
+					:clear="false"
+					v-model="selectedCourseId"
+					:localdata="courseSelectorData"
+					placeholder="选择课程">
+				</uni-data-select>
+			</view>
+			<view class="teacher-selector">
+				<uni-data-select
+					class="selector"
+					:clear="false"
+					v-model="selectedTeacherId"
+					:localdata="teacherSelectorData"
+					placeholder="选择授课老师">
+				</uni-data-select>
+			</view>
+			<view class="member-container">
+				<view class="content">
+					<view class="top">
+						<text>班级学员</text>
+					</view>
+					<view class="body">
+						<view class="addBtn">
+							<view class=".iconfont .icon-add .add"></view>
+							<text class="text">邀请</text>
+						</view>
+						<view class="minusBtn">
+							<view class=".iconfont .icon-reduce .minus"></view>
+							<text class="text">移除</text>
+						</view>
+					</view>
+				</view>
+			</view>
 			<view class="desc">
 				<textarea 
 					class="textarea" 
@@ -76,6 +112,10 @@ const longPressGradeId = ref('')
 const gradeName = ref('')
 const gradeDesc = ref('')
 const selectedGradeId = ref('')
+const selectedCourseId = ref('')
+const selectedTeacherId = ref('')
+const courseSelectorData = ref<{value:string, text:string}[]>([])
+const teacherSelectorData = ref<{value:string, text:string}[]>([])
 
 const number = computed(() => {
 	return 100 - gradeDesc.value.length
@@ -165,6 +205,10 @@ const createGrade = async () => {
 }
 
 const updateGrade = async () => {
+	
+}
+
+const onChange = (e:string) => {
 	
 }
 
@@ -270,6 +314,58 @@ const reset = () => {
 				border-radius: $uni-border-radius-base;
 				caret-color: $wk-theme-color;
 				margin-top: $uni-spacing-col-sm;
+			}
+		}
+		.course-selector, .teacher-selector {
+			width: 100%;
+			background-color: white;
+			margin-top: $uni-spacing-col-sm;
+			padding-left: $uni-padding-base;
+			padding-right: $uni-padding-base;
+			box-sizing: border-box;
+		}
+		.member-container {
+			width: 100%;
+			background-color: white;
+			box-sizing: border-box;
+			.content {
+				display: flex;
+				flex-direction: column;
+				border: $wk-bg-color-grey solid 1px;
+				border-radius: $uni-border-radius-base;
+				margin: $uni-spacing-col-sm $uni-padding-base 0 $uni-padding-base;
+				padding: 0 $uni-padding-base;
+				.top {
+					margin-top: $uni-spacing-col-sm;
+					font-size: $uni-font-size-base;
+					color: $wk-text-color;
+				}
+				.body {
+					display: flex;
+					flex-direction: row;
+					margin-top: $uni-spacing-col-base;
+					.addBtn, .minusBtn {
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						margin-right: 30px;
+						.add, .minus {
+							display: flex;
+							justify-content: center;
+							align-items: center;
+							width: 30px;
+							height: 30px;
+							background-color: $wk-bg-color-grey;
+							color: $uni-text-color-placeholder;
+							border-radius: $uni-border-radius-circle;
+						}
+						.text {
+							font-size: $uni-font-size-sm;
+							color: $wk-text-color;
+							margin: $uni-spacing-col-sm 0;
+						}
+					}
+				}
 			}
 		}
 		.desc {
