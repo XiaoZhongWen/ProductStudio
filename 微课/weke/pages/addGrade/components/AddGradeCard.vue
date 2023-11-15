@@ -95,14 +95,17 @@
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
 import { useOrgsStore } from '@/store/orgs'
+import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from 'vue';
 import { Grade } from "../../../types/grade";
 import { Org } from "../../../types/org";
+import { User } from "../../../types/user";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
 const gradesStore = useGradesStore()
 const useOrgs = useOrgsStore()
+const courseStore = useCourseStore()
 
 const props = defineProps(['org'])
 
@@ -124,6 +127,33 @@ const number = computed(() => {
 onMounted(async () => {
 	const org:Org = props.org
 	grades.value = await gradesStore.fetchGrades(org.classIds ?? [])
+	
+	const courses = await courseStore.fetchCourses(org.courseIds ?? [])
+	courses.forEach(course => {
+		const index = courseSelectorData.value.findIndex(item => item.value === course._id)
+		if (index === -1) {
+			courseSelectorData.value.push({
+				value: course._id,
+				text: course.name
+			})
+		}
+	})
+	
+	const id = usersStore.owner._id
+	const teacherIds = org.teacherIds ?? []
+	if (!teacherIds.includes(id)) {
+		teacherIds.push(id)
+	}
+	const teachers = await usersStore.fetchUsers(teacherIds) as User[]
+	teachers.forEach(teacher => {
+		teacherSelectorData.value.push({
+			value: teacher._id,
+			text: teacher.nickName
+		})
+	})
+	if (teacherIds.length === 1) {
+		selectedTeacherId.value = teacherIds[0]
+	}
 })
 
 const orgBrief = (orgName:string) => {
