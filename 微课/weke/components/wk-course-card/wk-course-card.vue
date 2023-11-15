@@ -65,7 +65,7 @@
 		<uni-popup ref="popup" type="bottom" id="popup">
 			<wk-choose-teacher
 				id="teacher"
-				:entryId="props.entryId"
+				:memberIds="org.teacherIds"
 				@onConfirm="onConfirm">
 			</wk-choose-teacher>
 		</uni-popup>
@@ -91,7 +91,6 @@ import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { Entry } from '../../types/entry';
 import { format } from '@/utils/wk-date'
-import { PaymentRecord } from '../../types/PaymentRecord';
 
 const entry = ref<Entry>()
 const course = ref<Course>()

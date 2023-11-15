@@ -29,26 +29,16 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { useOrgsStore } from '@/store/orgs'
 import { onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { User } from "../../types/user";
-const props = defineProps(['entryId'])
+const props = defineProps(['memberIds'])
 const emit = defineEmits(['onConfirm'])
 const usersStore = useUsersStore()
-const useOrgs = useOrgsStore()
 const teachers = ref<User[]>([])
 const selectedId = ref('')
 
 onMounted(async () => {
-	const res = usersStore.entries.filter(entry => entry._id === props.entryId)
-	if (res.length === 1) {
-		const entry = res[0]
-		const orgs = useOrgs.orgs.filter(org => org._id === entry.orgId)
-		if (orgs.length === 1) {
-			const org = orgs[0]
-			teachers.value = await usersStore.fetchUsers(org.teacherIds ?? []) as User[]
-		}
-	}
+	teachers.value = await usersStore.fetchUsers(props.memberIds ?? []) as User[]
 })
 
 const onTeacherTap = (id:string) => {
