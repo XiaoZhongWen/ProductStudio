@@ -61,11 +61,11 @@
 						<text>班级学员</text>
 					</view>
 					<view class="body">
-						<view class="addBtn">
+						<view class="addBtn" @tap="onAddStudent">
 							<view class=".iconfont .icon-add .add"></view>
 							<text class="text">邀请</text>
 						</view>
-						<view class="minusBtn">
+						<view class="minusBtn" @tap="onRemoveStudent">
 							<view class=".iconfont .icon-reduce .minus"></view>
 							<text class="text">移除</text>
 						</view>
@@ -89,6 +89,16 @@
 			</view>
 		</view>
 	</view>
+	
+	<uni-popup ref="popup" type="bottom" id="popup">
+		<wk-choose-member
+			id="teacher"
+			:memberIds="props.org.studentIds"
+			:type="selectType"
+			role="student">
+		</wk-choose-member>
+	</uni-popup>
+	
 </template>
 
 <script setup lang="ts">
@@ -119,6 +129,13 @@ const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
 const courseSelectorData = ref<{value:string, text:string}[]>([])
 const teacherSelectorData = ref<{value:string, text:string}[]>([])
+
+const selectType = ref('')
+
+const popup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
 
 const number = computed(() => {
 	return 100 - gradeDesc.value.length
@@ -194,6 +211,16 @@ const onAddTap = () => {
 	} else {
 		updateGrade()
 	}
+}
+
+const onAddStudent = () => {
+	selectType.value = 'multiple'
+	popup.value?.open()
+}
+
+const onRemoveStudent = () => {
+	selectType.value = 'remove'
+	popup.value?.open()
 }
 
 const createGrade = async () => {

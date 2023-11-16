@@ -63,11 +63,13 @@
 		</view>
 		
 		<uni-popup ref="popup" type="bottom" id="popup">
-			<wk-choose-teacher
+			<wk-choose-member
 				id="teacher"
-				:memberIds="org.teacherIds"
+				:memberIds="teacherIds"
+				type="single"
+				role="teacher"
 				@onConfirm="onConfirm">
-			</wk-choose-teacher>
+			</wk-choose-member>
 		</uni-popup>
 		
 		<uni-popup ref="renewPopup" type="bottom" id="renewPopup">
@@ -97,6 +99,7 @@ const course = ref<Course>()
 const teacher = ref<User>()
 const operator = ref<User>()
 const org = ref<Org>()
+const teacherIds = ref<string[]>([])
 const typeName = ref('')
 const orgName = ref('')
 const operateTime = ref('')
@@ -157,11 +160,15 @@ onMounted(async () => {
 	if (typeof(props.orgId) !== 'undefined' &&
 		props.orgId.length > 0) {
 		org.value = useOrgs.fetchOrgById(props.orgId)
-		isCreator.value = org.value.creatorId === usersStore.owner._id
+		const userId = usersStore.owner._id
+		isCreator.value = org.value.creatorId === userId
 		const roles = usersStore.owner.roles ?? []
 		hasAdminOrTeacherRole.value = roles.includes(1) || roles.includes(2)
-		const teacherIds = org.value.teacherIds ?? []
-		canReplaceTeacher.value = isCreator.value && hasAdminOrTeacherRole.value && teacherIds.length > 1
+		teacherIds.value = org.value.teacherIds ?? []
+		if (isCreator.value && !teacherIds.value.includes(userId)) {
+			teacherIds.value.push(userId)
+		}
+		canReplaceTeacher.value = isCreator.value && hasAdminOrTeacherRole.value && teacherIds.value.length > 1
 		if (org.value.type === 0) {
 			orgName.value = org.value.name
 		} else {
@@ -247,9 +254,9 @@ const onCourseTap = (e:{target:{id:string}}) => {
 	})
 }
 
-const onConfirm = async (data: {teacherId: string}) => {
+const onConfirm = async (data: {memberId: string}) => {
 	if (typeof(entry.value) !== 'undefined') {
-		const teacherId = data.teacherId
+		const teacherId = data.memberId
 		uni.showLoading({
 			title:"正在变更"
 		})
