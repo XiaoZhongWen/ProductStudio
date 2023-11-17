@@ -61,6 +61,12 @@
 						<text>班级学员</text>
 					</view>
 					<view class="body">
+						<template v-for="student in students" :key="student._id">
+							<wk-portrait
+								:url="student.avatarUrl" 
+								:name="student.nickName">
+							</wk-portrait>
+						</template>
 						<view class="addBtn" @tap="onAddStudent">
 							<view class=".iconfont .icon-add .add"></view>
 							<text class="text">邀请</text>
@@ -94,8 +100,10 @@
 		<wk-choose-member
 			id="teacher"
 			:memberIds="props.org.studentIds"
+			:invitedIds="invitedIds"
 			:type="selectType"
-			role="student">
+			role="student"
+			@onConfirm="onConfirm">
 		</wk-choose-member>
 	</uni-popup>
 	
@@ -109,7 +117,7 @@ import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from 'vue';
 import { Grade } from "../../../types/grade";
 import { Org } from "../../../types/org";
-import { User } from "../../../types/user";
+import { Student, User } from "../../../types/user";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
@@ -129,6 +137,8 @@ const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
 const courseSelectorData = ref<{value:string, text:string}[]>([])
 const teacherSelectorData = ref<{value:string, text:string}[]>([])
+
+const students = ref<Student[]>([])
 
 const selectType = ref('')
 
@@ -171,6 +181,10 @@ onMounted(async () => {
 	if (teacherIds.length === 1) {
 		selectedTeacherId.value = teacherIds[0]
 	}
+})
+
+const invitedIds = computed(() => {
+	return students.value.map(student => student._id)
 })
 
 const orgBrief = (orgName:string) => {
@@ -221,6 +235,29 @@ const onAddStudent = () => {
 const onRemoveStudent = () => {
 	selectType.value = 'remove'
 	popup.value?.open()
+}
+
+const onConfirm = async (data: {
+	type: string,
+	memberIds: string[]
+}) => {
+	popup.value?.close()
+	const { type, memberIds } = data
+	if (type === 'multiple') {
+		const result = usersStore.students.filter(student => memberIds.includes(student._id))
+		students.value.push(...result)
+		// const result = await gradesStore.addStudents(selectedGradeId.value, memberIds)
+		// uni.showToast({
+		// 	title: result?"添加成功":"添加失败",
+		// 	duration: global.duration_toast,
+		// 	icon: result?"success":"error"
+		// })
+		// const res = grades.value.filter(grade => grade._id === selectedGradeId.value)
+		// if (res.length === 1) {
+		// 	const grade = res[0]
+		// 	students.value = usersStore.students.filter(student => grade.studentIds?.includes(student._id))
+		// }
+	}
 }
 
 const createGrade = async () => {

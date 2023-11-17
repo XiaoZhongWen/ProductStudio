@@ -26,6 +26,7 @@ export const useGradesStore = defineStore('grades', {
 			}
 			return [...g1, ...other]
 		},
+		// 添加学生、老师、课程信息
 		async addGrade(name:string, icon:string, desc?:string) {
 			if (typeof(name) === 'undefined' || name.length === 0 ||
 				typeof(icon) === 'undefined' || icon.length === 0) {
@@ -41,6 +42,29 @@ export const useGradesStore = defineStore('grades', {
 			} else {
 				return ''
 			}
+		},
+		async addStudents(id: string, studentIds:string[]) {
+			debugger
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+				return false
+			}
+			const grades = this.grades.filter(grade => grade._id === id)
+			if (grades.length !== 1) {
+				return false
+			}
+			const grade = grades[0]
+			const ids = grade.studentIds ?? []
+			studentIds.forEach(id => {
+				if (!ids.includes(id)) {
+					ids.push(id)
+				}
+			})
+			const result = await grades_co.addStudents(id, ids)
+			if (result) {
+				grade.studentIds = ids
+			}
+			return result
 		}
 	}
 })

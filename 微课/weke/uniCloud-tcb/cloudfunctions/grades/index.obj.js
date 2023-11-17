@@ -30,5 +30,18 @@ module.exports = {
 		} else {
 			return ''
 		}
+	},
+	async addStudents(id, studentIds) {
+		if (typeof(id) === 'undefined' || id.length === 0 ||
+			typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-classes').where({
+			_id: id
+		}).update({
+			studentIds
+		})
+		return res.updated === 1
 	}
 }

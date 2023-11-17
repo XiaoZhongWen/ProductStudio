@@ -2,8 +2,12 @@
 	<view class="choose-member-container">
 		<view class="header">
 			<text>{{title}}</text>
-			<view class="confirm" v-if="selectedId.length > 0" @tap="onConfirmTap">
-				确定
+			<view 
+				class="confirm" 
+				v-if="selectedId.length > 0 || 
+					selectedIds.length - invitedIds.length > 0" 
+				@tap="onConfirmTap">
+				确定{{'('+ count + ')'}}
 			</view>
 		</view>
 		<scroll-view class="body" scroll-y="true">
@@ -24,7 +28,7 @@
 					</view>
 				</template>
 				<template v-else-if="props.type === 'multiple'">
-					<view class="right" v-if="props.selectedIds && props.selectedIds.includes(member._id)">
+					<view class="right" v-if="invitedIds.includes(member._id)">
 						<uni-icons type="checkbox-filled" color="#c8c7cc" size="24"></uni-icons>
 					</view>
 					<view class="right" v-else>
@@ -50,14 +54,16 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { onBeforeUpdate, onMounted, ref } from "../../uni_modules/lime-shared/vue";
+import { computed, onBeforeUpdate, onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { Student, User } from "../../types/user";
-const props = defineProps(['memberIds', 'type', 'selectedIds', 'role'])
+const props = defineProps(['memberIds', 'type', 'invitedIds', 'role'])
 const emit = defineEmits(['onConfirm'])
 const usersStore = useUsersStore()
 const members = ref<User[]|Student[]>([])
 const selectedId = ref('')
 const selectedIds = ref<string[]>([])
+const invitedIds = ref<string[]>([])
+
 const title = ref('')
 
 onMounted(async () => {
@@ -78,13 +84,20 @@ onBeforeUpdate(() => {
 			title.value = "选择"
 		} else if (props.type === 'remove') {
 			title.value = "移除"
+			members.value = usersStore.students.filter(student => props.invitedIds.includes(student._id)) as Student[]
 		}
+	}
+	if (typeof(props.invitedIds) !== 'undefined') {
+		invitedIds.value = props.invitedIds
 	}
 })
 
 const onMemberTap = (id:string) => {
 	if (typeof(props.type) !== 'undefined') {
 		if (props.type === 'remove' || props.type === 'multiple') {
+			if (props.invitedIds.includes(id)) {
+				return
+			}
 			const index = selectedIds.value.indexOf(id)
 			if (index === -1) {
 				selectedIds.value.push(id)
@@ -95,12 +108,26 @@ const onMemberTap = (id:string) => {
 			selectedId.value = id
 		}
 	}
-	console.info(selectedIds.value)
 }
 
 const onConfirmTap = () => {
-	emit('onConfirm', { memberId: selectedId.value })
+	if (props.type === 'single') {
+		emit('onConfirm', { memberId: selectedId.value })
+	} else if (props.type === 'multiple' || props.type === 'remove') {
+		emit('onConfirm', { 
+			type: props.type,
+			memberIds: selectedIds.value
+		})
+	}
 }
+
+const count = computed(() => {
+	if (props.type === 'single') {
+		return ''
+	} else {
+		return selectedIds.value.length - props.invitedIds.length
+	}
+})
 
 const briefName = (name:string) => {
 	const length = name.length
