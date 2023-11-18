@@ -5,7 +5,7 @@
 			<view 
 				class="confirm" 
 				v-if="selectedId.length > 0 || 
-					selectedIds.length - invitedIds.length > 0" 
+					selectedIds.length > 0" 
 				@tap="onConfirmTap">
 				确定{{'('+ count + ')'}}
 			</view>
@@ -22,23 +22,24 @@
 						{{member.nickName}}
 					</view>
 				</view>
-				<template v-if="props.type === 'single'">
+				<template v-if="chooseType === 'single'">
 					<view class="right" v-if="selectedId === member._id">
 						<uni-icons type="checkmarkempty" color="#5073D6"></uni-icons>
 					</view>
 				</template>
-				<template v-else-if="props.type === 'multiple'">
-					<view class="right" v-if="invitedIds.includes(member._id)">
+				<template v-else-if="chooseType === 'multiple'">
+					<view class="right" v-if="invitedMemberIds.includes(member._id)">
 						<uni-icons type="checkbox-filled" color="#c8c7cc" size="24"></uni-icons>
 					</view>
 					<view class="right" v-else>
 						<uni-icons 
 							:type="selectedIds.includes(member._id)?'checkbox-filled':'circle'"
 							:color="selectedIds.includes(member._id)?'#5073D6':'#c8c7cc'"
-							size="24"></uni-icons>
+							size="24">
+						</uni-icons>
 					</view>
 				</template>
-				<template v-else-if="props.type === 'remove'">
+				<template v-else-if="chooseType === 'remove'">
 					<view class="right">
 						<uni-icons 
 							:type="selectedIds.includes(member._id)?'checkbox-filled':'circle'"
@@ -54,78 +55,85 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { computed, onBeforeUpdate, onMounted, ref } from "../../uni_modules/lime-shared/vue";
+import { computed, ref } from "../../uni_modules/lime-shared/vue";
 import { Student, User } from "../../types/user";
-const props = defineProps(['memberIds', 'type', 'invitedIds', 'role'])
 const emit = defineEmits(['onConfirm'])
 const usersStore = useUsersStore()
 const members = ref<User[]|Student[]>([])
 const selectedId = ref('')
 const selectedIds = ref<string[]>([])
-const invitedIds = ref<string[]>([])
+const invitedMemberIds = ref<string[]>([])
 
+const chooseType = ref('single')
 const title = ref('')
 
-onMounted(async () => {
-	const role = props.role
-	if (typeof(role) === 'undefined') {
+const initial = async (data:{
+	memberIds: string[],
+	type: string,
+	role: string,
+	invitedIds?: string[]
+}) => {
+	const { memberIds, type, role, invitedIds } = data
+	if (typeof(memberIds) === 'undefined' ||
+		typeof(type) === 'undefined' ||
+		typeof(role) === 'undefined' ||
+		(type === "multiple" && (typeof(invitedIds) === 'undefined'))) {
 		return
 	}
+	chooseType.value = type
+	if (type === "multiple" && (typeof(invitedIds) !== 'undefined')) {
+		invitedMemberIds.value = invitedIds ?? []
+	}
+	if (type === 'single' || type === 'multiple') {
+		title.value = "选择"
+	} else if (type === 'remove') {
+		title.value = "移除"
+		invitedMemberIds.value = []
+	}
 	if (role === 'teacher') {
-		members.value = await usersStore.fetchUsers(props.memberIds ?? []) as User[]
+		members.value = await usersStore.fetchUsers(memberIds ?? []) as User[]
 	} else if (role === 'student') {
-		members.value = usersStore.students.filter(student => props.memberIds.includes(student._id)) as Student[]
+		members.value = usersStore.students.filter(student => memberIds.includes(student._id)) as Student[]
 	}
-})
+	selectedIds.value = []
+}
 
-onBeforeUpdate(() => {
-	if (typeof(props.type) !== 'undefined') {
-		if (props.type === 'single' || props.type === 'multiple') {
-			title.value = "选择"
-		} else if (props.type === 'remove') {
-			title.value = "移除"
-			members.value = usersStore.students.filter(student => props.invitedIds.includes(student._id)) as Student[]
-		}
-	}
-	if (typeof(props.invitedIds) !== 'undefined') {
-		invitedIds.value = props.invitedIds
-	}
+defineExpose({
+	initial
 })
 
 const onMemberTap = (id:string) => {
-	if (typeof(props.type) !== 'undefined') {
-		if (props.type === 'remove' || props.type === 'multiple') {
-			if (props.invitedIds.includes(id)) {
-				return
-			}
-			const index = selectedIds.value.indexOf(id)
-			if (index === -1) {
-				selectedIds.value.push(id)
-			} else {
-				selectedIds.value.splice(index, 1)
-			}
-		} else if (props.type === 'single') {
-			selectedId.value = id
+	if (chooseType.value === 'remove' || chooseType.value === 'multiple') {
+		if (invitedMemberIds.value.includes(id)) {
+			return
 		}
+		const index = selectedIds.value.indexOf(id)
+		if (index === -1) {
+			selectedIds.value.push(id)
+		} else {
+			selectedIds.value.splice(index, 1)
+		}
+	} else if (chooseType.value === 'single') {
+		selectedId.value = id
 	}
 }
 
 const onConfirmTap = () => {
-	if (props.type === 'single') {
+	if (chooseType.value === 'single') {
 		emit('onConfirm', { memberId: selectedId.value })
-	} else if (props.type === 'multiple' || props.type === 'remove') {
+	} else if (chooseType.value === 'multiple' || chooseType.value === 'remove') {
 		emit('onConfirm', { 
-			type: props.type,
-			memberIds: selectedIds.value
+			type: chooseType.value,
+			memberIds: [...selectedIds.value]
 		})
 	}
 }
 
 const count = computed(() => {
-	if (props.type === 'single') {
+	if (chooseType.value === 'single') {
 		return ''
 	} else {
-		return selectedIds.value.length - props.invitedIds.length
+		return selectedIds.value.length
 	}
 })
 

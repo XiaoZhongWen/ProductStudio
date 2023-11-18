@@ -99,10 +99,7 @@
 	<uni-popup ref="popup" type="bottom" id="popup">
 		<wk-choose-member
 			id="teacher"
-			:memberIds="props.org.studentIds"
-			:invitedIds="invitedIds"
-			:type="selectType"
-			role="student"
+			ref="chooseMemberRef"
 			@onConfirm="onConfirm">
 		</wk-choose-member>
 	</uni-popup>
@@ -118,6 +115,7 @@ import { computed, onMounted, ref } from 'vue';
 import { Grade } from "../../../types/grade";
 import { Org } from "../../../types/org";
 import { Student, User } from "../../../types/user";
+import wkChooseMemberVue from "../../../components/wk-choose-member/wk-choose-member.vue";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
@@ -140,7 +138,7 @@ const teacherSelectorData = ref<{value:string, text:string}[]>([])
 
 const students = ref<Student[]>([])
 
-const selectType = ref('')
+const chooseMemberRef = ref(null)
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -228,13 +226,36 @@ const onAddTap = () => {
 }
 
 const onAddStudent = () => {
-	selectType.value = 'multiple'
-	popup.value?.open()
+	if (chooseMemberRef.value) {
+		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
+		instance.initial({
+			memberIds: props.org.studentIds,
+			type: "multiple",
+			role: "student",
+			invitedIds: invitedIds.value
+		})
+		popup.value?.open()
+	}
 }
 
 const onRemoveStudent = () => {
-	selectType.value = 'remove'
-	popup.value?.open()
+	if (invitedIds.value.length === 0) {
+		uni.showToast({
+			title: "请先添加学员",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+		return
+	}
+	if (chooseMemberRef.value) {
+		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
+		instance.initial({
+			memberIds: invitedIds.value,
+			type: "remove",
+			role: "student"
+		})
+		popup.value?.open()
+	}
 }
 
 const onConfirm = async (data: {
@@ -257,6 +278,9 @@ const onConfirm = async (data: {
 		// 	const grade = res[0]
 		// 	students.value = usersStore.students.filter(student => grade.studentIds?.includes(student._id))
 		// }
+	} else if (type === 'remove') {
+		const result = students.value.filter(student => !memberIds.includes(student._id))
+		students.value = result
 	}
 }
 

@@ -65,9 +65,7 @@
 		<uni-popup ref="popup" type="bottom" id="popup">
 			<wk-choose-member
 				id="teacher"
-				:memberIds="teacherIds"
-				type="single"
-				role="teacher"
+				ref="chooseMemberRef"
 				@onConfirm="onConfirm">
 			</wk-choose-member>
 		</uni-popup>
@@ -93,6 +91,7 @@ import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { Entry } from '../../types/entry';
 import { format } from '@/utils/wk-date'
+import wkChooseMemberVue from '../wk-choose-member/wk-choose-member.vue';
 
 const entry = ref<Entry>()
 const course = ref<Course>()
@@ -109,6 +108,8 @@ const hasAdminOrTeacherRole = ref(false)
 const canReplaceTeacher = ref(false)
 const status = ref(0)
 const isRenew = ref(true)
+
+const chooseMemberRef = ref(null)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
@@ -241,7 +242,15 @@ const revokeClass = computed(() => {
 })
 
 const onReplaceTap = () => {
-	popup.value?.open()
+	if (chooseMemberRef.value) {
+		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
+		instance.initial({
+			memberIds: teacherIds.value,
+			type: "single",
+			role: "teacher"
+		})
+		popup.value?.open()
+	}
 }
 
 const onCourseTap = (e:{target:{id:string}}) => {
