@@ -1,6 +1,6 @@
 <template>
 	<view class="add-grade-container" v-for="org in orgs" :key="org._id">
-		<AddGradeCard :org="org"></AddGradeCard>
+		<AddGradeCard :org="org" :gradeId="gId"></AddGradeCard>
 	</view>
 </template>
 
@@ -9,6 +9,7 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { onMounted, ref } from 'vue';
 import { Org } from "../../types/org";
+import { onLoad } from '@dcloudio/uni-app'
 import AddGradeCard from './components/AddGradeCard.vue'
 
 const global = getApp().globalData!
@@ -16,10 +17,21 @@ const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 
 const orgs = ref<Org[]>([])
+const gId = ref('')
+
+onLoad(async (option) => {
+	const { gradeId } = option as {gradeId:string}
+	if (typeof(gradeId) !== 'undefined' && gradeId.length > 0) {
+		gId.value = gradeId
+	}
+})
 
 onMounted(() => {
 	const id = usersStore.owner._id
-	const result = useOrgs.orgs.filter(org => org.creatorId === id)
+	let result = useOrgs.orgs.filter(org => org.creatorId === id)
+	if (gId.value.length > 0) {
+		result = useOrgs.orgs.filter(org => org.classIds?.includes(gId.value))
+	}
 	if (result.length === 0) {
 		uni.showToast({
 			title: "请先创建机构",

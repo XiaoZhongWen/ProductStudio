@@ -1,5 +1,12 @@
 <template>
 	<view class="grade-container">
+		<template v-for="item in gradeList" :key="item.gradeId">
+			<GradeCard
+				@tap="onTap(item.gradeId)"
+				:gradeId="item.gradeId"
+				:orgId="item.orgId"
+			/>
+		</template>
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -11,13 +18,87 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { computed } from 'vue';
+import { useOrgsStore } from '@/store/orgs'
+import { computed, onMounted, ref } from 'vue';
+import { Org } from "../../types/org";
+import { onLoad } from '@dcloudio/uni-app'
+import GradeCard from './components/GradeCard.vue'
 
+type GradeItem = {
+	gradeId: string,
+	orgId: string
+}
+
+const global = getApp().globalData!
 const usersStore = useUsersStore()
+const useOrgs = useOrgsStore()
+
+const gradeList = ref<GradeItem[]>([])
+const userId = ref(usersStore.owner._id)
+
+onLoad(async (option) => {
+	const { id } = option as {id:string}
+	if (typeof(id) !== 'undefined' && id.length > 0) {
+		userId.value = id
+	}
+})
+
+onMounted(() => {
+	const orgs:Org[] = []
+	const roles = usersStore.owner.roles
+	if (userId.value === usersStore.owner._id) {
+		if (usersStore.owner.from === 'wx') {
+			if (roles?.includes(1) || roles?.includes(2)) {
+				// 管理员 | 老师
+				const res = useOrgs.orgs.filter(org => org.creatorId === userId.value || 
+											org.teacherIds?.includes(userId.value))
+				orgs.push(...res)
+			}
+		} else {
+			// 学生
+			const res = useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
+			orgs.push(...res)
+		}
+	} else {
+		// 家长
+		const students = usersStore.students.filter(student => student.associateIds?.includes(userId.value))
+		students.forEach(student => {
+			const res = useOrgs.orgs.filter(org => org.studentIds?.includes(student._id))
+			res.forEach(org => {
+				const index = orgs.findIndex(o => o._id === org._id)
+				if (index === -1) {
+					orgs.push(org)
+				}
+			})
+		})
+	}
+	orgs.forEach(org => {
+		org.classIds?.forEach(cId => {
+			const item = {
+				gradeId: cId,
+				orgId: org._id
+			}
+			gradeList.value.push(item)
+		})
+	})
+})
 
 const isShowAddBtn = computed(() => {
 	return usersStore.owner.roles?.includes(1) ||
 			usersStore.owner.roles?.includes(2)
+})
+
+uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {
+	const { gradeId, orgId } = data
+	if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
+		typeof(orgId) === 'undefined' || orgId.length === 0) {
+		return
+	}
+	const item = {
+		gradeId: gradeId,
+		orgId: orgId
+	}
+	gradeList.value.push(item)
 })
 
 const onAddTap = () => {
@@ -26,10 +107,18 @@ const onAddTap = () => {
 	})
 }
 
+const onTap = (gradeId:string) => {
+	uni.navigateTo({
+		url: "/pages/addGrade/addGrade?gradeId="+gradeId
+	})
+}
+
 </script>
 
 <style lang="scss">
 .grade-container {
+	display: flex;
+	flex-direction: column;
 	.add-container {
 		display: flex;
 		position: fixed;

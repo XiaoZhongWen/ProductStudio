@@ -116,6 +116,7 @@ import { Grade } from "../../../types/grade";
 import { Org } from "../../../types/org";
 import { Student, User } from "../../../types/user";
 import wkChooseMemberVue from "../../../components/wk-choose-member/wk-choose-member.vue";
+import { Course } from "../../../types/course";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
@@ -123,7 +124,8 @@ const gradesStore = useGradesStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 
-const props = defineProps(['org'])
+const props = defineProps(['org', 'gradeId'])
+let studentsInfoDidUpdated = false
 
 const grades = ref<Grade[]>([])
 const selectedIconId = ref('.t-icon .t-icon-shetuan')
@@ -151,16 +153,29 @@ const number = computed(() => {
 
 onMounted(async () => {
 	const org:Org = props.org
-	grades.value = await gradesStore.fetchGrades(org.classIds ?? [])
+	const gradeId = props.gradeId
+	let courses:Course[] = []
+	if (gradeId.length > 0) {
+		grades.value = await gradesStore.fetchGrades([gradeId])
+		if (grades.value.length === 1) {
+			const grade = grades.value[0]
+			courses = await courseStore.fetchCourses([grade.courseId ?? ''])
+		}
+	} else {
+		grades.value = await gradesStore.fetchGrades(org.classIds ?? [])
+		courses = await courseStore.fetchCourses(org.courseIds ?? [])
+	}
 	
-	const courses = await courseStore.fetchCourses(org.courseIds ?? [])
+	// 获取所有的班课
 	courses.forEach(course => {
-		const index = courseSelectorData.value.findIndex(item => item.value === course._id)
-		if (index === -1) {
-			courseSelectorData.value.push({
-				value: course._id,
-				text: course.name
-			})
+		if (course.type === 1) {
+			const index = courseSelectorData.value.findIndex(item => item.value === course._id)
+			if (index === -1) {
+				courseSelectorData.value.push({
+					value: course._id,
+					text: course.name
+				})
+			}
 		}
 	})
 	
@@ -178,6 +193,10 @@ onMounted(async () => {
 	})
 	if (teacherIds.length === 1) {
 		selectedTeacherId.value = teacherIds[0]
+	}
+	
+	if (gradeId.length > 0) {
+		onGradeTap(gradeId)
 	}
 })
 
@@ -200,7 +219,23 @@ const gradeStyle = (gradeId:string) => {
 }
 
 const onGradeTap = (gradeId:string) => {
-	
+	if (selectedGradeId.value === gradeId) {
+		if (props.gradeId.length === 0) {
+			reset()
+		}
+	} else {
+		const res = grades.value.filter(grade => grade._id === gradeId)
+		if (res.length === 1) {
+			const grade = res[0]
+			selectedIconId.value = grade.icon
+			gradeName.value = grade.name
+			selectedCourseId.value = grade.courseId ?? ''
+			selectedTeacherId.value = grade.teacherId ?? ''
+			students.value = usersStore.students.filter(student => grade.studentIds?.includes(student._id))
+			gradeDesc.value = grade.desc ?? ''
+			selectedGradeId.value = gradeId
+		}
+	}
 }
 
 const onLongPressGrade = (gradeId:string) => {
@@ -267,21 +302,11 @@ const onConfirm = async (data: {
 	if (type === 'multiple') {
 		const result = usersStore.students.filter(student => memberIds.includes(student._id))
 		students.value.push(...result)
-		// const result = await gradesStore.addStudents(selectedGradeId.value, memberIds)
-		// uni.showToast({
-		// 	title: result?"添加成功":"添加失败",
-		// 	duration: global.duration_toast,
-		// 	icon: result?"success":"error"
-		// })
-		// const res = grades.value.filter(grade => grade._id === selectedGradeId.value)
-		// if (res.length === 1) {
-		// 	const grade = res[0]
-		// 	students.value = usersStore.students.filter(student => grade.studentIds?.includes(student._id))
-		// }
 	} else if (type === 'remove') {
 		const result = students.value.filter(student => !memberIds.includes(student._id))
 		students.value = result
 	}
+	studentsInfoDidUpdated = true
 }
 
 const createGrade = async () => {
@@ -299,7 +324,12 @@ const createGrade = async () => {
 	uni.showLoading({
 		title:"添加中"
 	})
-	const id = await gradesStore.addGrade(name, icon, desc)
+	const id = await gradesStore.addGrade({
+		name, icon, desc,
+		courseId: selectedCourseId.value,
+		teacherId: selectedTeacherId.value,
+		studentIds: students.value.map(student => student._id)
+	})
 	let result = false
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		result = await useOrgs.addGrade(props.org._id, id)
@@ -315,15 +345,57 @@ const createGrade = async () => {
 			_id: id,
 			name: name,
 			desc: desc,
-			icon: icon
+			icon: icon,
+			courseId: selectedCourseId.value,
+			teacherId: selectedTeacherId.value,
+			studentIds: students.value.map(student => student._id)
 		}
 		grades.value.push(grade)
 		reset()
+		uni.$emit(global.event_name.didCreateGrade, {gradeId:id, orgId:props.org._id})
 	}
 }
 
 const updateGrade = async () => {
-	
+	const res = grades.value.filter(grade => grade._id === selectedGradeId.value)
+	if (res.length === 1) {
+		const grade = res[0]
+		if (grade.icon !== selectedIconId.value ||
+			grade.name !== gradeName.value ||
+			grade.courseId !== selectedCourseId.value ||
+			grade.teacherId !== selectedTeacherId.value ||
+			grade.desc !== gradeDesc.value ||
+			studentsInfoDidUpdated) {
+			uni.showLoading({
+				title:"更新中"
+			})
+			const result = await gradesStore.updateGrade({
+				_id: selectedGradeId.value,
+				icon: selectedIconId.value,
+				name: gradeName.value,
+				courseId: selectedCourseId.value,
+				teacherId: selectedTeacherId.value,
+				studentIds: students.value.map(student => student._id),
+				desc: gradeDesc.value
+			})
+			if (result) {
+				grade.icon = selectedIconId.value
+				grade.name = gradeName.value
+				grade.courseId = selectedCourseId.value
+				grade.teacherId = selectedTeacherId.value
+				grade.studentIds = students.value.map(student => student._id)
+				grade.desc = gradeDesc.value
+				studentsInfoDidUpdated = false
+				uni.$emit(global.event_name.didUpdatedGradeData, {gradeId:selectedGradeId.value})
+			}
+			uni.hideLoading()
+			uni.showToast({
+				title: result?"更新成功":"更新失败",
+				duration: global.duration_toast,
+				icon: result?"success":"error"
+			})
+		}
+	}
 }
 
 const onChange = (e:string) => {
@@ -345,6 +417,9 @@ const reset = () => {
 	gradeName.value = ""
 	gradeDesc.value = ""
 	selectedGradeId.value = ""
+	selectedCourseId.value = ""
+	selectedTeacherId.value = ""
+	students.value = []
 }
 	
 </script>
@@ -461,12 +536,15 @@ const reset = () => {
 				.body {
 					display: flex;
 					flex-direction: row;
+					flex-flow: row wrap;
 					margin-top: $uni-spacing-col-base;
 					.addBtn, .minusBtn {
 						display: flex;
 						flex-direction: column;
+						justify-content: center;
 						align-items: center;
-						margin-right: 30px;
+						width: 50px;
+						height: 60px;
 						.add, .minus {
 							display: flex;
 							justify-content: center;

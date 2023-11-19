@@ -26,16 +26,24 @@ export const useGradesStore = defineStore('grades', {
 			}
 			return [...g1, ...other]
 		},
-		// 添加学生、老师、课程信息
-		async addGrade(name:string, icon:string, desc?:string) {
+		// 添加学生、老师、课程信息 name:string, icon:string, desc?:string
+		async addGrade(param: {
+			name:string,
+			icon:string,
+			desc?:string,
+			courseId?:string,
+			teacherId?:string,
+			studentIds?:string[]
+		}) {
+			const { name, icon, desc, courseId, teacherId, studentIds } = param
 			if (typeof(name) === 'undefined' || name.length === 0 ||
 				typeof(icon) === 'undefined' || icon.length === 0) {
 				return ''
 			}
-			const id = await grades_co.addGrade(name, icon, desc)
+			const id = await grades_co.addGrade(param)
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const grade: Grade = {
-					_id: id, name, icon, desc
+					_id: id, name, icon, desc, courseId, teacherId, studentIds
 				}
 				this.grades.push(grade)
 				return id
@@ -43,26 +51,33 @@ export const useGradesStore = defineStore('grades', {
 				return ''
 			}
 		},
-		async addStudents(id: string, studentIds:string[]) {
-			debugger
-			if (typeof(id) === 'undefined' || id.length === 0 ||
-				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+		async updateGrade(param:{
+			_id:string,
+			name:string,
+			icon:string,
+			desc?:string,
+			courseId?:string,
+			teacherId?:string,
+			studentIds?:string[]
+		}) {
+			const { _id, name, icon, desc, courseId, teacherId, studentIds } = param
+			if (typeof(_id) === 'undefined' || _id.length === 0 ||
+				typeof(name) === 'undefined' || name.length === 0 ||
+				typeof(icon) === 'undefined' || icon.length === 0) {
 				return false
 			}
-			const grades = this.grades.filter(grade => grade._id === id)
-			if (grades.length !== 1) {
-				return false
-			}
-			const grade = grades[0]
-			const ids = grade.studentIds ?? []
-			studentIds.forEach(id => {
-				if (!ids.includes(id)) {
-					ids.push(id)
-				}
-			})
-			const result = await grades_co.addStudents(id, ids)
+			const result = await grades_co.updateGrade(param)
 			if (result) {
-				grade.studentIds = ids
+				const res = this.grades.filter(grade => grade._id === _id)
+				if (res.length === 1) {
+					const grade = res[0]
+					grade.name = name
+					grade.icon = icon
+					grade.desc = desc
+					grade.courseId = courseId
+					grade.teacherId = teacherId
+					grade.studentIds = studentIds
+				}
 			}
 			return result
 		}

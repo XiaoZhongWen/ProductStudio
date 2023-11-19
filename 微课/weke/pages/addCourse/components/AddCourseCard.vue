@@ -152,15 +152,19 @@ const onTapCourseIcon = () => {
 }
 
 const onCourseTap = (courseId:string) => {
-	const res = courses.value.filter(course => course._id === courseId)
-	if (res.length === 1) {
-		const course = res[0]
-		courseName.value = course.name
-		selectedIconId.value = course.icon
-		courseDesc.value = course.desc ?? ''
-		type.value = course.type
-		duration.value = course.duration + "分钟"
-		selectedCourseId.value = course._id
+	if (selectedCourseId.value === courseId) {
+		reset()
+	} else {
+		const res = courses.value.filter(course => course._id === courseId)
+		if (res.length === 1) {
+			const course = res[0]
+			courseName.value = course.name
+			selectedIconId.value = course.icon
+			courseDesc.value = course.desc ?? ''
+			type.value = course.type
+			duration.value = course.duration + "分钟"
+			selectedCourseId.value = course._id
+		}
 	}
 }
 
@@ -355,6 +359,7 @@ const reset = () => {
 	courseName.value = ''
 	duration.value = "分钟"
 	courseDesc.value = ''
+	selectedCourseId.value = ''
 }
 
 </script>

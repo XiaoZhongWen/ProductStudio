@@ -15,14 +15,25 @@ module.exports = {
 		}).get()
 		return result.data
 	},
-	async addGrade(name, icon, desc) {
+	async addGrade(param) {
+		const { name, icon, desc } = param
 		if (typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0) {
 			return false
 		}
+		let { courseId, teacherId, studentIds } = param
+		if (typeof(courseId) === 'undefined') {
+			courseId = ''
+		}
+		if (typeof(teacherId) === 'undefined') {
+			teacherId = ''
+		}
+		if (typeof(studentIds) === 'undefined') {
+			studentIds = []
+		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-classes').add({
-			name, icon, desc
+			name, icon, desc, courseId, teacherId, studentIds
 		})
 		const { inserted } = result
 		if (inserted === 1) {
@@ -31,17 +42,19 @@ module.exports = {
 			return ''
 		}
 	},
-	async addStudents(id, studentIds) {
-		if (typeof(id) === 'undefined' || id.length === 0 ||
-			typeof(studentIds) === 'undefined' || studentIds.length === 0) {
+	async updateGrade(param) {
+		const { _id, name, icon, desc, courseId, teacherId, studentIds } = param
+		if (typeof(_id) === 'undefined' || _id.length === 0 ||
+			typeof(name) === 'undefined' || name.length === 0 ||
+			typeof(icon) === 'undefined' || icon.length === 0) {
 			return false
 		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-classes').where({
-			_id: id
+			_id
 		}).update({
-			studentIds
+			name, icon, desc, courseId, teacherId, studentIds
 		})
-		return res.updated === 1
+		return result.updated === 1
 	}
 }

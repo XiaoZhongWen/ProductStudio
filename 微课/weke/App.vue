@@ -22,7 +22,8 @@
 						uni.hideLoading()
 						uni.showToast({
 							title: result? "登录成功": "登录失败",
-							duration: this.globalData.duration_toast
+							duration: this.globalData.duration_toast,
+							icon: result? "success": "error"
 						})
 						if (result) {
 							uni.showLoading({
@@ -60,7 +61,9 @@
 				didSelectedIcon: "didSelectedIcon",
 				didRenewCourse: "didRenewCourse",
 				didUpdateCourseData: "didUpdateCourseData",
-				didUpdateOrgData: "didUpdateOrgData"
+				didUpdateOrgData: "didUpdateOrgData",
+				didUpdatedGradeData: "didUpdatedGradeData",
+				didCreateGrade: "didCreateGrade"
 			}
 		}
 	}

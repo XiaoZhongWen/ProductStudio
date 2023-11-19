@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["name", "icon"],
+	"required": ["name", "icon", "createTime"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -39,6 +39,10 @@
 		"studentIds": {
 			"bsonType": "array",
 			"description": "学生id集合"
+		},
+		"createTime": {
+			"bsonType": "timestamp",
+			"description": "创建时间"
 		}
 	}
 }
