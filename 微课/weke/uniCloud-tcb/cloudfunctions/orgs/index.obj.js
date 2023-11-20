@@ -244,32 +244,6 @@ module.exports = {
 			return true
 		}
 	},
-	async addGrade(orgId, gradeId) {
-		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-			typeof(gradeId) === 'undefined' || gradeId.length === 0) {
-			return false
-		}
-		const db = uniCloud.database()
-		let res = await db.collection('wk-orgs').where({
-			_id: orgId
-		}).field({classIds:true}).get()
-		const data = res.data
-		let ids = []
-		if (data.length > 0) {
-			ids = data[0].classIds
-		}
-		if (!ids.includes(gradeId)) {
-			ids.push(gradeId)
-			res = await db.collection('wk-orgs').where({
-				_id: orgId
-			}).update({
-				classIds: ids
-			})
-			return res.updated === 1
-		} else {
-			return true
-		}
-	},
 	async removeStudents(orgId, sIds) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(sIds) === 'undefined' || sIds.length === 0) {

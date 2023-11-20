@@ -38,7 +38,7 @@
 			</view>
 			<view class="course-selector">
 				<uni-data-select
-					@change="onChange"
+					@change="onCourseChange"
 					class="selector"
 					:clear="false"
 					v-model="selectedCourseId"
@@ -48,6 +48,7 @@
 			</view>
 			<view class="teacher-selector">
 				<uni-data-select
+					@change="onTeacherChange"
 					class="selector"
 					:clear="false"
 					v-model="selectedTeacherId"
@@ -109,7 +110,6 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
-import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from 'vue';
 import { Grade } from "../../../types/grade";
@@ -121,7 +121,6 @@ import { Course } from "../../../types/course";
 const global = getApp().globalData!
 const usersStore = useUsersStore()	
 const gradesStore = useGradesStore()
-const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 
 const props = defineProps(['org', 'gradeId'])
@@ -137,6 +136,8 @@ const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
 const courseSelectorData = ref<{value:string, text:string}[]>([])
 const teacherSelectorData = ref<{value:string, text:string}[]>([])
+const courseSelectors:{value:string, text:string}[] = []
+const teacherSelectors:{value:string, text:string}[] = []
 
 const students = ref<Student[]>([])
 
@@ -171,13 +172,14 @@ onMounted(async () => {
 		if (course.type === 1) {
 			const index = courseSelectorData.value.findIndex(item => item.value === course._id)
 			if (index === -1) {
-				courseSelectorData.value.push({
+				courseSelectors.push({
 					value: course._id,
 					text: course.name
 				})
 			}
 		}
 	})
+	courseSelectorData.value = courseSelectors
 	
 	const id = usersStore.owner._id
 	const teacherIds = org.teacherIds ?? []
@@ -186,11 +188,13 @@ onMounted(async () => {
 	}
 	const teachers = await usersStore.fetchUsers(teacherIds) as User[]
 	teachers.forEach(teacher => {
-		teacherSelectorData.value.push({
+		teacherSelectors.push({
 			value: teacher._id,
 			text: teacher.nickName
 		})
 	})
+	teacherSelectorData.value = teacherSelectors
+	
 	if (teacherIds.length === 1) {
 		selectedTeacherId.value = teacherIds[0]
 	}
@@ -261,10 +265,53 @@ const onAddTap = () => {
 }
 
 const onAddStudent = () => {
+	if (selectedCourseId.value.length === 0) {
+		uni.showToast({
+			title: "请选择课程",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+		return
+	}
+	if (selectedTeacherId.value.length === 0) {
+		uni.showToast({
+			title: "请选择老师",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+		return
+	}
+	let studentNos:string[] = []
+	usersStore.entries.filter(entry => {
+		if (entry.orgId === props.org._id && 
+			entry.courseId === selectedCourseId.value &&
+			entry.teacherId === selectedTeacherId.value) {
+			if (!studentNos.includes(entry.studentId)) {
+				studentNos.push(entry.studentId)
+			}
+		}
+	})
+	
+	const result = usersStore.students.filter(student => studentNos.includes(student.studentNo))
+	const studentIds = result.map(student => student._id)
+	if (studentIds.length === 0) {
+		const cItems = courseSelectorData.value.filter(item => item.value === selectedCourseId.value)
+		const tItems = teacherSelectorData.value.filter(item => item.value === selectedTeacherId.value)
+		if (cItems.length === 1 && tItems.length === 1) {
+			const cItem = cItems[0]
+			const tItem = tItems[0]
+			uni.showToast({
+				title: "还没有学员添加"+tItem.text+"老师的"+cItem.text+"课程",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+		}
+		return
+	}
 	if (chooseMemberRef.value) {
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
 		instance.initial({
-			memberIds: props.org.studentIds,
+			memberIds: studentIds,
 			type: "multiple",
 			role: "student",
 			invitedIds: invitedIds.value
@@ -324,16 +371,14 @@ const createGrade = async () => {
 	uni.showLoading({
 		title:"添加中"
 	})
-	const id = await gradesStore.addGrade({
+	const id = await gradesStore.createGrade({
 		name, icon, desc,
+		orgId: props.org._id,
 		courseId: selectedCourseId.value,
 		teacherId: selectedTeacherId.value,
 		studentIds: students.value.map(student => student._id)
 	})
-	let result = false
-	if (typeof(id) !== 'undefined' && id.length > 0) {
-		result = await useOrgs.addGrade(props.org._id, id)
-	}
+	const result = typeof(id) !== 'undefined' && id.length > 0
 	uni.hideLoading()
 	uni.showToast({
 		title: result?"添加成功":"添加失败",
@@ -348,7 +393,8 @@ const createGrade = async () => {
 			icon: icon,
 			courseId: selectedCourseId.value,
 			teacherId: selectedTeacherId.value,
-			studentIds: students.value.map(student => student._id)
+			studentIds: students.value.map(student => student._id),
+			createTime: Date.now()
 		}
 		grades.value.push(grade)
 		reset()
@@ -398,8 +444,36 @@ const updateGrade = async () => {
 	}
 }
 
-const onChange = (e:string) => {
-	
+const onCourseChange = (courseId:string) => {
+	const entries = usersStore.entries.filter(entry => entry.courseId === courseId && entry.orgId === props.org._id)
+	const teacherIds = entries.map(entry => entry.teacherId)
+	const data = teacherSelectors.filter(item => teacherIds.includes(item.value))
+	teacherSelectorData.value = data
+	if (selectedTeacherId.value.length > 0 && 
+		teacherIds.includes(selectedTeacherId.value)) {
+		return
+	}
+	if (teacherSelectorData.value.length === 1) {
+		selectedTeacherId.value = teacherSelectorData.value[0].value
+	} else {
+		selectedTeacherId.value = ''
+	}
+}
+
+const onTeacherChange = (teacherId:string) => {
+	const entries = usersStore.entries.filter(entry => entry.teacherId === teacherId && entry.orgId === props.org._id)
+	const courseIds = entries.map(entry => entry.courseId)
+	const data = courseSelectors.filter(item => courseIds.includes(item.value))
+	courseSelectorData.value = data
+	if (selectedCourseId.value.length > 0 &&
+		courseIds.includes(selectedCourseId.value)) {
+		return
+	}
+	if (courseSelectorData.value.length === 1) {
+		selectedCourseId.value = courseSelectorData.value[0].value
+	} else {
+		selectedCourseId.value = ''
+	}
 }
 
 uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) => {

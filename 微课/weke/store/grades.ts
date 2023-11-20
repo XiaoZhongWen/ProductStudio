@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useOrgsStore } from "@/store/orgs"
 import { Grade } from '../types/grade'
 
 const grades_co = uniCloud.importObject('grades', {
@@ -26,26 +27,41 @@ export const useGradesStore = defineStore('grades', {
 			}
 			return [...g1, ...other]
 		},
-		// 添加学生、老师、课程信息 name:string, icon:string, desc?:string
-		async addGrade(param: {
+		// 添加学生、老师、课程信息
+		async createGrade(param: {
 			name:string,
 			icon:string,
 			desc?:string,
+			orgId: string,
 			courseId?:string,
 			teacherId?:string,
 			studentIds?:string[]
 		}) {
-			const { name, icon, desc, courseId, teacherId, studentIds } = param
+			const { name, icon, desc, orgId, courseId, teacherId, studentIds } = param
 			if (typeof(name) === 'undefined' || name.length === 0 ||
-				typeof(icon) === 'undefined' || icon.length === 0) {
+				typeof(icon) === 'undefined' || icon.length === 0 ||
+				typeof(orgId) === 'undefined' || orgId.length === 0) {
 				return ''
 			}
-			const id = await grades_co.addGrade(param)
+			const id = await grades_co.createGrade(param)
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const grade: Grade = {
-					_id: id, name, icon, desc, courseId, teacherId, studentIds
+					_id: id, name, icon, desc, courseId, teacherId, studentIds,
+					createTime: Date.now()
 				}
 				this.grades.push(grade)
+				
+				const orgsStore = useOrgsStore()
+				let res = orgsStore.orgs.filter(org => org._id === orgId)
+				if (res.length === 0 && orgsStore.anonymousOrg._id === orgId) {
+					res = [orgsStore.anonymousOrg]
+				}
+				if (res.length > 0) {
+					const org = res[0]
+					if (!org.classIds?.includes(id)) {
+						org.classIds?.push(id)
+					}
+				}
 				return id
 			} else {
 				return ''

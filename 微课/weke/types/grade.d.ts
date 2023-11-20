@@ -5,5 +5,6 @@ export type Grade = {
 	icon: string,
 	teacherId?: string,
 	courseId?: string,
-	studentIds?: string[]
+	studentIds?: string[],
+	createTime: number
 }

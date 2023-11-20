@@ -23,6 +23,9 @@ onLoad(async (option) => {
 	const { gradeId } = option as {gradeId:string}
 	if (typeof(gradeId) !== 'undefined' && gradeId.length > 0) {
 		gId.value = gradeId
+		uni.setNavigationBarTitle({
+			title: "更新班级"
+		})
 	}
 })
 

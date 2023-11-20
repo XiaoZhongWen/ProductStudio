@@ -15,10 +15,11 @@ module.exports = {
 		}).get()
 		return result.data
 	},
-	async addGrade(param) {
-		const { name, icon, desc } = param
+	async createGrade(param) {
+		const { name, icon, desc, orgId } = param
 		if (typeof(name) === 'undefined' || name.length === 0 ||
-			typeof(icon) === 'undefined' || icon.length === 0) {
+			typeof(icon) === 'undefined' || icon.length === 0 ||
+			typeof(orgId) === 'undefined' || orgId.length === 0) {
 			return false
 		}
 		let { courseId, teacherId, studentIds } = param
@@ -32,13 +33,31 @@ module.exports = {
 			studentIds = []
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-classes').add({
-			name, icon, desc, courseId, teacherId, studentIds
-		})
-		const { inserted } = result
-		if (inserted === 1) {
-			return result.id
-		} else {
+		const transaction = await db.startTransaction()
+		try {
+			const dbCmd = db.command
+			// 1. 创建班级记录
+			let result = await db.collection('wk-classes').add({
+				name, icon, desc, courseId, teacherId, studentIds,
+				createTime: Date.now()
+			})
+			const gradeId = result.id
+			const { inserted } = result
+			
+			// 2. 将班级记录id添加到相应机构
+			result = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).update({
+				classIds: dbCmd.push(gradeId)
+			})
+			const { updated } = result
+			if (inserted === 1 && updated === 1) {
+				return gradeId
+			} else {
+				return ''
+			}
+		} catch(e) {
+			await transaction.commit()
 			return ''
 		}
 	},

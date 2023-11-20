@@ -305,30 +305,6 @@ export const useOrgsStore = defineStore('orgs', {
 				return false
 			}
 		},
-		async addGrade(orgId:string, gradeId:string) {
-			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-				typeof(gradeId) === 'undefined' || gradeId.length === 0) {
-				return false
-			}
-			let res = this.orgs.filter(org => org._id === orgId)
-			if (res.length === 0 && this.anonymousOrg._id === orgId) {
-				res = [this.anonymousOrg]
-			}
-			if (res.length > 0) {
-				const org = res[0]
-				if (!org.classIds?.includes(gradeId)) {
-					const result = await orgs_co.addGrade(orgId, gradeId)
-					if (result) {
-						org.classIds?.push(gradeId)
-					}
-					return result
-				} else {
-					return true
-				}
-			} else {
-				return false
-			}
-		},
 		/**
 		 * 删除机构学员
 		 */

@@ -298,9 +298,17 @@ const onBindCourse = async () => {
 		})
 		return
 	}
-	if (totle.value <= 0) {
+	if (totle.value < 0) {
 		uni.showToast({
-			title: "总课" + (type.value === 2?"次":"时") + "要大于0",
+			title: "总课" + (type.value === 2?"次":"时") + "不能小于0",
+			duration: global.duration_toast,
+			icon: "error"
+		})
+		return
+	}
+	if (consume.value < 0) {
+		uni.showToast({
+			title: "已耗课" + (type.value === 2?"次":"时") + "不能小于0",
 			duration: global.duration_toast,
 			icon: "error"
 		})
