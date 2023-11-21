@@ -4,9 +4,9 @@
 			<wk-icon 
 				class="icon" 
 				:url="org.logoUrl" 
-				:text="org.name.length > 2? org.name.substring(0, 2): org.name">
+				:text="orgBriefName(org)">
 			</wk-icon>
-			<text class="org-name">{{org.name}}</text>
+			<text class="org-name">{{orgName(org)}}</text>
 		</view>
 		<view class="org-teacher-container" v-if="org.teacherIds?.length ?? 0 > 0">
 			<template v-for="teacherId in org.teacherIds" :key="teacherId">
@@ -58,6 +58,7 @@ import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 import { User } from '../../types/user'
 import InviteCard from './components/invite-card'
+import { Org } from '../../types/org'
 
 type EditInfo = {
 	orgId:string, 
@@ -79,7 +80,6 @@ onShareAppMessage((option) => {
 		const { orgId, phoneNumber, timestamp } = target.dataset.info
 		const title = usersStore.owner.nickName + "向你发起老师邀请"
 		const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
-		console.info(path)
 		return {
 			title: title,
 			path: path
@@ -92,35 +92,36 @@ onShareAppMessage((option) => {
 })
 
 onMounted(async () => {
-	console.info("organization page...")
 	if (usersStore.isLogin) {
-		useOrgs.myOrgs.forEach(async org => {
-			const users:User[] = await usersStore.fetchUsers(org.teacherIds ?? [])
-			teachers.value.push(...users)
+		const teacherIds:string[] = []
+		useOrgs.myOrgs.forEach(org => {
+			org.teacherIds?.forEach(id => {
+				if (!teacherIds.includes(id)) {
+					teacherIds.push(id)
+				}
+			})
 		})
+		const users = await usersStore.fetchUsers(teacherIds) as User[]
+		teachers.value.push(...users)
 		
 		uni.getStorage({
 			key: usersStore.owner._id,
 			success: (res) => {
-				console.info("邀请数据获取成功")
 				const data:EditInfo[] = res.data
 				data.forEach(info => {
 					if (info.timestamp > Date.now()) {
 						inviteInfos.value.push(info)
 					} else {
-						console.info("过期数据: " + info)
 					}
 				})
 			},
 			fail: () => {
-				console.info("邀请数据获取失败")
 			}
 		})
 	}
 })
 
 onUnmounted(() => {
-	console.info("onUnmounted organization page...")
 	const data:EditInfo[] = []
 	inviteInfos.value.forEach(info => {
 		if (info.timestamp > Date.now()) {
@@ -133,10 +134,8 @@ onUnmounted(() => {
 		key:usersStore.owner._id,
 		data:data,
 		success: () => {
-			console.info("邀请数据保存成功")
 		},
 		fail: () => {
-			console.info("邀请数据保存失败")
 		}
 	})
 })
@@ -224,6 +223,22 @@ const onDelete = async (orgId:string) => {
 const onLongPress = (e) => {
 	const { id } = e.currentTarget
 	selectedId.value = id
+}
+
+const orgBriefName = (org:Org) => {
+	let name = org.name
+	if (org.type === 1) {
+		name = usersStore.owner.nickName
+	}
+	return name.length > 2? name.substring(0, 2): name
+}
+
+const orgName = (org:Org) => {
+	let name = org.name
+	if (org.type === 1) {
+		name = usersStore.owner.nickName
+	}
+	return name
 }
 
 </script>

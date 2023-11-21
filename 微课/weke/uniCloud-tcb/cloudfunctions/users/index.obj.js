@@ -269,6 +269,7 @@ module.exports = {
 		   return []
 	   }
 	   const db = uniCloud.database()
+	   const dbCmd = db.command
 	   const studentIds = []
 	   const studentNos = []
 	   if (from === 'wx') {
@@ -306,26 +307,30 @@ module.exports = {
 		   		associateIds: userId
 		   }).get()
 		   if (res.data.length > 0) {
-		   		for (let student of res.data) {
-		   			if (!studentNos.includes(student.studentNo)) {
-				   		studentNos.push(student.studentNo)
-		   			}
-				   let result = await db.collection('wk-mapping').where({
-		   				studentId: student.studentNo
-		   		   }).get()
-		   		   if (result.data.length > 0) {
-		   				const courseIds = result.data.map(entry => entry.courseId)
-		   	 		    const dbCmd = db.command
-		   			    result = await db.collection('wk-mapping').where({
-		   					courseId: dbCmd.in(courseIds)
-		   				}).get()
-		   				result.data.forEach(entry => {
-		   					if (!studentNos.includes(entry.studentId)) {
-		   					   studentNos.push(entry.studentId)
-		   					}
-						})
-		   			}
+			   const s = []
+			   for (const student of res.data) {
+				   if (!studentNos.includes(student.studentNo)) {
+					   studentNos.push(student.studentNo)
+				   }
+				   s.push(student.studentNo)
 			   }
+			   let result = await db.collection('wk-mapping').where({
+				   studentId: dbCmd.in(s),
+				}).get()
+				const courseIds = []
+				result.data.forEach(e => {
+					if (!courseIds.includes(e.courseId)) {
+						courseIds.push(e.courseId)
+					}
+				})
+				result = await db.collection('wk-mapping').where({
+					courseId: dbCmd.in(courseIds)
+				}).get()
+				result.data.forEach(e => {
+					if (!studentNos.includes(e.studentId)) {
+						studentNos.push(e.studentId)
+					}
+				})
 		   }
 	   } else {
 		   // 学员
@@ -338,7 +343,6 @@ module.exports = {
 		   }).get()
 		   if (res.data.length > 0) {
 			   const courseIds = res.data.map(entry => entry.courseId)
-			   const dbCmd = db.command
 			   res = await db.collection('wk-mapping').where({
 			   		courseId: dbCmd.in(courseIds)
 			   }).get()
@@ -354,7 +358,6 @@ module.exports = {
 	   const fromSNo = []
 	   const fromAssociate = []
 	   const total = []
-	   const dbCmd = db.command
 	   if (studentIds.length > 0) {
 		   const res = await db.collection('wk-student').where({
 				_id: dbCmd.in(studentIds)
@@ -374,17 +377,6 @@ module.exports = {
 			   }
 		   })
 	   }
-	   
-	   const res = await db.collection('wk-student').where({
-		   associateIds: userId
-	   }).get()
-	   fromAssociate.push(...res.data)
-	   fromAssociate.forEach(stu => {
-		   const index = total.findIndex(student => student._id === stu._id)
-		   if (index === -1) {
-			   total.push(stu)
-			}
-	   })
 	   return total
    },
    

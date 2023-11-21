@@ -221,8 +221,7 @@ module.exports = {
 		if (from === 'wx') {
 			const forCreator = []
 			let res = await db.collection("wk-orgs").where({
-				creatorId: id,
-				type: 0
+				creatorId: id
 			}).get()
 			if (res.data.length > 0) {
 				const orgIds = res.data.map(org => org._id)

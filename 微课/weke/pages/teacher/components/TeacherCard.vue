@@ -72,11 +72,21 @@ const onIconTap = (e) => {
 	}
 }
 
-const handleOrgNames = (orgs:Org[]) => {
+const handleOrgNames = async (orgs:Org[]) => {
 	let index = 0
 	let str = ''
 	for (let org of orgs) {
-		str += org.name + " "
+		let name = org.name
+		if (org.type === 1) {
+			name = ''
+			// 匿名机构
+			const users = await usersStore.fetchUsers([org.creatorId])
+			if (users.length === 1) {
+				const user = users[0]
+				name = user.nickName
+			}
+		}
+		str += name + " "
 		index++
 		if (index > 2) {
 			str += "等"

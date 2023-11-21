@@ -145,7 +145,7 @@
 		    "path" : "pages/addOrganization/addOrganization",
 		    "style" :                                                                                    
 		    {
-		        "navigationBarTitleText": "添加机构",
+		        "navigationBarTitleText": "创建机构",
 		        "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
 		    }

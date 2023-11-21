@@ -107,8 +107,7 @@ const loadEntries = async (studentId:string) => {
 	const res = usersStore.fetchEntriesWithStudentNo(studentId)
 	const teacherIds:string[] = []
 	res.forEach(entry => {
-		const index = teacherIds.findIndex(tId => tId === entry.teacherId)
-		if (index === -1) {
+		if (!teacherIds.includes(entry.teacherId)) {
 			teacherIds.push(entry.teacherId)
 		}
 	})

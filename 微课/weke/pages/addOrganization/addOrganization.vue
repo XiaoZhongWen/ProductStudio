@@ -168,7 +168,7 @@ const toTeacher = computed(() => {
 
 //@ts-ignore
 onLoad((option) => {
-	let title = "添加机构"
+	let title = "创建机构"
 	const id = option!.orgId
 	if (typeof(id) !== 'undefined') {
 		orgId.value = id
@@ -235,7 +235,7 @@ const onTapAdd = async () => {
 		uni.showToast({
 			title: "请填写机构名称",
 			duration: global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -244,7 +244,7 @@ const onTapAdd = async () => {
 		uni.showToast({
 			title: "请填写创建时间",
 			duration: global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -254,7 +254,7 @@ const onTapAdd = async () => {
 		uni.showToast({
 			title: "创建时间有误",
 			duration: global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -263,7 +263,7 @@ const onTapAdd = async () => {
 		uni.showToast({
 			title: "权限错误",
 			duration: global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -284,7 +284,7 @@ const onTapAdd = async () => {
 			uni.showToast({
 				title:"机构图标上传失败",
 				duration:global.duration_toast,
-				icon:"error"
+				icon:"none"
 			})
 			return
 		} else {
@@ -301,7 +301,8 @@ const onTapAdd = async () => {
 	if (result) {
 		uni.showToast({
 			title: orgId.value.length === 0? "机构创建成功": "机构更新成功",
-			duration:global.duration_toast
+			duration:global.duration_toast,
+			icon: "success"
 		})
 		uni.navigateBack()
 		uni.$emit(global.event_name.didUpdateOrgData)

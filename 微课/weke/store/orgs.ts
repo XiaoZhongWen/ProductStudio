@@ -46,7 +46,6 @@ export const useOrgsStore = defineStore('orgs', {
 					result = false
 				} else {
 					const curOrg = arr[0]
-					org.gradient.filter(item => curOrg.gradient.includes(item))
 					// TODO: 后期添加老师、学员、课程、班级验证
 					if (org.name === curOrg.name &&
 						org.tel === curOrg.tel &&
