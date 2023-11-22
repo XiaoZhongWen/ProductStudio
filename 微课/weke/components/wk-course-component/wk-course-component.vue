@@ -1,7 +1,9 @@
 <template>
 	<view class="course-component-container" v-if="usersStore.isLogin">
 		<template v-for="item in items" :key="item.courseId">
-			<wk-course-item :courseId="item.courseId" :orgId="item.orgId">
+			<wk-course-item 
+				:courseId="item.courseId" 
+				:orgId="item.orgId">
 			</wk-course-item>
 		</template>
 	</view>
@@ -24,8 +26,6 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
-const forStudent = ref(true)
-const entries = ref<Entry[]>([])
 const items = ref<CourseItem[]>([])
 
 onMounted(async () => {
@@ -58,7 +58,6 @@ const loadAllCourses = async () => {
 					}
 				})
 			})
-			forStudent.value = false
 		}
 		if (roles?.includes(2)) {
 			// 老师 - 获取所有教授的课程以及自己匿名机构的所有课程
@@ -88,18 +87,21 @@ const loadAllCourses = async () => {
 					courseItems.push(item)
 				}
 			})
-			forStudent.value = false
 		}
 		if (roles?.length === 1 && roles.includes(3)) {
 			// 家长 - 孩子上的所有课程
 			const students = usersStore.students.filter(student => student.associateIds?.includes(userId))
 			students.forEach(student => {
 				const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
-				entries.value.push(...result)
 				result.forEach(entry => {
 					const index = courseIds.findIndex(id => id === entry.courseId)
 					if (index === -1) {
 						courseIds.push(entry.courseId)
+						const item = {
+							courseId: entry.courseId,
+							orgId: entry.orgId
+						}
+						courseItems.push(item)
 					}
 				})
 			})
@@ -107,11 +109,16 @@ const loadAllCourses = async () => {
 	} else {
 		// 获取学生上的所有课程
 		const studentNo = usersStore.owner.studentNo
-		entries.value = usersStore.entries.filter(entry => entry.studentId === studentNo)
-		entries.value.forEach(entry => {
+		const entries = usersStore.entries.filter(entry => entry.studentId === studentNo)
+		entries.forEach(entry => {
 			const index = courseIds.findIndex(id => id === entry.courseId)
 			if (index === -1) {
 				courseIds.push(entry.courseId)
+				const item = {
+					courseId: entry.courseId,
+					orgId: entry.orgId
+				}
+				courseItems.push(item)
 			}
 		})
 	}

@@ -118,7 +118,7 @@
             "path" : "pages/bind/bind",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "绑定手机号",
+                "navigationBarTitleText": "绑定学号",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
             }
