@@ -114,15 +114,11 @@ const loadOrgStudent = () => {
 	// 管理员 - 获取机构所有学员
 	const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
 	orgs.forEach(org => {
-		const studentIds = org.studentIds ?? []
-		studentIds.forEach(sId => {
-			let index = usersStore.students.findIndex(student => student._id === sId)
-			if (index !== -1) {
-				const student = usersStore.students[index]
-				index = students.findIndex(s => s._id === student._id)
-				if (index === -1) {
-					students.push(student)
-				}
+		const res = usersStore.students.filter(s => org.studentIds?.includes(s._id))
+		res.forEach(s => {
+			const index = students.findIndex(student => student._id === s._id)
+			if (index === -1) {
+				students.push(s)
 			}
 		})
 	})
@@ -134,8 +130,9 @@ const loadTeacherStudent = () => {
 	const userId = usersStore.owner._id
 	// 老师 - 获取教授的所有学员
 	const entries = usersStore.entries.filter(entry => entry.teacherId === userId)
-	const studentIds = entries.map(entry => entry.studentId)
+	const studentNos = entries.map(entry => entry.studentId)
 	// 匿名机构的学员
+	const studentIds:string[] = []
 	if (useOrgs.anonymousOrg._id.length > 0) {
 		const o = useOrgs.anonymousOrg.studentIds ?? []
 		if (o.length > 0) {
@@ -143,48 +140,32 @@ const loadTeacherStudent = () => {
 		}
 	}
 	
-	studentIds.forEach(sId => {
-		let index = usersStore.students.findIndex(student => student.studentNo === sId || student._id === sId)
-		if (index !== -1) {
-			const student = usersStore.students[index]
-			index = students.findIndex(s => s._id === student._id)
-			if (index === -1) {
-				students.push(student)
-			}
+	const s1 = usersStore.students.filter(student => studentNos.includes(student.studentNo)) as Student[]
+	const s2 = usersStore.students.filter(student => studentIds.includes(student._id)) as Student[]
+	[...s1, ...s2].forEach(student => {
+		const index = students.findIndex(item => item._id === student._id)
+		if (index === -1) {
+			students.push(student)
 		}
 	})
 	return students
 }
 
 const loadClassmate = (studentNo: string) => {
-	const students:Student[] = []
-	const courses:string[] = []
 	// 获取学习相同课程的学员
-	usersStore.entries.forEach(entry => {
-		if (entry.studentId === studentNo) {
-			const index = courses.findIndex(courseId => courseId === entry.courseId)
-			if (index === -1) {
-				courses.push(entry.courseId)
-			}
-		}
-	})
-	const entries = usersStore.entries.filter(entry => courses.includes(entry.courseId))
+	let entries = usersStore.entries.filter(entry => entry.studentId === studentNo)
+	const courseIds = entries.map(entry => entry.courseId)
+	
+	entries = usersStore.entries.filter(entry => courseIds.includes(entry.courseId))
+	
 	const studentIds:string[] = [studentNo]
 	entries.forEach(entry => {
 		if (!studentIds.includes(entry.studentId)) {
 			studentIds.push(entry.studentId)
 		}
 	})
-	studentIds.forEach(sId => {
-		let index = usersStore.students.findIndex(student => student.studentNo === sId)
-		if (index !== -1) {
-			const student = usersStore.students[index]
-			index = students.findIndex(s => s._id === student._id)
-			if (index === -1) {
-				students.push(student)
-			}
-		}
-	})
+	
+	const students = usersStore.students.filter(student => studentIds.includes(student.studentNo))
 	return students
 }
 

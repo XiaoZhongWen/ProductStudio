@@ -329,10 +329,9 @@ export const useUsersStore = defineStore('users', {
 		},
 		// 更新角色
 		async updateRoles(roleIds: RoleId[]) {
-			this.owner.roles = roleIds
 			const res = await users_co.updateRoles(this.owner._id, roleIds)
-			if (res === true) {
-				// useOrgsStore().createAnonymousOrg()
+			if (res) {
+				this.owner.roles = roleIds
 			}
 		},
 		// 更新个性签名

@@ -70,7 +70,7 @@ const nickNameBrief = () => {
 }
 
 // @ts-ignore
-const orgs = computed({
+const orgs = computed<Org[]>({
 	get() {
 		const userId = usersStore.owner._id
 		let normalOrgs = []
@@ -82,7 +82,10 @@ const orgs = computed({
 		}
 		if (usersStore.owner.roles?.includes(2) &&
 			useOrgs.anonymousOrg._id.length > 0) {
-			normalOrgs.push(useOrgs.anonymousOrg)
+			const index = normalOrgs.findIndex(org => org._id === useOrgs.anonymousOrg._id)
+			if (index === -1) {
+				normalOrgs.push(useOrgs.anonymousOrg)
+			}
 		}
 		return normalOrgs
 	}
@@ -90,15 +93,15 @@ const orgs = computed({
 
 const onAddTap = async (data:{info:EditInfo}) => {
 	const { orgId, name, phoneNumber } = data.info
-	const res:Org[] = orgs.value.filter(org => org._id === orgId)
+	const res = orgs.value.filter(org => org._id === orgId)
 	let isAvailable = true
 	if (res.length === 1) {
 		const org = res[0]
+		let identity = md5(name + "-" + phoneNumber)
 		org.studentIds?.forEach(id => {
 			const data:Student[] = usersStore.students.filter(student => student._id === id)
 			if (data.length === 1) {
 				const student = data[0]
-				let identity = md5(name + "-" + phoneNumber)
 				if (process.env.NODE_ENV === 'development') {
 					// 开发环境
 					identity = phoneNumber

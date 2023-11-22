@@ -116,6 +116,8 @@ export const useOrgsStore = defineStore('orgs', {
 					...this.anonymousOrg,
 					...org
 				}
+			} else {
+				await this.createAnonymousOrg()
 			}
 		},
 		// 上传机构图标
