@@ -73,7 +73,6 @@
 		<uni-popup ref="renewPopup" type="bottom" id="renewPopup">
 			<wk-renew-course
 				id="course"
-				:isRenew="isRenew"
 				:entryId="props.entryId"
 				@onConfirm="onRenewConfirm">
 			</wk-renew-course>
@@ -107,7 +106,6 @@ const isCreator = ref(false)
 const hasAdminOrTeacherRole = ref(false)
 const canReplaceTeacher = ref(false)
 const status = ref(0)
-const isRenew = ref(true)
 
 const chooseMemberRef = ref(null)
 
@@ -288,22 +286,17 @@ const onConfirm = async (data: {memberId: string}) => {
 }
 
 const onRenewConfirm = (data: {
-							isRenew:boolean, 
 							updated:boolean, 
 							count:number, 
 							total:number, 
 							consume:number}) => {
 	renewPopup.value?.close()
-	const { isRenew } = data
-	if (isRenew) {
-		status.value = 0
-	}
+	status.value = 0
 }
 
 const onActionTap = (e:UniHelper.EventTarget) => {
 	const { id } = e.target
 	if (id === 'renew') {
-		isRenew.value = true
 		renewPopup.value?.open()
 	} else if (id === 'finish') {
 		if (status.value !== 1) {
@@ -315,11 +308,6 @@ const onActionTap = (e:UniHelper.EventTarget) => {
 		}
 	}
 }
-
-// const onEditTap = () => {
-// 	isRenew.value = false
-// 	renewPopup.value?.open()
-// }
 
 const finishCourse = async () => {
 	// 1. 检查剩余课时

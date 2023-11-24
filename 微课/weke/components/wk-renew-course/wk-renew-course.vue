@@ -1,7 +1,7 @@
 <template>
 	<view class="renew-course-container">
 		<view class="header">
-			<text>{{props.isRenew?"续课":"编辑"}}</text>
+			<text>续课</text>
 		</view>
 		<view class="body">
 			<view class="top">
@@ -49,41 +49,25 @@
 						{{typeName}}
 					</view>
 				</view>
-				<template v-if="props.isRenew">
-					<view class="section">
-						<text class="title">{{type === 2?"剩余课次":"剩余课时"}}</text>
-						<view class="desc">
-							{{typeof(entry) !== 'undefined'?(entry.total - entry.consume):0}}
-						</view>
+				<view class="section">
+					<text class="title">{{type === 2?"剩余课次":"剩余课时"}}</text>
+					<view class="desc">
+						{{typeof(entry) !== 'undefined'?(entry.total - entry.consume):0}}
 					</view>
-				</template>
-				<template v-else>
-					<view class="section">
-						<text class="title">{{type === 2?"总课次数":"总课时数"}}</text>
-						<view class="desc">
-							<input class="input" type="number" v-model="total"/>
-						</view>
-					</view>
-					<view class="section">
-						<text class="title">{{type === 2?"消耗课次数":"消耗课时数"}}</text>
-						<view class="desc">
-							<input class="input" type="number" v-model="consume"/>
-						</view>
-					</view>
-				</template>
+				</view>
 				<view class="section">
 					<text class="title">{{type === 2?"课次单价":"课时单价"}}</text>
 					<view class="desc">
 						<input class="input" type="number" v-model="price"/>
 					</view>
 				</view>
-				<view class="section" v-if="props.isRenew">
+				<view class="section">
 					<text class="title">{{type === 2?"续课次数":"续课时数"}}</text>
 					<view class="desc">
 						<uni-number-box v-model="renewCount" background="#5073D6" color="#fff" />
 					</view>
 				</view>
-				<view class="remark" v-if="props.isRenew">
+				<view class="remark">
 					<textarea
 						v-model="remark"
 						class="textarea" 
@@ -114,7 +98,7 @@ import { Student, User } from "../../types/user";
 import { PaymentRecord } from "../../types/PaymentRecord";
 import { Entry } from "../../types/entry";
 
-const props = defineProps(['entryId', 'isRenew'])
+const props = defineProps(['entryId'])
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
@@ -217,11 +201,7 @@ const number = computed(() => {
 })
 
 const onConfirm = async () => {
-	if (props.isRenew) {
-		await renewCourse()
-	} else {
-		// await editCourse()
-	}
+	await renewCourse()
 }
 
 const renewCourse = async () => {
@@ -273,7 +253,7 @@ const renewCourse = async () => {
 			entry.value.status = 0
 			entry.value.modifyDate = Date.now()
 			entry.value.operatorId = operatorId
-			emit('onConfirm', {isRenew:props.isRenew, count:renewCount.value})
+			emit('onConfirm', {count:renewCount.value})
 			uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
 		} else {
 			courseStore.removePaymentRecord(id)
@@ -299,85 +279,6 @@ const fetchLastestPaymentRecord = async (courseId:string, studentId:string) => {
 		return {}
 	}
 }
-
-// const editCourse = async () => {
-// 	if (!isFinite(total.value) ||
-// 		!isFinite(consume.value) ||
-// 		!isFinite(price.value)) {
-// 		uni.showToast({
-// 			title:"请输入正确格式的数字",
-// 			duration:global.duration_toast,
-// 			icon:"none"
-// 		})
-// 		return
-// 	}
-// 	if (total.value < 0) {
-// 		uni.showToast({
-// 			title:"总课数不能小于0",
-// 			duration:global.duration_toast,
-// 			icon:"none"
-// 		})
-// 		return
-// 	}
-// 	if (consume.value < 0) {
-// 		uni.showToast({
-// 			title:"耗课数不能小于0",
-// 			duration:global.duration_toast,
-// 			icon:"none"
-// 		})
-// 		return
-// 	}
-// 	if (total.value < consume.value) {
-// 		uni.showToast({
-// 			title:"总课数不能小于耗课数",
-// 			duration:global.duration_toast,
-// 			icon:"none"
-// 		})
-// 		return
-// 	}
-// 	if (price.value < 0) {
-// 		uni.showToast({
-// 			title:"课程单价不能小于0",
-// 			duration:global.duration_toast,
-// 			icon:"none"
-// 		})
-// 		return
-// 	}
-// 	let result = true
-// 	if (price.value === paymentRecord.value?.price &&
-// 		total.value === entry.value?.total &&
-// 		consume.value === entry.value.consume) {
-// 		result = false
-// 	} else {
-// 		if (price.value !== paymentRecord.value?.price) {
-// 			result = await courseStore.modifyPaymentRecord(paymentRecord.value?._id ?? '', price.value)
-// 			if (paymentRecord.value && result) {
-// 				paymentRecord.value.price = price.value
-// 			}
-// 			uni.showToast({
-// 				title:"课程价格修改为" + price.value,
-// 				duration:global.duration_toast,
-// 				icon:"none"
-// 			})
-// 		}
-// 		if (total.value !== entry.value?.total || 
-// 			consume.value !== entry.value.consume) {
-// 			debugger
-// 			result = await courseStore.modifyCourseCount(entry.value?._id ?? '', total.value, consume.value)
-// 			if (entry.value && result) {
-// 				entry.value.total = total.value
-// 				entry.value.consume = consume.value
-// 			}
-// 		}
-// 	}
-// 	if (result) {
-// 		emit('onConfirm', {isRenew:props.isRenew, total:total.value, consume:consume.value, updated:true})
-// 		uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value?.studentId})
-// 	} else {
-// 		emit('onConfirm', {isRenew:props.isRenew, updated:false})
-// 	}
-// 	return result
-// }
 
 </script>
 
