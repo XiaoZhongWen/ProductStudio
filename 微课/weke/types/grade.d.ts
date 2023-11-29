@@ -3,6 +3,7 @@ export type Grade = {
 	name: string,
 	desc?: string,
 	icon: string,
+	orgId: string,
 	teacherId?: string,
 	courseId?: string,
 	studentIds?: string[],

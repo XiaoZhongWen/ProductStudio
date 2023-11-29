@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
+import { useGradesStore } from "@/store/grades";
 import { computed, onMounted, ref } from 'vue';
 import { Org } from "../../types/org";
 import { onLoad } from '@dcloudio/uni-app'
@@ -32,6 +33,7 @@ type GradeItem = {
 const global = getApp().globalData!
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
+const useGrades = useGradesStore()
 
 const gradeList = ref<GradeItem[]>([])
 const userId = ref(usersStore.owner._id)
@@ -43,8 +45,7 @@ onLoad(async (option) => {
 	}
 })
 
-onMounted(() => {
-	const orgs:Org[] = []
+onMounted(async () => {
 	const roles = usersStore.owner.roles
 	if (userId.value === usersStore.owner._id) {
 		if (usersStore.owner.from === 'wx') {
@@ -52,40 +53,46 @@ onMounted(() => {
 				// 管理员 | 老师
 				const res = useOrgs.orgs.filter(org => org.creatorId === userId.value || 
 											org.teacherIds?.includes(userId.value))
+				const orgs:Org[] = []
 				orgs.push(...res)
+				orgs.forEach(org => {
+					org.classIds?.forEach(cId => {
+						const item = {
+							gradeId: cId,
+							orgId: org._id
+						}
+						gradeList.value.push(item)
+					})
+				})
 			}
 		} else {
 			// 学生
-			const res = useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value))
-			orgs.push(...res)
+			const res = await useGrades.fetchGradesByStudentId(userId.value)
+			res.forEach(grade => {
+				const item = {
+					gradeId: grade._id,
+					orgId: grade.orgId
+				}
+				gradeList.value.push(item)
+			})
 		}
 	} else {
 		// 家长
-		const students = usersStore.students.filter(student => student.associateIds?.includes(userId.value))
-		students.forEach(student => {
-			const res = useOrgs.orgs.filter(org => org.studentIds?.includes(student._id))
-			res.forEach(org => {
-				const index = orgs.findIndex(o => o._id === org._id)
-				if (index === -1) {
-					orgs.push(org)
-				}
-			})
-		})
-	}
-	orgs.forEach(org => {
-		org.classIds?.forEach(cId => {
+		const res = await useGrades.fetchGradesByStudentId(userId.value)
+		res.forEach(grade => {
 			const item = {
-				gradeId: cId,
-				orgId: org._id
+				gradeId: grade._id,
+				orgId: grade.orgId
 			}
 			gradeList.value.push(item)
 		})
-	})
+	}
 })
 
 const isShowAddBtn = computed(() => {
-	return usersStore.owner.roles?.includes(1) ||
-			usersStore.owner.roles?.includes(2)
+	return usersStore.owner._id === userId.value && 
+			(usersStore.owner.roles?.includes(1) ||
+				usersStore.owner.roles?.includes(2))
 })
 
 uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {

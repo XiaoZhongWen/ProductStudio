@@ -34,6 +34,14 @@ onMounted(() => {
 	let result = useOrgs.orgs.filter(org => org.creatorId === id)
 	if (gId.value.length > 0) {
 		result = useOrgs.orgs.filter(org => org.classIds?.includes(gId.value))
+		if (result.length === 1) {
+			const org = result[0]
+			if (org.creatorId !== id) {
+				uni.setNavigationBarTitle({
+					title: "班级详情"
+				})
+			}
+		}
 	}
 	if (result.length === 0) {
 		uni.showToast({

@@ -21,9 +21,13 @@ onLoad((option) => {
 	}
 	bindType.value = type
 	if (type === "mobile") {
-		
+		uni.setNavigationBarTitle({
+			title: "绑定手机号"
+		})
 	} else if (type === "studentNo") {
-		
+		uni.setNavigationBarTitle({
+			title: "绑定学号"
+		})
 	}
 })
 

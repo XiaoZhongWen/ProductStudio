@@ -66,23 +66,25 @@ const onAddTap = async () => {
 		})
 		return
 	}
-	if (studentNo.value.length !== 8) {
+	const pattern = /^\d+$/
+	if (studentNo.value.length !== 8 || !pattern.test(studentNo.value)) {
 		uni.showToast({
-			title:"学号不正确",
+			title:"学号必须是八位数字",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
+	
 	uni.showLoading({
 		title: "添加中..."
 	})
 	const result = await usersStore.bindStudentNo(studentNo.value)
 	uni.hideLoading()
 	uni.showToast({
-		title:result?"绑定成功":"绑定失败",
+		title:result?"绑定成功":"绑定的学号不存在",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 	studentNo.value = ''
 }

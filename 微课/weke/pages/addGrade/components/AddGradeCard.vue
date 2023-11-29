@@ -34,11 +34,12 @@
 			</view>
 			<text class="text">班级图标</text>
 			<view class="gradeName">
-				<input class="input" type="text" v-model="gradeName" placeholder="班级名称" />
+				<input class="input" type="text" :disabled="!isEditable" v-model="gradeName" placeholder="班级名称" />
 			</view>
 			<view class="course-selector">
 				<uni-data-select
 					@change="onCourseChange"
+					:disabled="!isEditable"
 					class="selector"
 					:clear="false"
 					v-model="selectedCourseId"
@@ -49,6 +50,7 @@
 			<view class="teacher-selector">
 				<uni-data-select
 					@change="onTeacherChange"
+					:disabled="!isEditable"
 					class="selector"
 					:clear="false"
 					v-model="selectedTeacherId"
@@ -68,11 +70,11 @@
 								:name="student.nickName">
 							</wk-portrait>
 						</template>
-						<view class="addBtn" @tap="onAddStudent">
+						<view class="addBtn" v-if="isEditable" @tap="onAddStudent">
 							<view class=".iconfont .icon-add .add"></view>
 							<text class="text">邀请</text>
 						</view>
-						<view class="minusBtn" @tap="onRemoveStudent">
+						<view class="minusBtn" v-if="isEditable" @tap="onRemoveStudent">
 							<view class=".iconfont .icon-reduce .minus"></view>
 							<text class="text">移除</text>
 						</view>
@@ -82,6 +84,7 @@
 			<view class="desc">
 				<textarea 
 					class="textarea" 
+					:disabled="!isEditable"
 					placeholder="班级描述" 
 					v-model="gradeDesc" 
 					maxlength="100" 
@@ -89,6 +92,7 @@
 				<text class="number">{{number}}</text>
 				<button
 					@tap="onAddTap"
+					v-if="isEditable"
 					class="btn" 
 					type="default">
 					{{selectedGradeId.length === 0? "添加":"更新"}}
@@ -150,6 +154,11 @@ const popup = ref<{
 
 const number = computed(() => {
 	return 100 - gradeDesc.value.length
+})
+
+const isEditable = computed(() => {
+	const org:Org = props.org
+	return org.creatorId === usersStore.owner._id
 })
 
 onMounted(async () => {
@@ -251,9 +260,11 @@ const onDeleteTap = () => {
 }
 
 const onTapGradeIcon = () => {
-	uni.navigateTo({
-		url: "/pages/icon/icon?orgId="+props.org._id
-	})
+	if (isEditable.value) {
+		uni.navigateTo({
+			url: "/pages/icon/icon?orgId="+props.org._id
+		})
+	}
 }
 	
 const onAddTap = () => {

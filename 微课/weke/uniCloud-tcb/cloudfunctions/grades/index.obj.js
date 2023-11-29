@@ -15,6 +15,16 @@ module.exports = {
 		}).get()
 		return result.data
 	},
+	async fetchGradesByStudentId(sid) {
+		if (typeof(sid) === 'undefined' || sid.length === 0) {
+			return []
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-classes').where({
+			studentIds: sid
+		}).get()
+		return result.data
+	},
 	async createGrade(param) {
 		const { name, icon, desc, orgId } = param
 		if (typeof(name) === 'undefined' || name.length === 0 ||

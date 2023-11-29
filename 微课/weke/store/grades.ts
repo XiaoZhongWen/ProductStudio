@@ -27,6 +27,24 @@ export const useGradesStore = defineStore('grades', {
 			}
 			return [...g1, ...other]
 		},
+		async fetchGradesByStudentId(sid:string) {
+			if (typeof(sid) === 'undefined' || sid.length === 0) {
+				return []
+			}
+			let res = this.grades.filter(grade => grade.studentIds?.includes(sid))
+			if (res.length > 0) {
+				return res
+			} else {
+				res = await grades_co.fetchGradesByStudentId(sid)
+			}
+			res.forEach(grade => {
+				const index = this.grades.findIndex(g => g._id === grade._id)
+				if (index === -1) {
+					this.grades.push(grade)
+				}
+			})
+			return res
+		},
 		// 添加学生、老师、课程信息
 		async createGrade(param: {
 			name:string,
@@ -46,7 +64,7 @@ export const useGradesStore = defineStore('grades', {
 			const id = await grades_co.createGrade(param)
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const grade: Grade = {
-					_id: id, name, icon, desc, courseId, teacherId, studentIds,
+					_id: id, name, icon, desc, courseId, teacherId, studentIds, orgId,
 					createTime: Date.now()
 				}
 				this.grades.push(grade)
