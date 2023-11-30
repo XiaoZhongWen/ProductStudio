@@ -388,7 +388,10 @@ const revokeCourse = async () => {
 								studentId: entry.value.studentId,
 								courseId: entry.value.courseId
 							})
-							uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
+							uni.$emit(global.event_name.didUpdateCourseData, {
+								studentNo: entry.value.studentId,
+								courseId: entry.value.courseId
+							})
 						}
 						uni.showToast({
 							title:result?"退课成功":"退课失败",

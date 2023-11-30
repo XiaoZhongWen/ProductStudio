@@ -104,16 +104,16 @@ export const useCourseStore = defineStore('course', {
 			courseId: string,
 			total: number,
 			consume: number,
-			info: {status:number, date:number, operator:string}
+			operatorId:string
 		}) {
-			const { orgId, teacherId, studentId, courseId, total, consume, info } = param
+			const { orgId, teacherId, studentId, courseId, total, consume, operatorId } = param
 			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(studentId) === 'undefined' || studentId.length === 0 ||
-				typeof(courseId) === 'undefined' || courseId.length === 0 || 
+				typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
 				typeof(total) === 'undefined' || total <= 0 || 
-				typeof(consume) === 'undefined' || consume < 0 ||
-				typeof(info) === 'undefined') {
+				typeof(consume) === 'undefined' || consume < 0) {
 				return ''
 			}
 			const entryId = await course_co.bindCourse(param)

@@ -254,7 +254,10 @@ const renewCourse = async () => {
 			entry.value.modifyDate = Date.now()
 			entry.value.operatorId = operatorId
 			emit('onConfirm', {count:renewCount.value})
-			uni.$emit(global.event_name.didUpdateCourseData, {studentNo: entry.value.studentId})
+			uni.$emit(global.event_name.didUpdateCourseData, {
+				studentNo: entry.value.studentId,
+				courseId: entry.value.courseId
+			})
 		} else {
 			courseStore.removePaymentRecord(id)
 		}

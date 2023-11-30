@@ -33,6 +33,8 @@ import { useOrgsStore } from '@/store/orgs'
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
 
+const global = getApp().globalData!
+
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
@@ -50,12 +52,19 @@ onMounted(async () => {
 		typeof(props.orgId) === 'undefined' || props.orgId.length === 0) {
 		return
 	}
-	const entries = usersStore.entries.filter(entry => entry.courseId === props.courseId && 
-														entry.orgId === props.orgId)
-	entries.forEach(entry => {
-		total.value += entry.total
-		consume.value += entry.consume
-	})
+	const orgs = useOrgs.orgs.filter(org => org._id === props.orgId)
+	if (orgs.length > 0) {
+		org.value = orgs[0]
+		if (org.value.type === 1) {
+			const users = await usersStore.fetchUsers([org.value.creatorId])
+			if (users.length > 0) {
+				creator.value = users[0].nickName
+			}
+		}
+	}
+	
+	loadProgress()
+	
 	const courses = await courseStore.fetchCourses([props.courseId])
 	if (courses.length > 0) {
 		course.value = courses[0]
@@ -72,17 +81,44 @@ onMounted(async () => {
 			typeName.value = "试听课"
 		}
 	}
-	const orgs = useOrgs.orgs.filter(org => org._id === props.orgId)
-	if (orgs.length > 0) {
-		org.value = orgs[0]
-		if (org.value.type === 1) {
-			const users = await usersStore.fetchUsers([org.value.creatorId])
-			if (users.length > 0) {
-				creator.value = users[0].nickName
+	
+	uni.$on(global.event_name.didUpdateCourseData, (data: {courseId:string}) => {
+		const { courseId } = data
+		if (props.courseId === courseId) {
+			loadProgress()
+		}
+	})
+})
+
+const loadProgress = () => {
+	const roles = usersStore.owner.roles
+	const userId = usersStore.owner._id
+	const entries = usersStore.entries.filter(entry => entry.courseId === props.courseId &&
+														entry.orgId === props.orgId)
+	const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
+	const childNos = children.map(child => child.studentNo)
+	// 待验证
+	entries.forEach(entry => {
+		if (usersStore.owner.from === 'wx') {
+			// 1. 有机构管理员角色并且课程属于自己创建的机构
+			const forCreator = roles?.includes(1) && org.value?.creatorId === userId
+			// 2. 有老师角色并且该授课记录的老师是自己
+			const forTeacher = roles?.includes(2) && entry.teacherId === userId
+			// 3. 有家长角色并且该授课记录中的学号属于自己的孩子
+			const forParent = roles?.includes(3) && childNos.includes(entry.studentId)
+			if (forCreator || forTeacher || forParent) {
+				total.value += entry.total
+				consume.value += entry.consume
+			}
+		} else if (usersStore.owner.from === 'stuNo') {
+			// 角色是学生, 统计跟自己相关的课程进度
+			if (entry.studentId === usersStore.owner.studentNo) {
+				total.value += entry.total
+				consume.value += entry.consume
 			}
 		}
-	}
-})
+	})
+}
 	
 </script>
 

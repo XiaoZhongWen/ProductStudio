@@ -166,6 +166,10 @@ onMounted(async () => {
 			}
 		})
 	})
+	if (orgs.length > 0 && !teacherIds.includes(id)) {
+		teacherIds.unshift(id)
+	}
+	
 	const orgCourses = await courseStore.fetchCourses(courseIds ?? [])
 	courses = orgCourses
 	courses.forEach(course => {
@@ -227,41 +231,35 @@ const onChange = (e:string) => {
 	
 	const length = teacherSelectorData.value.length
 	teacherSelectorData.value.splice(0, length)
+	
+	const id = usersStore.owner._id
 	// 1. 获取课程所属的机构
 	const result = orgs.filter(org => org.courseIds?.includes(selectedCourseId.value))
 	if (result.length === 1) {
 		const org = result[0]
-		if (org._id !== useOrgs.anonymousOrg._id) {
+		if (org.type === 0) {
 			orgName.value = org.name
+			teachers.forEach(teacher => {
+				if (org.teacherIds?.includes(teacher._id) || teacher._id === id) {
+					teacherSelectorData.value.push({
+						value: teacher._id,
+						text: teacher.nickName
+					})
+				}
+			})
+			if (teacherSelectorData.value.length === 1) {
+				selectedTeacherId.value = id
+			} else {
+				selectedTeacherId.value = ""
+			}
 		} else {
 			isAnonymousOrg.value = true
 			teacherSelectorData.value = [{
-				value: usersStore.owner._id,
+				value: id,
 				text: usersStore.owner.nickName
 			}]
-			selectedTeacherId.value = usersStore.owner._id
+			selectedTeacherId.value = id
 			return
-		}
-		if (org.creatorId === usersStore.owner._id) {
-			// 2. 对于管理员
-			teachers.forEach(teacher => {
-				if (org.teacherIds?.includes(teacher._id)) {
-					teacherSelectorData.value.push({
-						value: teacher._id,
-						text: teacher.nickName
-					})
-				}
-			})
-		} else {
-			// 3. 对于机构老师
-			teachers.forEach(teacher => {
-				if (teacher._id === usersStore.owner._id) {
-					teacherSelectorData.value.push({
-						value: teacher._id,
-						text: teacher.nickName
-					})
-				}
-			})
 		}
 	}
 	if (teacherSelectorData.value.length === 0) {
@@ -326,11 +324,6 @@ const onBindCourse = async () => {
 	uni.showLoading({
 		title:"正在绑定..."
 	})
-	const info = {
-		status: 0,
-		date: Date.now(),
-		operator: usersStore.owner._id
-	}
 	const entryId = await courseStore.bindCourse({
 		orgId: org._id,
 		teacherId: selectedTeacherId.value,
@@ -338,7 +331,7 @@ const onBindCourse = async () => {
 		courseId: selectedCourseId.value,
 		total: parseInt(totle.value),
 		consume: parseInt(consume.value),
-		info
+		operatorId: usersStore.owner._id
 	})
 	let result = false
 	if (entryId.length > 0) {
@@ -359,7 +352,7 @@ const onBindCourse = async () => {
 		icon: result? "success": "error"
 	})
 	if (result) {
-		const entry = {
+		const entry: Entry = {
 			_id: entryId,
 			orgId: org._id,
 			teacherId: selectedTeacherId.value,
@@ -367,12 +360,21 @@ const onBindCourse = async () => {
 			courseId: selectedCourseId.value,
 			total: parseInt(totle.value),
 			consume: parseInt(consume.value),
-			info
+			status: 0,
+			modifyDate: Date.now(),
+			operatorId: usersStore.owner._id
+		}
+		const index = courseSelectorData.value.findIndex(c => c.value === entry.courseId)
+		if (index !== -1) {
+			courseSelectorData.value.splice(index, 1)
 		}
 		entries.value.push(entry)
 		usersStore.entries.push(entry)
 		reset()
-		uni.$emit(global.event_name.didUpdateCourseData, {studentNo:stuNo})
+		uni.$emit(global.event_name.didUpdateCourseData, {
+			studentNo:stuNo,
+			courseId: entry.courseId
+		})
 	}
 }
 

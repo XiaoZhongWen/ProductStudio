@@ -233,7 +233,10 @@ const onRevokeAction = async (param:{id:string}) => {
 				const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
 				if (res) {
 					entry.value.consume = consume
-					uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+					uni.$emit(global.event_name.didUpdateCourseData, {
+						studentNo:entry.value.studentId,
+						courseId: entry.value.courseId
+					})
 					flag = true
 				}
 			}
@@ -275,7 +278,10 @@ const onRevokePaymentAction = async (param:{id:string}) => {
 				const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
 				if (res) {
 					entry.value.total = total
-					uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+					uni.$emit(global.event_name.didUpdateCourseData, {
+						studentNo:entry.value.studentId,
+						courseId: entry.value.courseId
+					})
 					flag = true
 				}
 			}
@@ -318,7 +324,10 @@ const onChange = async (
 					const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
 					if (res) {
 						entry.value.consume = consume
-						uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+						uni.$emit(global.event_name.didUpdateCourseData, {
+							studentNo:entry.value.studentId,
+							courseId: entry.value.courseId
+						})
 						flag = true
 					}
 				} else {
@@ -363,7 +372,10 @@ const onPaymentChange = async (param:{
 					const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
 					if (res) {
 						entry.value.total = total
-						uni.$emit(global.event_name.didUpdateCourseData, {studentNo:entry.value.studentId})
+						uni.$emit(global.event_name.didUpdateCourseData, {
+							studentNo:entry.value.studentId,
+							courseId: entry.value.courseId
+						})
 						flag = true
 					}
 				} else {
