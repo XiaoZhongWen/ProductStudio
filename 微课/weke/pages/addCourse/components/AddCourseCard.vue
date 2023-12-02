@@ -22,7 +22,7 @@
 					type="minus-filled" 
 					color="#dd524d" 
 					size="24" 
-					@tap="onDeleteTap">
+					@tap.prevent="onDeleteTap">
 				</uni-icons>
 			</view>
 		</template>
@@ -76,7 +76,6 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from "vue";
 import { Course } from "../../../types/course";
@@ -84,7 +83,6 @@ import { Org } from "../../../types/org";
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
-const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 const props = defineProps(['org'])
 const selectedIconId = ref('.t-icon .t-icon-yuwen1')
@@ -148,6 +146,7 @@ const onTapCourseIcon = () => {
 }
 
 const onCourseTap = (courseId:string) => {
+	longPressCourseId.value = ''
 	if (selectedCourseId.value === courseId) {
 		reset()
 	} else {
@@ -165,17 +164,32 @@ const onCourseTap = (courseId:string) => {
 }
 
 const onLongPressCourse = (courseId:string) => {
+	selectedCourseId.value = ''
 	longPressCourseId.value = courseId
 }
 
 const onDeleteTap = async () => {
+	let canDelete = true
+	const entries = usersStore.entries.filter(entry => entry.courseId === longPressCourseId.value)
+	entries.forEach(e => {
+		if (e.status === 0) {
+			canDelete = false
+		}
+	})
+	if (!canDelete) {
+		const result = courses.value.filter(course => course._id === longPressCourseId.value)
+		const entry = result[0]
+		uni.showToast({
+			title: "学习" + entry.name + "的学员还没有结课, 不能删除",
+			duration: global.duration_toast,
+			icon: 'none'
+		})
+		return
+	}
 	uni.showLoading({
 		title:"删除中"
 	})
-	let result = await useOrgs.removeCourse(props.org._id, longPressCourseId.value)
-	if (result) {
-		result = await courseStore.removeCourse(longPressCourseId.value)
-	}
+	const result = await courseStore.removeCourse(longPressCourseId.value, props.org._id)
 	uni.hideLoading()
 	uni.showToast({
 		title: result?"删除成功":"删除失败",
@@ -261,17 +275,14 @@ const createCourse = async () => {
 	const index = duration.value.indexOf(suffix)
 	const minutes = Number(duration.value.substring(0, index))
 	const cId = await courseStore.addCourse({
+		orgId: props.org._id,
 		name: courseName.value,
 		icon: selectedIconId.value,
 		desc: courseDesc.value,
 		type: type.value,
 		duration: type.value !== 2?minutes:0
 	})
-	let result = false
-	if (typeof(cId) !== 'undefined' && cId.length > 0) {
-		// 2. 将课程添加到相应机构
-		result = await useOrgs.addCourse(props.org._id, cId)
-	}
+	const result = cId.length > 0
 	uni.hideLoading()
 	uni.showToast({
 		title: result?"添加成功":"添加失败",

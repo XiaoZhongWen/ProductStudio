@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { Course, CourseConsumeRecord } from '@/types/course'
 import { PaymentRecord } from '../types/PaymentRecord'
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from "@/store/orgs"
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true
@@ -21,6 +22,7 @@ export const useCourseStore = defineStore('course', {
 	actions: {
 		async addCourse(
 			param:{
+				orgId:string,
 				name:string, 
 				icon:string, 
 				desc?:string, 
@@ -28,25 +30,36 @@ export const useCourseStore = defineStore('course', {
 				duration:number
 		}) {
 			const {
-				name, icon, type, duration, desc
+				orgId, name, icon, type, duration, desc
 			} = param
-			if (typeof(name) === 'undefined' || name.length === 0 || 
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 || 
+				typeof(name) === 'undefined' || name.length === 0 || 
 				typeof(icon) === 'undefined' || icon.length === 0 ||
 				typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type)) {
 				return ''
 			}
-			const result = await course_co.addCourse(param)
-			if (typeof(result) !== 'undefined' && result.length > 0) {
+			const courseId = await course_co.addCourse(param)
+			if (typeof(courseId) !== 'undefined' && courseId.length > 0) {
 				this.course.push({
-					_id:result,
+					_id: courseId,
 					name: name,
 					desc: desc ?? '',
 					icon: icon,
 					type: type,
 					duration: duration
 				})
+				
+				const orgStore = useOrgsStore()
+				let result = orgStore.orgs.filter(org => org._id === orgId)
+				if (result.length === 0 && orgStore.anonymousOrg._id === orgId) {
+					result = [orgStore.anonymousOrg]
+				}
+				if (result.length > 0) {
+					const org = result[0]
+					org.courseIds?.push(courseId)
+				}
 			}
-			return result
+			return courseId
 		},
 		async fetchCourses(ids:string[]) {
 			if (typeof(ids) === 'undefined' || ids.length === 0) {
@@ -84,15 +97,29 @@ export const useCourseStore = defineStore('course', {
 			const result = await course_co.updateCourse(param)
 			return result
 		},
-		async removeCourse(courseId:string) {
-			if (typeof(courseId) === 'undefined' || courseId.length === 0) {
+		async removeCourse(courseId:string, orgId:string) {
+			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(orgId) === 'undefined' || orgId.length === 0) {
 				return false
 			}
-			const result = await course_co.removeCourse(courseId)
+			const result = await course_co.removeCourse(courseId, orgId)
 			if (result) {
 				const index = this.course.findIndex(course => course._id === courseId)
 				if (index !== -1) {
 					this.course.splice(index, 1)
+					
+					const orgStore = useOrgsStore()
+					let result = orgStore.orgs.filter(org => org._id === orgId)
+					if (result.length === 0 && orgStore.anonymousOrg._id === orgId) {
+						result = [orgStore.anonymousOrg]
+					}
+					if (result.length > 0) {
+						const org = result[0]
+						const position = org.courseIds?.findIndex(id => id === courseId) ?? -1
+						if (position !== -1) {
+							org.courseIds?.splice(position, 1)
+						}
+					}
 				}
 			}
 			return result

@@ -280,33 +280,6 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 		},
 		/**
-		 * 向机构添加课程
-		 */
-		async addCourse(orgId:string, courseId:string) {
-			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-				typeof(courseId) === 'undefined' || courseId.length === 0) {
-				return false
-			}
-			let res = this.orgs.filter(org => org._id === orgId)
-			if (res.length === 0 && this.anonymousOrg._id === orgId) {
-				res = [this.anonymousOrg]
-			}
-			if (res.length > 0) {
-				const org = res[0]
-				if (!org.courseIds?.includes(courseId)) {
-					const result = await orgs_co.addCourse(orgId, courseId)
-					if (result) {
-						org.courseIds?.push(courseId)
-					}
-					return result
-				} else {
-					return true
-				}
-			} else {
-				return false
-			}
-		},
-		/**
 		 * 删除机构学员
 		 */
 		async removeStudents(orgId:string, studentIds:string[]) {
@@ -350,27 +323,6 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 			return result
-		},
-		async removeCourse(orgId:string, courseId:string) {
-			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-				typeof(courseId) === 'undefined' || courseId.length === 0) {
-				return false
-			}
-			let res = this.orgs.filter(org => org._id === orgId)
-			if (res.length === 0 && this.anonymousOrg._id === orgId) {
-				res = [this.anonymousOrg]
-			}
-			if (res.length > 0) {
-				const org = res[0]
-				if (!org.courseIds?.includes(courseId)) {
-					return true
-				} else {
-					const result = await orgs_co.removeCourse(orgId, courseId)
-					return result
-				}
-			} else {
-				return false
-			}
 		}
 	}
 })

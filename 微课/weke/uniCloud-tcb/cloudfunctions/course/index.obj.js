@@ -6,9 +6,10 @@ module.exports = {
 	},
 	async addCourse(param) {
 		const {
-			name, icon, desc, type, duration
+			orgId, name, icon, desc, type, duration
 		} = param
-		if (typeof(name) === 'undefined' || name.length === 0 ||
+		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type)) {
 			return ''
@@ -22,7 +23,17 @@ module.exports = {
 			duration: duration
 		})
 		const { id, inserted } = result
-		return inserted === 1? id: ''
+		let updated = false
+		if (inserted === 1) {
+			const dbCmd = db.command
+			const data = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).update({
+				courseIds: dbCmd.push([id])
+			})
+			updated = data.updated === 1
+		}
+		return updated? id: ''
 	},
 	async fetchCourses(courseIds) {
 		if (typeof(courseIds) === 'undefined' || courseIds.length === 0) {
@@ -58,15 +69,36 @@ module.exports = {
 		})
 		return result.updated === 1
 	},
-	async removeCourse(courseId) {
-		if (typeof(courseId) === 'undefined' || courseId.length === 0) {
+	async removeCourse(courseId, orgId) {
+		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(orgId) === 'undefined' || orgId.length === 0) {
 			return false
 		}
 		const db = uniCloud.database()
 		const result = await db.collection('wk-courses').where({
 			_id: courseId
 		}).remove()
-		return result.deleted === 1
+		let updated = false
+		if (result.deleted === 1) {
+			const res = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).get()
+			const orgs = res.data
+			if (orgs.length === 1) {
+				const org = orgs[0]
+				const index = org.courseIds.findIndex(cId => cId === courseId)
+				if (index !== -1) {
+					org.courseIds.splice(index, 1)
+					const data = await db.collection('wk-orgs').where({
+						_id: orgId
+					}).update({
+						courseIds: org.courseIds
+					})
+					updated = data.updated === 1
+				}
+			}
+		}
+		return updated
 	},
 	async bindCourse(param) {
 		const { orgId, teacherId, studentId, courseId, total, consume, operatorId } = param
