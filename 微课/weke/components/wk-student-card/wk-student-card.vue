@@ -13,7 +13,7 @@
 				:total="total" 
 				:consume="consume">
 			</wk-circle-progress>
-			<view v-else class="bind">绑定课程</view>
+			<view v-else-if="actualTotal > 0" class="bind">绑定课程</view>
 		</view>
 		<view class="body">
 			
@@ -35,6 +35,7 @@ import { useOrgsStore } from '@/store/orgs'
 
 const total = ref(0)
 const consume = ref(0)
+const actualTotal = ref(0)
 const orgIds = ref<string[]>([])
 const orgNames = ref('')
 
@@ -62,27 +63,34 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 
 const loaddata = () => {
 	const userId = usersStore.owner._id
+	const studentNo = usersStore.owner.studentNo
 	const from = usersStore.owner.from
 	const roles = usersStore.owner.roles ?? []
 	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
 	const createOrgIds = useOrgs.orgs.filter(org => org.creatorId === userId).map(org => org._id)
+	const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
+	const childNos = children.map(child => child.studentNo)
+	const childIds = children.map(child => child._id)
 	const anonymousOrgId = useOrgs.anonymousOrg._id
 	const oIds:string[] = []
 	const s = orgs.map(org => org._id)
 	const entries = usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
 	let totalCourse = 0
 	let consumeCourse = 0
+	let actualTotalCourse = 0
 	entries.forEach(entry => {
 		// 1. 角色-机构管理员, 课程属于自己所创建的机构
 		const isOrgCourse = roles.includes(1) && createOrgIds.includes(entry.orgId)
 		// 2. 角色-老师, 课程属于自己所教授的课程以及自己匿名机构的课程
 		const isTeacherCourse = roles.includes(2) && (entry.teacherId === userId || entry.orgId === anonymousOrgId)
 		// 3. 角色-家长, 课程属于学员绑定的课程
-		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
+		const isStudentCourse = (roles.includes(3) && childNos.includes(entry.studentId)) || 
+								(from === 'stuNo' && studentNo === entry.studentId)
 		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
 			totalCourse += entry.total
 			consumeCourse += entry.consume
 		}
+		actualTotalCourse += entry.total
 	})
 	orgs.forEach(org => {
 		// 1. 角色-机构管理员, 学员属于自己所创建的机构
@@ -90,7 +98,13 @@ const loaddata = () => {
 		// 2. 角色-老师, 学员属于自己所任教的机构
 		const isTeacherCourse = roles.includes(2) && (org.teacherIds?.includes(userId) || org._id === anonymousOrgId)
 		// 3. 角色-家长, 学员属于自己加入的机构
-		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
+		let isInclude = false
+		childIds.forEach(id => {
+			if (!isInclude) {
+				isInclude = org.studentIds?.includes(id) ?? false
+			}
+		})
+		const isStudentCourse = (roles.includes(3) || from === 'stuNo') && isInclude
 		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
 			const index = oIds.findIndex(id => id === org._id)
 			if (index === -1) {
@@ -101,6 +115,7 @@ const loaddata = () => {
 	orgIds.value = oIds
 	total.value = totalCourse
 	consume.value = consumeCourse
+	actualTotal.value = actualTotalCourse
 	
 	fetchOrgName()
 }
