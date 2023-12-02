@@ -55,9 +55,6 @@
 					</picker>
 				</view>
 			</view>
-			<view class="count" v-else>
-				<input class="input" type="text" v-model="courseCount" placeholder="课程次数" />
-			</view>
 		</view>
 		<view class="desc">
 			<textarea 
@@ -116,7 +113,6 @@ const range = [
 
 const courseName = ref('')
 const courseDesc = ref('')
-const courseCount = ref()
 const courses = ref<Course[]>([])
 const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
 const duration = ref('分钟')
@@ -252,15 +248,6 @@ const validate = () => {
 		})
 		return false
 	}
-	
-	if (type.value === 2 && (!isFinite(courseCount.value) || parseInt(courseCount.value) <= 0)) {
-		uni.showToast({
-			title: "请设置课程次数",
-			duration: global.duration_toast,
-			icon: "error"
-		})
-		return false
-	}
 	return true
 }
 
@@ -278,7 +265,7 @@ const createCourse = async () => {
 		icon: selectedIconId.value,
 		desc: courseDesc.value,
 		type: type.value,
-		duration: type.value !== 2?minutes:courseCount.value
+		duration: type.value !== 2?minutes:0
 	})
 	let result = false
 	if (typeof(cId) !== 'undefined' && cId.length > 0) {
@@ -298,7 +285,7 @@ const createCourse = async () => {
 			desc: courseDesc.value,
 			icon: selectedIconId.value,
 			type: type.value,
-			duration: type.value !== 2?minutes:courseCount.value
+			duration: type.value !== 2?minutes:0
 		}
 		courses.value.push(course)
 		reset()

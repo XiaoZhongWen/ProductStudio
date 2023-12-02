@@ -37,12 +37,7 @@ onLoad(async () => {
 const orgs = computed({
 	get() {
 		const userId = usersStore.owner._id
-		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId || 
-											org.teacherIds?.includes(userId))
-		if (usersStore.owner.roles?.includes(2) &&
-			useOrgs.anonymousOrg._id.length > 0) {
-			normalOrgs.push(useOrgs.anonymousOrg)
-		}
+		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId)
 		return normalOrgs
 	}
 })
