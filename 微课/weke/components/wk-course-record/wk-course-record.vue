@@ -20,8 +20,8 @@
 			<text class="title">结束时间:</text>
 			<text class="desc">{{format(new Date(r.endTime))}}</text>
 		</view>
-		<view class="section">
-			<text class="title">消耗课时:</text>
+		<view class="section" v-if="courseType">
+			<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
 			<text class="desc">{{r.count}}</text>
 		</view>
 		<view class="section area">
@@ -60,8 +60,9 @@ const r = ref<CourseConsumeRecord>()
 const courseStore = useCourseStore()
 const operator = ref<User>()
 const isValidate = ref(false)
+const courseType = ref()
 
-onMounted(() => {
+onMounted(async () => {
 	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
 	if (res.length > 0) {
 		r.value = res[0]
@@ -78,6 +79,13 @@ onMounted(() => {
 		if (courseId.length > 0) {
 			const index = orgs.findIndex(org => org.courseIds?.includes(courseId))
 			isValidate.value = index !== -1
+			if (index !== -1) {
+				const courses = await courseStore.fetchCourses([courseId])
+				if (courses.length === 1) {
+					const course = courses[0]
+					courseType.value = course.type
+				}
+			}
 		}
 	}
 })

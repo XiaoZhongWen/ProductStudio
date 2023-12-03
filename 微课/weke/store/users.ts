@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useOrgsStore } from "@/store/orgs"
 import { RoleId, Student, User, WxIdentity } from '@/types/user'
 // @ts-ignore
 import md5 from 'js-md5'
@@ -473,13 +474,20 @@ export const useUsersStore = defineStore('users', {
 		/**
 		 * 创建云端学生记录
 		 */
-		async createStudent(name:string, mobile:string) {
-			if (typeof(name) === 'undefined' || name.length === 0 ||
+		async createStudent(orgId:string, name:string, mobile:string) {
+			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(name) === 'undefined' || name.length === 0 ||
 				typeof(mobile) === 'undefined' || mobile.length === 0) {
 				return {}
 			}
-			const student:Student = await users_co.createStudent(name, mobile)
+			const student:Student = await users_co.createStudent(orgId, name, mobile)
 			if (JSON.stringify(student) !== '{}') {
+				const orgStore = useOrgsStore()
+				const orgs = orgStore.orgs.filter(org => org._id === orgId)
+				if (orgs.length === 1) {
+					const org = orgs[0]
+					org.studentIds?.push(student._id)
+				}
 				const index = this.students.findIndex(stu => stu._id === student._id)
 				if (index === -1) {
 					this.students.push(student)

@@ -443,8 +443,9 @@ module.exports = {
 	* @param {Object} name 		学生姓名
 	* @param {Object} mobile	关联手机号
 	*/
-   async createStudent(name, mobile) {
-	   if (typeof(name) === 'undefined' || name.length === 0 ||
+   async createStudent(orgId, name, mobile) {
+	   if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(mobile) === 'undefined' || mobile.length === 0) {
 	   		return {}
 		}
@@ -456,7 +457,18 @@ module.exports = {
 			identity: identity
 		}).get()
 		if (res.data.length > 0) {
-			return res.data[0]
+			const student = res.data[0]
+			const dbCmd = db.command
+			const data = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).update({
+				studentIds: dbCmd.push([student._id])
+			})
+			if (data.updated === 1) {
+				return res.data[0]
+			} else {
+				return {}
+			}
 		}
 		res = await db.collection('wk-student').count()
 		const suffix = (res.total + 1).toString()
@@ -469,11 +481,21 @@ module.exports = {
 			identity: identity,
 		})
 		if (res.inserted === 1) {
-			return {
-				_id: res.id,
-				studentNo: studentNo,
-				identity: identity,
-				nickName: name,
+			const dbCmd = db.command
+			const data = await db.collection('wk-orgs').where({
+				_id: orgId
+			}).update({
+				studentIds: dbCmd.push([res.id])
+			})
+			if (data.updated === 1) {
+				return {
+					_id: res.id,
+					studentNo: studentNo,
+					identity: identity,
+					nickName: name,
+				}
+			} else {
+				return {}
 			}
 		} else {
 			return {}

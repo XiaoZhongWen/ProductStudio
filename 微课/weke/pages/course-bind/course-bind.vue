@@ -69,13 +69,22 @@
 		<view class="form">
 			<uni-forms ref="form" label-width=80>
 				<uni-forms-item :label="type === 2? '总课次数':'总课时数'" required>
-					<uni-easyinput type="number" v-model="totle" placeholder="请输入总课时数"/>
+					<uni-easyinput 
+						type="number" 
+						v-model="totle" 
+						:placeholder="type === 2? '请输入总课次数':'请输入总课时数'"/>
 				</uni-forms-item>
 				<uni-forms-item :label="type === 2? '已耗课次':'已耗课时'" required>
-					<uni-easyinput type="number" v-model="consume" placeholder="请输入已耗课时数"/>
+					<uni-easyinput 
+						type="number" 
+						v-model="consume" 
+						:placeholder="type === 2? '请输入已耗课次数':'请输入已耗课时数'"/>
 				</uni-forms-item>
 				<uni-forms-item :label="type === 2? '课次单价':'课时单价'" required>
-					<uni-easyinput type="number" v-model="price" placeholder="请输入课时单价"/>
+					<uni-easyinput 
+						type="number" 
+						v-model="price" 
+						:placeholder="type === 2? '请输入课次单价':'请输入课时单价'"/>
 				</uni-forms-item>
 				<uni-forms-item label="报名时间" required>
 					<uni-datetime-picker type="date" return-type="timestamp" v-model="date" />

@@ -406,10 +406,14 @@ module.exports = {
 			return []
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-course-records').where({
+		const dbCmd = db.command
+		const result = await db.collection('wk-course-records').where(dbCmd.or({
 			courseId,
 			studentId
-		}).get()
+		}, {
+			courseId,
+			studentIds: studentId
+		})).get()
 		return result.data
 	},
 	async modifyCourseConsumeRecord(param) {

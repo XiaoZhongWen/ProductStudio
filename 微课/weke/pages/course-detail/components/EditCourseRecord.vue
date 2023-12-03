@@ -20,8 +20,8 @@
 					v-model="end"
 					:border="border" />
 			</view>
-			<view class="section">
-				<text class="title">消耗课时:</text>
+			<view class="section" v-if="courseType">
+				<text class="title">{{courseType === 2?'消耗课次:':'消耗课时:'}}</text>
 				<uni-number-box 
 					background="#5073D6" 
 					color="#fff" 
@@ -82,8 +82,10 @@ const content = ref('')
 const assignment = ref('')
 const feedback = ref('')
 
+const courseType = ref()
+
 let rId = ''
-const initial = (id:string) => {
+const initial = async (id:string) => {
 	if (typeof(id) === 'undefined' || id.length === 0) {
 		return
 	}
@@ -97,6 +99,15 @@ const initial = (id:string) => {
 		content.value = record.value.content ?? ''
 		assignment.value = record.value.assignment ?? ''
 		feedback.value = record.value.feedback ?? ''
+	}
+	
+	const courseId = record.value?.courseId ?? ''
+	if (courseId.length > 0) {
+		const courses = await courseStore.fetchCourses([courseId])
+		if (courses.length === 1) {
+			const course = courses[0]
+			courseType.value = course.type
+		}
 	}
 }
 

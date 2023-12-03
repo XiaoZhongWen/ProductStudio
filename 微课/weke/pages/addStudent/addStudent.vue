@@ -113,10 +113,9 @@ const onAddTap = async (data:{info:EditInfo}) => {
 		})
 		if (isAvailable) {
 			// 1. 创建并返回该学员的云端数据记录
-			const id = await usersStore.createStudent(name, phoneNumber) as string
+			const id = await usersStore.createStudent(orgId, name, phoneNumber) as string
 			// 2. 将该学员记录id添加到相应的机构里
 			if (id.length > 0) {
-				useOrgs.addStudents(orgId, [id])
 				uni.$emit(global.event_name.didUpdateOrgData)
 			}
 		} else {

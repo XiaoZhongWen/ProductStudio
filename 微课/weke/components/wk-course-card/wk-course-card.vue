@@ -18,7 +18,10 @@
 				:consume="entry.consume">
 			</wk-circle-progress>
 		</view>
-		<view class="duration" v-if="status === 0">
+		<view class="courseType">
+			<text>课程类型: {{typeName}}</text>
+		</view>
+		<view class="duration" v-if="status === 0 && course.type !== 2">
 			<text>课程时长: {{course.duration}}分钟</text>
 		</view>
 		<view class="teacher" v-if="isShowTeacher">
@@ -450,7 +453,7 @@ const revokeCourse = async () => {
 			color: $uni-color-error;
 		}
 	}
-	.duration, .operator, .operateTime {
+	.courseType, .duration, .operator, .operateTime {
 		font-size: $uni-font-size-sm;
 		color: $wk-text-color-grey;
 		margin-top: $uni-spacing-col-sm;

@@ -258,28 +258,6 @@ export const useOrgsStore = defineStore('orgs', {
 			}
 		},
 		/**
-		 * 向机构添加学员
-		 */
-		addStudents(orgId:string, studentIds:string[]) {
-			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-				typeof(studentIds) === 'undefined' || studentIds.length === 0) {
-				return
-			}
-			
-			let res = this.orgs.filter(org => org._id === orgId)
-			if (res.length === 0 && this.anonymousOrg._id === orgId) {
-				res = [this.anonymousOrg]
-			}
-			if (res.length > 0) {
-				const org = res[0]
-				const ids = studentIds.filter(id => !org.studentIds?.includes(id))
-				if (ids.length > 0) {
-					org.studentIds?.push(...ids)
-					orgs_co.addStudents(orgId, ids)
-				}
-			}
-		},
-		/**
 		 * 删除机构学员
 		 */
 		async removeStudents(orgId:string, studentIds:string[]) {

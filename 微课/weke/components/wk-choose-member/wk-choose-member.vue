@@ -7,7 +7,7 @@
 				v-if="selectedId.length > 0 || 
 					selectedIds.length > 0" 
 				@tap="onConfirmTap">
-				确定{{'('+ count + ')'}}
+				{{chooseType === 'single'? '确定': '确定' + '（' + count + ')'}}
 			</view>
 		</view>
 		<scroll-view class="body" scroll-y="true">

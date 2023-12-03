@@ -192,32 +192,6 @@ module.exports = {
 		})
 		return res
 	},
-	async addStudents(orgId, sIds) {
-		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
-			typeof(sIds) === 'undefined' || sIds.length === 0) {
-			return
-		}
-		const db = uniCloud.database()
-		let res = await db.collection('wk-orgs').where({
-			_id: orgId
-		}).field({studentIds:true}).get()
-		const data = res.data
-		let ids = []
-		if (data.length > 0) {
-			ids = data[0].studentIds
-		}
-		sIds.forEach(studentId => {
-			if (!ids.includes(studentId)) {
-				ids.push(studentId)
-			}
-		})
-		res = await db.collection('wk-orgs').where({
-			_id: orgId
-		}).update({
-			studentIds: ids
-		})
-		return res
-	},
 	async removeStudents(orgId, sIds) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(sIds) === 'undefined' || sIds.length === 0) {
