@@ -156,9 +156,11 @@ module.exports = {
 		const { id } = result
 		return id
 	},
-	async revokePaymentRecord(id, operatorId) {
+	async revokePaymentRecord(id, operatorId, entryId, delta) {
 		if (typeof(id) === 'undefined' || id.length === 0 ||
-			typeof(operatorId) === 'undefined' || operatorId.length === 0) {
+			typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
+			typeof(entryId) === 'undefined' || entryId.length === 0 ||
+			typeof(delta) === 'undefined') {
 			return false
 		}
 		const db = uniCloud.database()
@@ -169,6 +171,14 @@ module.exports = {
 			modifyDate: Date.now(),
 			status: 2
 		})
+		if (result.updated === 1) {
+			const dbCmd = db.command
+			await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				total: dbCmd.inc(-delta)
+			})
+		}
 		return result.updated === 1
 	},
 	async revokeAllPaymentRecords(orgId, studentId, courseId, operatorId) {
@@ -199,7 +209,7 @@ module.exports = {
 		return result.deleted === 1
 	},
 	async modifyPaymentRecord(param) {
-		const { _id, date, count, price, remark, operatorId } = param
+		const { _id, date, count, price, remark, operatorId, entryId, delta } = param
 		if (typeof(_id) === 'undefined' ||
 			_id.length === 0 || 
 			typeof(operatorId) === 'undefined' ||
@@ -207,6 +217,9 @@ module.exports = {
 			typeof(date) === 'undefined' ||
 			typeof(count) === 'undefined' ||
 			typeof(price) === 'undefined') {
+			return false
+		}
+		if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
 			return false
 		}
 		const db = uniCloud.database()
@@ -221,6 +234,14 @@ module.exports = {
 			modifyDate: Date.now(),
 			status: 1
 		})
+		if (result.updated === 1) {
+			const dbCmd = db.command
+			await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				total: dbCmd.inc(-delta)
+			})
+		}
 		return result.updated === 1
 	},
 	async fetchPaymentRecords(courseId, studentId) {
@@ -386,20 +407,6 @@ module.exports = {
 		})
 		return result.updated === 1
 	},
-	async modifyCourseCount(entryId, total, consume) {
-		if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
-			typeof(total) === 'undefined' || typeof(consume) === 'undefined') {
-			return false
-		}
-		const db = uniCloud.database()
-		const result = await db.collection('wk-mapping').where({
-			_id: entryId
-		}).update({
-			total,
-			consume
-		})
-		return result.updated === 1
-	},
 	async fetchCourseConsumeRecords(courseId, studentId) {
 		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0) {
@@ -417,7 +424,7 @@ module.exports = {
 		return result.data
 	},
 	async modifyCourseConsumeRecord(param) {
-		const { _id, startTime, endTime, count, content, assignment, feedback, operatorId } = param
+		const { _id, startTime, endTime, count, content, assignment, feedback, operatorId, entryId, delta } = param
 		if (typeof(_id) === 'undefined' ||
 			_id.length === 0 ||
 			typeof(operatorId) === 'undefined' ||
@@ -425,6 +432,9 @@ module.exports = {
 			typeof(startTime) === 'undefined' || 
 			typeof(endTime) === 'undefined' ||
 			typeof(count) === 'undefined') {
+			return false
+		}
+		if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
 			return false
 		}
 		const db = uniCloud.database()
@@ -441,11 +451,21 @@ module.exports = {
 			modifyDate: Date.now(),
 			status: 1
 		})
+		if (result.updated === 1 && delta !== 0) {
+			const dbCmd = db.command
+			await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				consume: dbCmd.inc(-delta)
+			})
+		}
 		return result.updated === 1
 	},
-	async revokeCourseConsumeRecord(_id, operatorId) {
+	async revokeCourseConsumeRecord(_id, operatorId, entryId, delta) {
 		if (typeof(_id) === 'undefined' || _id.length === 0 ||
-			typeof(operatorId) === 'undefined' || operatorId.length === 0) {
+			typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
+			typeof(entryId) === 'undefined' || entryId.length === 0 ||
+			typeof(delta) === 'undefined') {
 			return false
 		}
 		const db = uniCloud.database()
@@ -456,6 +476,14 @@ module.exports = {
 			modifyDate: Date.now(),
 			status: 2
 		})
+		if (result.updated === 1) {
+			const dbCmd = db.command
+			await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				consume: dbCmd.inc(-delta)
+			})
+		}
 		return result.updated === 1
 	}
 }

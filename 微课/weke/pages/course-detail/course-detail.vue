@@ -225,20 +225,18 @@ const onRevokeAction = async (param:{id:string}) => {
 	let flag = false
 	if (res.length > 0) {
 		const r = res[0]
-		const result = await courseStore.revokeCourseConsumeRecord(id)
+		const entryId = entry.value?._id ?? ''
+		const result = await courseStore.revokeCourseConsumeRecord(id, entryId, r.count)
 		if (result) {
+			flag = true
 			if (entry.value) {
 				let consume = entry.value.consume
 				consume -= r.count
-				const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
-				if (res) {
-					entry.value.consume = consume
-					uni.$emit(global.event_name.didUpdateCourseData, {
-						studentNo:entry.value.studentId,
-						courseId: entry.value.courseId
-					})
-					flag = true
-				}
+				entry.value.consume = consume
+				uni.$emit(global.event_name.didUpdateCourseData, {
+					studentNo:entry.value.studentId,
+					courseId: entry.value.courseId
+				})
 			}
 		}
 	}
@@ -269,21 +267,19 @@ const onRevokePaymentAction = async (param:{id:string}) => {
 	const res = paymentRecords.value.filter(r => r._id === id)
 	let flag = false
 	if (res.length > 0) {
+		const entryId = entry.value?._id ?? ''
 		const r = res[0]
-		const result = await courseStore.revokePaymentRecord(id)
+		const result = await courseStore.revokePaymentRecord(id, entryId, r.count)
 		if (result) {
 			if (entry.value) {
 				let total = entry.value.total
 				total -= r.count
-				const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
-				if (res) {
-					entry.value.total = total
-					uni.$emit(global.event_name.didUpdateCourseData, {
-						studentNo:entry.value.studentId,
-						courseId: entry.value.courseId
-					})
-					flag = true
-				}
+				entry.value.total = total
+				uni.$emit(global.event_name.didUpdateCourseData, {
+					studentNo:entry.value.studentId,
+					courseId: entry.value.courseId
+				})
+				flag = true
 			}
 		}
 	}
@@ -315,23 +311,20 @@ const onChange = async (
 			r.content !== content ||
 			r.assignment !== assignment ||
 			r.feedback !== feedback) {
+			const entryId = entry.value?._id ?? ''
 			const delta = r.count - count
-			const result = await courseStore.modifyCourseConsumeRecord({...param})
+			const result = await courseStore.modifyCourseConsumeRecord({...param, entryId, delta})
 			if (result) {
+				flag = true
 				if (entry.value && delta !== 0) {
 					let consume = entry.value.consume
 					consume -= delta
-					const res = await courseStore.modifyCourseCount(entry.value._id, entry.value.total, consume)
-					if (res) {
-						entry.value.consume = consume
-						uni.$emit(global.event_name.didUpdateCourseData, {
-							studentNo:entry.value.studentId,
-							courseId: entry.value.courseId
-						})
-						flag = true
-					}
-				} else {
-					flag = true
+					entry.value.consume = consume
+					usersStore.entries
+					uni.$emit(global.event_name.didUpdateCourseData, {
+						studentNo:entry.value.studentId,
+						courseId: entry.value.courseId
+					})
 				}
 			}
 		}
@@ -363,23 +356,19 @@ const onPaymentChange = async (param:{
 			r.count !== count ||
 			r.price !== price ||
 			r.remark !== remark) {
+			const entryId = entry.value?._id ?? ''
 			const delta = r.count - count
-			const result = await courseStore.modifyPaymentRecord({...param})
+			const result = await courseStore.modifyPaymentRecord({...param, entryId, delta})
 			if (result) {
+				flag = true
 				if (entry.value && delta !== 0) {
 					let total = entry.value.total
 					total -= delta
-					const res = await courseStore.modifyCourseCount(entry.value._id, total, entry.value.consume)
-					if (res) {
-						entry.value.total = total
-						uni.$emit(global.event_name.didUpdateCourseData, {
-							studentNo:entry.value.studentId,
-							courseId: entry.value.courseId
-						})
-						flag = true
-					}
-				} else {
-					flag = true
+					entry.value.total = total
+					uni.$emit(global.event_name.didUpdateCourseData, {
+						studentNo:entry.value.studentId,
+						courseId: entry.value.courseId
+					})
 				}
 			}
 		}

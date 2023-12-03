@@ -189,12 +189,14 @@ export const useCourseStore = defineStore('course', {
 			}
 			return id
 		},
-		async revokePaymentRecord(id:string) {
-			if (typeof(id) === 'undefined' || id.length === 0) {
+		async revokePaymentRecord(id:string, entryId:string, delta:number) {
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(delta) === 'undefined') {
 				return false
 			}
 			const usersStore = useUsersStore()
-			const res = await course_co.revokePaymentRecord(id, usersStore.owner._id)
+			const res = await course_co.revokePaymentRecord(id, usersStore.owner._id, entryId, delta)
 			if (res) {
 				this.paymentRecords.forEach(r => {
 					if (r._id === id) {
@@ -243,14 +245,19 @@ export const useCourseStore = defineStore('course', {
 				date:number,
 				count: number,
 				price: number,
-				remark: string
+				remark: string,
+				entryId: string,
+				delta: number
 		}) {
-			const { _id, date, count, price } = param
+			const { _id, date, count, price, entryId, delta } = param
 			if (typeof(_id) === 'undefined' || 
 				_id.length === 0 || 
 				typeof(date) === 'undefined' ||
 				typeof(count) === 'undefined' ||
 				typeof(price) === 'undefined') {
+				return false
+			}
+			if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
 				return false
 			}
 			let { remark } = param
@@ -260,7 +267,8 @@ export const useCourseStore = defineStore('course', {
 			const usersStore = useUsersStore()
 			const result = await course_co.modifyPaymentRecord({
 				_id, date, count, price, remark,
-				operatorId: usersStore.owner._id
+				operatorId: usersStore.owner._id,
+				entryId, delta
 			})
 			if (result) {
 				const records = this.paymentRecords.filter(r => r._id === _id)
@@ -339,14 +347,6 @@ export const useCourseStore = defineStore('course', {
 			}
 			return res
 		},
-		async modifyCourseCount(entryId: string, total:number, consume:number) {
-			if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
-				typeof(total) === 'undefined' || typeof(consume) === 'undefined') {
-				return false
-			}
-			const res = await course_co.modifyCourseCount(entryId, total, consume)
-			return res
-		},
 		async fetchCourseConsumeRecords(courseId: string, studentId: string) {
 			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
 				typeof(studentId) === 'undefined' || studentId.length === 0) {
@@ -375,14 +375,19 @@ export const useCourseStore = defineStore('course', {
 				count: number,
 				content: string,
 				assignment: string,
-				feedback: string
+				feedback: string,
+				entryId: string,
+				delta: number
 		}) {
-			const { _id, startTime, endTime, count } = param
+			const { _id, startTime, endTime, count, entryId, delta } = param
 			if (typeof(_id) === 'undefined' || 
 				_id.length === 0 ||
 				typeof(startTime) === 'undefined' || 
 				typeof(endTime) === 'undefined' ||
 				typeof(count) === 'undefined') {
+				return false
+			}
+			if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
 				return false
 			}
 			let { content, assignment, feedback } = param
@@ -398,7 +403,8 @@ export const useCourseStore = defineStore('course', {
 			const usersStore = useUsersStore()
 			const result = await course_co.modifyCourseConsumeRecord({
 				_id, startTime, endTime, count, content, assignment, feedback,
-				operatorId: usersStore.owner._id
+				operatorId: usersStore.owner._id,
+				entryId, delta
 			})
 			if (result) {
 				const records = this.courseConsumeRecords.filter(r => r._id === _id)
@@ -417,12 +423,14 @@ export const useCourseStore = defineStore('course', {
 			}
 			return result
 		},
-		async revokeCourseConsumeRecord(_id:string) {
-			if (typeof(_id) === 'undefined' || _id.length === 0) {
+		async revokeCourseConsumeRecord(_id:string, entryId:string, delta:number) {
+			if (typeof(_id) === 'undefined' || _id.length === 0 ||
+				typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(delta) === 'undefined') {
 				return false
 			}
 			const usersStore = useUsersStore()
-			const result = await course_co.revokeCourseConsumeRecord(_id, usersStore.owner._id)
+			const result = await course_co.revokeCourseConsumeRecord(_id, usersStore.owner._id, entryId, delta)
 			if (result) {
 				const records = this.courseConsumeRecords.filter(r => r._id === _id)
 				if (records.length > 0) {
