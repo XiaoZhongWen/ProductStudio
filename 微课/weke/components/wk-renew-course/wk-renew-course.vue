@@ -239,28 +239,26 @@ const renewCourse = async () => {
 		courseId: courseId.value,
 		count: renewCount.value,
 		price: price.value,
-		remark: remark.value ?? ''
+		remark: remark.value ?? '',
+		entryId: props.entryId,
+		delta: renewCount.value,
+		operatorId: usersStore.owner._id
 	})
 	let result = false
 	if (typeof(id) !== 'undefined' && 
 		id.length > 0 && 
 		typeof(entry.value) !== 'undefined') {
 		const operatorId = usersStore.owner._id
-		const res = await courseStore.renewCourse(props.entryId, entry.value.total + renewCount.value, operatorId)
-		if (res) {
-			result = true
-			entry.value.total += renewCount.value
-			entry.value.status = 0
-			entry.value.modifyDate = Date.now()
-			entry.value.operatorId = operatorId
-			emit('onConfirm', {count:renewCount.value})
-			uni.$emit(global.event_name.didUpdateCourseData, {
-				studentNo: entry.value.studentId,
-				courseId: entry.value.courseId
-			})
-		} else {
-			courseStore.removePaymentRecord(id)
-		}
+		result = true
+		entry.value.total += renewCount.value
+		entry.value.status = 0
+		entry.value.modifyDate = Date.now()
+		entry.value.operatorId = operatorId
+		emit('onConfirm', {count:renewCount.value})
+		uni.$emit(global.event_name.didUpdateCourseData, {
+			studentNo: entry.value.studentId,
+			courseId: entry.value.courseId
+		})
 	}
 	uni.showToast({
 		title:result?"续课成功":"续课失败",

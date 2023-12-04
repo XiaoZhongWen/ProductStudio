@@ -378,19 +378,20 @@ const revokeCourse = async () => {
 				success: async function (res) {
 					if (res.confirm && typeof(entry.value) !== 'undefined') {
 						const entryId = entry.value._id
-						const operator = usersStore.owner._id
-						const result = await courseStore.revokeCourse(entryId, operator, entry.value.consume)
+						const operatorId = usersStore.owner._id
+						const result = await courseStore.revokeAllPaymentRecords({
+							orgId: entry.value.orgId,
+							studentId: entry.value.studentId,
+							courseId: entry.value.courseId,
+							operatorId, entryId,
+							delta: count
+						})
 						if (result) {
 							status.value = 2
 							operateTime.value = format(new Date())
 							entry.value.status = 2
 							entry.value.modifyDate = Date.now()
-							entry.value.operatorId = operator
-							courseStore.revokeAllPaymentRecords({
-								orgId: entry.value.orgId,
-								studentId: entry.value.studentId,
-								courseId: entry.value.courseId
-							})
+							entry.value.operatorId = operatorId
 							uni.$emit(global.event_name.didUpdateCourseData, {
 								studentNo: entry.value.studentId,
 								courseId: entry.value.courseId

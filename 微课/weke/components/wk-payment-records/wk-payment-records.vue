@@ -16,12 +16,12 @@
 			<text class="title">续课时间:</text>
 			<text class="desc">{{format(new Date(r.date))}}</text>
 		</view>
-		<view class="section">
-			<text class="title">续课时数:</text>
+		<view class="section" v-if="course">
+			<text class="title">{{course.type === 2? '续课次数:':'续课时数:'}}</text>
 			<text class="desc">{{r.count}}</text>
 		</view>
-		<view class="section">
-			<text class="title">课程价格:</text>
+		<view class="section" v-if="course">
+			<text class="title">{{course.type === 2? '课次单价:':'课时单价:'}}</text>
 			<text class="desc">{{r.price}}</text>
 		</view>
 		<view class="section area" v-if="r.remark && r.remark.length > 0">
@@ -43,6 +43,7 @@ import { useOrgsStore } from '@/store/orgs'
 import { PaymentRecord } from '../../types/PaymentRecord'
 import { User } from '../../types/user'
 import { format } from '@/utils/wk-date'
+import { Course } from '../../types/course'
 
 const global = getApp().globalData!
 const courseStore = useCourseStore()
@@ -50,6 +51,7 @@ const courseStore = useCourseStore()
 const props = defineProps(['rId'])
 const emit = defineEmits(['editPaymentAction', 'revokePaymentAction'])
 const r = ref<PaymentRecord>()
+const course = ref<Course>()
 const operator = ref<User>()
 const isValidate = ref(false)
 
@@ -63,14 +65,18 @@ onMounted(() => {
 	if (users.length > 0) {
 		operator.value = users[0]
 	}
+	const courseId = r.value?.courseId ?? ''
 	if (usersStore.owner.from === 'wx' && usersStore.owner.roles?.includes(1)) {
 		const orgsStore = useOrgsStore()
 		const orgs = orgsStore.orgs.filter(org => org.creatorId === usersStore.owner._id)
-		const courseId = r.value?.courseId ?? ''
 		if (courseId.length > 0) {
 			const index = orgs.findIndex(org => org.courseIds?.includes(courseId))
 			isValidate.value = index !== -1
 		}
+	}
+	const courses = courseStore.course.filter(c => c._id === courseId)
+	if (courses.length === 1) {
+		course.value = courses[0]
 	}
 })
 

@@ -12,8 +12,8 @@
 					v-model="date"
 					:border="border" />
 			</view>
-			<view class="section">
-				<text class="title">续课时数:</text>
+			<view class="section" v-if="course">
+				<text class="title">{{course.type === 2? '续课次数:':'续课时数:'}}</text>
 				<uni-number-box 
 					background="#5073D6" 
 					color="#fff" 
@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { useCourseStore } from "@/store/course"
 import { ref } from 'vue';
+import { Course } from "../../../types/course";
 import { PaymentRecord } from "../../../types/PaymentRecord";
 
 const global = getApp().globalData!
@@ -57,6 +58,7 @@ const courseStore = useCourseStore()
 
 const date = ref<number>(Date.now())
 const record = ref<PaymentRecord>()
+const course = ref<Course>()
 const count = ref<number>(1)
 const price = ref<number>(0)
 const remark = ref('')
@@ -76,6 +78,10 @@ const initial = (id:string) => {
 		count.value = record.value.count
 		price.value = record.value.price
 		remark.value = record.value.remark ?? ''
+		const courses = courseStore.course.filter(c => c._id === record.value?.courseId)
+		if (courses.length === 1) {
+			course.value = courses[0]
+		}
 	}
 }
 	

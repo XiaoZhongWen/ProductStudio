@@ -131,14 +131,16 @@ module.exports = {
 		}
 	},
 	async addPaymentRecord(param) {
-		const { orgId, studentId, date, courseId, count, price, operatorId } = param
+		const { orgId, studentId, date, courseId, count, price, operatorId, entryId, delta } = param
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(entryId) === 'undefined' || entryId.length === 0 ||
 			typeof(date) === 'undefined' ||
 			typeof(count) === 'undefined' || count <= 0 ||
-			typeof(price) === 'undefined' || price < 0) {
+			typeof(price) === 'undefined' || price < 0 ||
+			typeof(delta) === 'undefined' || delta < 0) {
 			return false
 		}
 		const db = uniCloud.database()
@@ -153,7 +155,18 @@ module.exports = {
 			modifyDate: Date.now(),
 			status: 0
 		})
-		const { id } = result
+		const { id, inserted } = result
+		if (inserted === 1) {
+			const dbCmd = db.command
+			const data = await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				total: dbCmd.inc(delta),
+				status: 0,
+				date: Date.now(),
+				operatorId
+			})
+		}
 		return id
 	},
 	async revokePaymentRecord(id, operatorId, entryId, delta) {
@@ -181,22 +194,37 @@ module.exports = {
 		}
 		return result.updated === 1
 	},
-	async revokeAllPaymentRecords(orgId, studentId, courseId, operatorId) {
+	async revokeAllPaymentRecords(orgId, studentId, courseId, operatorId, entryId, delta) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
-			typeof(operatorId) === 'undefined' || operatorId.length === 0) {
+			typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
+			typeof(entryId) === 'undefined' || entryId.length === 0 ||
+			typeof(delta) === 'undefined') {
 			return false
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-payment-records').where({
-			orgId, studentId, courseId
-		}).update({
+		const result = await db.collection('wk-payment-records').add({
+			orgId,
+			studentId,
+			courseId,
+			date: Date.now(),
+			count: delta,
+			price: 0,
 			operatorId,
 			modifyDate: Date.now(),
-			status: 2
+			status: 3
 		})
-		return result.updated >= 1
+		const { id, inserted } = result
+		if (inserted === 1) {
+			const dbCmd = db.command
+			await db.collection('wk-mapping').where({
+				_id: entryId
+			}).update({
+				total: dbCmd.inc(-delta)
+			})
+		}
+		return id
 	},
 	async removePaymentRecord(id) {
 		if (typeof(id) === 'undefined' || id.length === 0) {
@@ -357,25 +385,6 @@ module.exports = {
 		})
 		return result.updated === 1
 	},
-	async renewCourse(entryId, count, operator) {
-		if (typeof(entryId) === 'undefined' ||
-			entryId.length === 0 || 
-			typeof(operator) === 'undefined' ||
-			operator.length === 0 || 
-			count <= 0) {
-			return false
-		}
-		const db = uniCloud.database()
-		const result = await db.collection('wk-mapping').where({
-			_id: entryId
-		}).update({
-			total: count,
-			status: 0,
-			date: Date.now(),
-			operator
-		})
-		return result.updated === 1
-	},
 	async finishCourse(entryId, operatorId) {
 		if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
 			typeof(operatorId) === 'undefined' || operatorId.length === 0) {
@@ -386,22 +395,6 @@ module.exports = {
 			_id: entryId
 		}).update({
 			status: 1,
-			date: Date.now(),
-			operator: operatorId
-		})
-		return result.updated === 1
-	},
-	async revokeCourse(entryId, operatorId, total) {
-		if (typeof(entryId) === 'undefined' || entryId.length === 0 ||
-			typeof(operatorId) === 'undefined' || operatorId.length === 0) {
-			return false
-		}
-		const db = uniCloud.database()
-		const result = await db.collection('wk-mapping').where({
-			_id: entryId
-		}).update({
-			total,
-			status: 2,
 			date: Date.now(),
 			operator: operatorId
 		})
