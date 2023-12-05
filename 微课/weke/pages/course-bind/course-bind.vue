@@ -333,57 +333,54 @@ const onBindCourse = async () => {
 	uni.showLoading({
 		title:"正在绑定..."
 	})
-	const entryId = await courseStore.bindCourse({
-		orgId: org._id,
-		teacherId: selectedTeacherId.value,
-		studentId: stuNo,
-		courseId: selectedCourseId.value,
-		total: parseInt(totle.value),
-		consume: parseInt(consume.value),
-		operatorId: usersStore.owner._id
-	})
-	let result = false
-	if (entryId.length > 0) {
-		result = await courseStore.addPaymentRecord({
-			orgId: org._id,
-			studentId: stuNo,
-			date: date.value,
-			courseId: selectedCourseId.value,
-			count: parseInt(totle.value),
-			price: parseFloat(price.value),
-			remark:''
-		})
-	}
-	uni.hideLoading()
-	uni.showToast({
-		title: result? "绑定成功": "绑定失败",
-		duration: global.duration_toast,
-		icon: result? "success": "error"
-	})
-	if (result) {
-		const entry: Entry = {
-			_id: entryId,
+	
+	const students = usersStore.students.filter(s => s.studentNo === stuNo)
+	if (students.length === 1) {
+		const student = students[0]
+		const entryId = await courseStore.bindCourse({
 			orgId: org._id,
 			teacherId: selectedTeacherId.value,
-			studentId: stuNo,
+			studentId: student._id,
+			studentNo: student.studentNo,
 			courseId: selectedCourseId.value,
 			total: parseInt(totle.value),
 			consume: parseInt(consume.value),
-			status: 0,
-			modifyDate: Date.now(),
-			operatorId: usersStore.owner._id
-		}
-		const index = courseSelectorData.value.findIndex(c => c.value === entry.courseId)
-		if (index !== -1) {
-			courseSelectorData.value.splice(index, 1)
-		}
-		entries.value.push(entry)
-		usersStore.entries.push(entry)
-		reset()
-		uni.$emit(global.event_name.didUpdateCourseData, {
-			studentNo:stuNo,
-			courseId: entry.courseId
+			operatorId: usersStore.owner._id,
+			date: date.value,
+			price: parseFloat(price.value),
 		})
+		const result = entryId.length > 0
+		uni.hideLoading()
+		uni.showToast({
+			title: result? "绑定成功": "绑定失败",
+			duration: global.duration_toast,
+			icon: result? "success": "error"
+		})
+		if (result) {
+			const entry: Entry = {
+				_id: entryId,
+				orgId: org._id,
+				teacherId: selectedTeacherId.value,
+				studentId: stuNo,
+				courseId: selectedCourseId.value,
+				total: parseInt(totle.value),
+				consume: parseInt(consume.value),
+				status: 0,
+				modifyDate: Date.now(),
+				operatorId: usersStore.owner._id
+			}
+			const index = courseSelectorData.value.findIndex(c => c.value === entry.courseId)
+			if (index !== -1) {
+				courseSelectorData.value.splice(index, 1)
+			}
+			entries.value.push(entry)
+			usersStore.entries.push(entry)
+			reset()
+			uni.$emit(global.event_name.didUpdateCourseData, {
+				studentNo:stuNo,
+				courseId: entry.courseId
+			})
+		}
 	}
 }
 

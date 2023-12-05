@@ -3,7 +3,6 @@ import { Course, CourseConsumeRecord } from '@/types/course'
 import { PaymentRecord } from '../types/PaymentRecord'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
-import { del } from '../uni_modules/lime-shared/vue'
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true
@@ -129,22 +128,62 @@ export const useCourseStore = defineStore('course', {
 			orgId: string,
 			teacherId: string,
 			studentId: string,
+			studentNo: string,
 			courseId: string,
 			total: number,
 			consume: number,
-			operatorId:string
+			operatorId:string,
+			date: number,
+			price: number
 		}) {
-			const { orgId, teacherId, studentId, courseId, total, consume, operatorId } = param
+			const { orgId, teacherId, studentId, studentNo, courseId, total, consume, operatorId, date, price } = param
 			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 ||
 				typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
 				typeof(total) === 'undefined' || total <= 0 || 
-				typeof(consume) === 'undefined' || consume < 0) {
+				typeof(consume) === 'undefined' || consume < 0 ||
+				typeof(date) === 'undefined' || typeof(price) === 'undefined') {
 				return ''
 			}
-			const entryId = await course_co.bindCourse(param)
+			const result = await course_co.bindCourse(param)
+			const { entryId, paymentId, courseRecordId } = result as {
+				entryId: string,
+				paymentId: string,
+				courseRecordId: string
+			}
+			if (paymentId.length > 0) {
+				const payment: PaymentRecord = {
+					_id: entryId,
+					orgId,
+					studentId,
+					date,
+					courseId,
+					count: total,
+					price,
+					status: 0,
+					operatorId,
+					modifyDate: Date.now()
+				}
+				this.paymentRecords.push(payment)
+			}
+			if (courseRecordId.length > 0) {
+				const courseRecord: CourseConsumeRecord = {
+					_id: courseRecordId,
+					courseId,
+					teacherId,
+					studentId,
+					startTime: date,
+					endTime: date,
+					count: consume,
+					status: 0,
+					operatorId,
+					modifyDate: Date.now()
+				}
+				this.courseConsumeRecords.push(courseRecord)
+			}
 			return entryId
 		},
 		async addPaymentRecord(param: {
@@ -231,7 +270,9 @@ export const useCourseStore = defineStore('course', {
 				typeof(delta) === 'undefined') {
 				return false
 			}
+			debugger
 			const id = await course_co.revokeAllPaymentRecords(orgId, studentId, courseId, operatorId, entryId, delta)
+			debugger
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const index = this.paymentRecords.findIndex(r => r._id === id)
 				if (index === -1) {

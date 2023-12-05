@@ -12,15 +12,15 @@
 			<text class="title">操作时间:</text>
 			<text class="desc">{{format(new Date(r.modifyDate))}}</text>
 		</view>
-		<view class="section">
+		<view class="section" v-if="r && r.status !== 3">
 			<text class="title">续课时间:</text>
 			<text class="desc">{{format(new Date(r.date))}}</text>
 		</view>
 		<view class="section" v-if="course">
-			<text class="title">{{course.type === 2? '续课次数:':'续课时数:'}}</text>
+			<text class="title">{{courseDesc}}</text>
 			<text class="desc">{{r.count}}</text>
 		</view>
-		<view class="section" v-if="course">
+		<view class="section" v-if="course && r && r.status !== 3">
 			<text class="title">{{course.type === 2? '课次单价:':'课时单价:'}}</text>
 			<text class="desc">{{r.price}}</text>
 		</view>
@@ -28,7 +28,7 @@
 			<text class="title">备注:</text>
 			<text class="content">{{r.remark}}</text>
 		</view>
-		<view class="bottom" v-if="isValidate && r.status !== 2">
+		<view class="bottom" v-if="isValidate && r.status !== 2 && r.status !== 3">
 			<text class="action" @tap="onEditTap">编辑</text>
 			<text class="action revoke" @tap="onRevokeTap">撤销</text>
 		</view>
@@ -102,10 +102,10 @@ const statusCls = computed(() => {
 	let cls = "desc"
 	const status = r.value?.status ?? 0
 	if (status === 0) {
-		cls = "desc"
+		cls = "renew"
 	} else if (status === 1) {
 		cls = "modify"
-	} else if (status === 2) {
+	} else if (status === 2 || status === 3) {
 		cls = "revoke"
 	}
 	return cls
@@ -115,13 +115,21 @@ const statusDesc = computed(() => {
 	let desc = ''
 	const status = r.value?.status ?? 0
 	if (status === 0) {
-		desc = "正常"
+		desc = "续课"
 	} else if (status === 1) {
 		desc = "已变更"
 	} else if (status === 2) {
 		desc = "已撤销"
-	}
+	} else if (status === 3) {
+		desc = "已退费"
+	} 
 	return desc
+})
+
+const courseDesc = computed(() => {
+	const section1 = r.value?.status === 3? '退课':'续课'
+	const section2 = course.value?.type === 2? '次数:':'时数:'
+	return section1 + section2
 })
 
 </script>
@@ -141,8 +149,11 @@ const statusDesc = computed(() => {
 		.desc {
 			color: $wk-text-color-grey;
 		}
-		.modify {
+		.renew {
 			color: $wk-theme-color;
+		}
+		.modify {
+			color: $uni-color-warning;
 		}
 		.revoke {
 			color: $uni-color-error;

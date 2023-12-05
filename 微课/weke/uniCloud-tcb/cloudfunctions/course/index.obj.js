@@ -101,21 +101,23 @@ module.exports = {
 		return updated
 	},
 	async bindCourse(param) {
-		const { orgId, teacherId, studentId, courseId, total, consume, operatorId } = param
+		const { orgId, teacherId, studentId, studentNo, courseId, total, consume, operatorId, date, price } = param
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 || 
 			typeof(operatorId) === 'undefined' || operatorId.length === 0 ||
 			typeof(total) === 'undefined' || total <= 0 || 
-			typeof(consume) === 'undefined' || consume < 0) {
+			typeof(consume) === 'undefined' || consume < 0 ||
+			typeof(date) === 'undefined' || typeof(price) === 'undefined') {
 			return ''
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-mapping').add({
+		const result_mapping = await db.collection('wk-mapping').add({
 			orgId,
 			teacherId,
-			studentId,
+			studentId: studentNo,
 			courseId,
 			total,
 			consume,
@@ -123,11 +125,45 @@ module.exports = {
 			modifyDate: Date.now(),
 			operatorId
 		})
-		const { inserted } = result
+		const { inserted } = result_mapping
+		const entryId = result_mapping.id
 		if (inserted === 1) {
-			return result.id
+			const result_payment = await db.collection('wk-payment-records').add({
+				orgId,
+				studentId,
+				courseId,
+				date,
+				total,
+				price,
+				operatorId,
+				modifyDate: Date.now(),
+				status: 0
+			})
+			const paymentId = result_payment.id
+			let courseRecordId = ''
+			if (consume > 0) {
+				const result_course = await db.collection('wk-course-records').add({
+					courseId, teacherId, studentId, 
+					startTime: date,
+					endTime: date,
+					count: consume,
+					status: 0,
+					modifyDate: Date.now(),
+					operatorId
+				})
+				courseRecordId = result_course.id
+			}
+			return {
+				entryId,
+				paymentId,
+				courseRecordId
+			}
 		} else {
-			return ''
+			return {
+				entryId: '',
+				paymentId: '',
+				courseRecordId: ''
+			}
 		}
 	},
 	async addPaymentRecord(param) {
@@ -221,7 +257,8 @@ module.exports = {
 			await db.collection('wk-mapping').where({
 				_id: entryId
 			}).update({
-				total: dbCmd.inc(-delta)
+				total: dbCmd.inc(-delta),
+				status: 2
 			})
 		}
 		return id

@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["courseId", "teacherId", "startTime", "endTime", "count", "status", "modifyDate", "operatorId"],
+	"required": ["courseId", "teacherId", "studentId", "startTime", "endTime", "count", "status", "modifyDate", "operatorId"],
 	"permission": {
 		"read": false,
 		"create": false,
