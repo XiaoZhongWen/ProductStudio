@@ -195,7 +195,7 @@ onLoad(async (option) => {
 		}
 	}
 	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
-	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value.studentNo)
+	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
 })
 
 const onClickItem = (e: { currentIndex:number }) => {

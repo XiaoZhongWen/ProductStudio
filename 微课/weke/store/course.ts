@@ -270,9 +270,7 @@ export const useCourseStore = defineStore('course', {
 				typeof(delta) === 'undefined') {
 				return false
 			}
-			debugger
 			const id = await course_co.revokeAllPaymentRecords(orgId, studentId, courseId, operatorId, entryId, delta)
-			debugger
 			if (typeof(id) !== 'undefined' && id.length > 0) {
 				const index = this.paymentRecords.findIndex(r => r._id === id)
 				if (index === -1) {

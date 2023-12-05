@@ -24,15 +24,15 @@
 			<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
 			<text class="desc">{{r.count}}</text>
 		</view>
-		<view class="section area">
+		<view class="section area" v-if="r.content">
 			<text class="title">课程内容:</text>
 			<text class="content">{{r.content}}</text>
 		</view>
-		<view class="section area">
+		<view class="section area" v-if="r.assignment">
 			<text class="title">课后作业:</text>
 			<text class="content">{{r.assignment}}</text>
 		</view>
-		<view class="section area">
+		<view class="section area" v-if="r.feedback">
 			<text class="title">课程反馈:</text>
 			<text class="content">{{r.feedback}}</text>
 		</view>
@@ -94,7 +94,7 @@ const statusCls = computed(() => {
 	let cls = "desc"
 	const status = r.value?.status ?? 0
 	if (status === 0) {
-		cls = "desc"
+		cls = "consume"
 	} else if (status === 1) {
 		cls = "modify"
 	} else if (status === 2) {
@@ -107,7 +107,7 @@ const statusDesc = computed(() => {
 	let desc = ''
 	const status = r.value?.status ?? 0
 	if (status === 0) {
-		desc = "正常"
+		desc = "课消"
 	} else if (status === 1) {
 		desc = "已变更"
 	} else if (status === 2) {
@@ -151,8 +151,11 @@ const onRevokeTap = () => {
 		.desc {
 			color: $wk-text-color-grey;
 		}
-		.modify {
+		.consume {
 			color: $wk-theme-color;
+		}
+		.modify {
+			color: $uni-color-warning;
 		}
 		.revoke {
 			color: $uni-color-error;

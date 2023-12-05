@@ -26,6 +26,7 @@
 					background="#5073D6" 
 					color="#fff" 
 					v-model="count"
+					:max="1000"
 					:min="1" />
 			</view>
 			<view class="section-input">

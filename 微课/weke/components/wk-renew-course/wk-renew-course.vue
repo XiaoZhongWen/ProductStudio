@@ -64,7 +64,12 @@
 				<view class="section">
 					<text class="title">{{type === 2?"续课次数":"续课时数"}}</text>
 					<view class="desc">
-						<uni-number-box v-model="renewCount" background="#5073D6" color="#fff" />
+						<uni-number-box 
+							:max="1000"
+							:min="1"
+							v-model="renewCount" 
+							background="#5073D6" 
+							color="#fff" />
 					</view>
 				</view>
 				<view class="remark">
@@ -139,12 +144,12 @@ onMounted(async () => {
 			}
 			total.value = entry.value.total
 			consume.value = entry.value.consume
-			paymentRecord.value = await fetchLastestPaymentRecord(entry.value.courseId, entry.value.studentId) as PaymentRecord
+			const student = await usersStore.fetchStudentByNo(entry.value.studentId) as Student
+			paymentRecord.value = await fetchLastestPaymentRecord(entry.value.courseId, student._id) as PaymentRecord
 			if (typeof(paymentRecord.value) !== 'undefined') {
 				price.value = paymentRecord.value.price
 			}
 			
-			const student = await usersStore.fetchStudentByNo(entry.value.studentId) as Student
 			studentAvatarUrl.value = student.avatarUrl ?? ''
 			studentNickname.value = student.nickName
 			studentNo.value = student.studentNo

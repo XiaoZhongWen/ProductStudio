@@ -133,7 +133,7 @@ module.exports = {
 				studentId,
 				courseId,
 				date,
-				total,
+				count:total,
 				price,
 				operatorId,
 				modifyDate: Date.now(),

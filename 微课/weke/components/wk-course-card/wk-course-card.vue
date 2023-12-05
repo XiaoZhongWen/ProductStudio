@@ -381,7 +381,7 @@ const revokeCourse = async () => {
 						const operatorId = usersStore.owner._id
 						const result = await courseStore.revokeAllPaymentRecords({
 							orgId: entry.value.orgId,
-							studentId: entry.value.studentId,
+							studentId: student._id,
 							courseId: entry.value.courseId,
 							operatorId, entryId,
 							delta: count
@@ -392,6 +392,7 @@ const revokeCourse = async () => {
 							entry.value.status = 2
 							entry.value.modifyDate = Date.now()
 							entry.value.operatorId = operatorId
+							entry.value.total = entry.value.consume
 							uni.$emit(global.event_name.didUpdateCourseData, {
 								studentNo: entry.value.studentId,
 								courseId: entry.value.courseId
