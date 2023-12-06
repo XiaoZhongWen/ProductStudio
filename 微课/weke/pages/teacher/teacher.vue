@@ -96,6 +96,10 @@ uni.$on("modify-teacher-success", () => {
 const loaddata = async (orgs:Org[]) => {
 	const teacherIds:string[] = []
 	orgs.forEach(org => {
+		const creatorId = org.creatorId
+		if (!teacherIds.includes(creatorId)) {
+			teacherIds.push(creatorId)
+		}
 		org.teacherIds?.forEach(id => {
 			const index = teacherIds.findIndex(tId => tId === id)
 			if (index === -1) {

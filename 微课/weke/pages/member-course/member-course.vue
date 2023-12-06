@@ -3,28 +3,36 @@
 		<template v-for="item in ds" :key="item.id">
 			<view class="member-course-card">
 				<view class="top">
-					<view class=".t-icon .t-icon-yuwen1"></view>
-					<text class="text">语文</text>
+					<view :class="item.icon"></view>
+					<text class="text">{{item.name}}</text>
 					<wk-circle-progress
 						class="circle-progress"
-						:total="100"
-						:consume="20">
+						:total="item.total"
+						:consume="item.consume">
 					</wk-circle-progress>
 				</view>
 				<view class="courseType">
-					<text>课程类型: 班课</text>
+					<text>课程类型: {{courseDesc(item.type)}}</text>
 				</view>
 				<view class="duration">
-					<text>课程时长: 40分钟</text>
+					<text>课程时长: {{item.duration}}分钟</text>
 				</view>
 				<view class="teacher">
 					<text>授课老师: Julien</text>
 				</view>
 				<view class="students">
 					<text>学员: </text>
+					<view class="cell-container">
+						<template v-for="student in item.students" :key="student._id">
+							<wk-portrait
+								:url="student.avatarUrl" 
+								:name="student.nickName">
+							</wk-portrait>
+						</template>
+					</view>
 				</view>
 				<view class="bottom">
-					<text>兮子英语</text>
+					<text>{{item.orgName}}</text>
 				</view>
 			</view>
 		</template>
@@ -94,7 +102,15 @@ onLoad(async (option) => {
 		const orgs = useOrgs.orgs.filter(org => org._id === orgId)
 		if (orgs.length === 1) {
 			const org = orgs[0]
-			orgName = org.name
+			if (org.type === 1) {
+				const users = usersStore.users.filter(u => u._id === org.creatorId)
+				if (users.length === 1) {
+					const user = users[0]
+					orgName = user.nickName
+				}
+			} else {
+				orgName = org.name
+			}
 		}
 		
 		const students = usersStore.students.filter(s => studentNos.includes(s.studentNo))
@@ -112,6 +128,20 @@ onLoad(async (option) => {
 		ds.value.push(info)
 	})
 })
+
+const courseDesc = (type: number) => {
+	let desc = ""
+	if (type === 0) {
+		desc = "一对一"
+	} else if (type === 1) {
+		desc = "班课"
+	} else if (type === 2) {
+		desc = "次课"
+	} else if (type === 3) {
+		desc = "试听课"
+	}
+	return desc
+}
 	
 </script>
 
@@ -123,7 +153,7 @@ onLoad(async (option) => {
 		display: flex;
 		flex-direction: column;
 		background-color: white;
-		margin: $uni-spacing-row-base;
+		margin: $uni-spacing-col-sm $uni-spacing-row-base;
 		border-radius: $uni-border-radius-base;
 		padding: $uni-padding-normal;
 		box-sizing: border-box;
@@ -157,11 +187,16 @@ onLoad(async (option) => {
 			font-size: $uni-font-size-sm;
 			color: $wk-text-color-grey;
 			margin-top: $uni-spacing-col-sm;
+			.cell-container {
+				flex: 1;
+				display: flex;
+				flex-direction: row;
+				flex-flow: row wrap;
+			}
 		}
 		.bottom {
 			display: flex;
 			flex-direction: row;
-			justify-content: flex-end;
 			font-size: $uni-font-size-sm;
 			color: $wk-text-color-grey;
 			margin-top: $uni-spacing-col-sm;
