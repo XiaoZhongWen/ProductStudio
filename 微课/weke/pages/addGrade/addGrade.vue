@@ -19,38 +19,49 @@ const useOrgs = useOrgsStore()
 const orgs = ref<Org[]>([])
 const gId = ref('')
 
+const organizationId = ref('')
 onLoad(async (option) => {
-	const { gradeId } = option as {gradeId:string}
+	const { gradeId, orgId } = option as {
+		gradeId:string, 
+		orgId?:string
+	}
 	if (typeof(gradeId) !== 'undefined' && gradeId.length > 0) {
 		gId.value = gradeId
 		uni.setNavigationBarTitle({
 			title: "更新班级"
 		})
 	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId.value = orgId
+	}
 })
 
 onMounted(() => {
-	const id = usersStore.owner._id
-	let result = useOrgs.orgs.filter(org => org.creatorId === id)
-	if (gId.value.length > 0) {
-		result = useOrgs.orgs.filter(org => org.classIds?.includes(gId.value))
-		if (result.length === 1) {
-			const org = result[0]
-			if (org.creatorId !== id) {
-				uni.setNavigationBarTitle({
-					title: "班级详情"
-				})
+	if (organizationId.value.length === 0) {
+		const id = usersStore.owner._id
+		let result = useOrgs.orgs.filter(org => org.creatorId === id)
+		if (gId.value.length > 0) {
+			result = useOrgs.orgs.filter(org => org.classIds?.includes(gId.value))
+			if (result.length === 1) {
+				const org = result[0]
+				if (org.creatorId !== id) {
+					uni.setNavigationBarTitle({
+						title: "班级详情"
+					})
+				}
 			}
 		}
-	}
-	if (result.length === 0) {
-		uni.showToast({
-			title: "请先创建机构",
-			duration: global.duration_toast,
-			icon: "none"
-		})
+		if (result.length === 0) {
+			uni.showToast({
+				title: "请先创建机构",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+		} else {
+			orgs.value = result
+		}
 	} else {
-		orgs.value = result
+		orgs.value = useOrgs.orgs.filter(org => org._id === organizationId.value)
 	}
 })
 

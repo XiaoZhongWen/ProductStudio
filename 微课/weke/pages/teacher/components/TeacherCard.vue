@@ -62,7 +62,7 @@ const onIconTap = (e) => {
 	const { id } = e.target
 	if (id === "course") {
 		uni.navigateTo({
-			url: "/pages/member-course/member-course"
+			url: "/pages/member-course/member-course?id=" + props.teacherId
 		})
 	}
 	if (id === "schedule") {

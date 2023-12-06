@@ -90,7 +90,7 @@
 						</view>
 					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable to="/pages/student2/student2">
+				<uni-list-item class="item" clickable :to="toStudent">
 					<template v-slot:header>
 						<view class="slot-box">
 							<text class="slot-text">添加学员</text>
@@ -98,7 +98,7 @@
 						</view>
 					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable>
+				<uni-list-item class="item" clickable :to="toCourse">
 					<template v-slot:header>
 						<view class="slot-box">
 							<text class="slot-text">添加课程</text>
@@ -106,7 +106,7 @@
 						</view>
 					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable>
+				<uni-list-item class="item" clickable :to="toClass">
 					<template v-slot:header>
 						<view class="slot-box">
 							<text class="slot-text">添加班级</text>
@@ -164,6 +164,18 @@ const org = ref<Org>({
 
 const toTeacher = computed(() => {
 	return "/pages/teacher/teacher?orgId=" + orgId.value
+})
+
+const toStudent = computed(() => {
+	return "/pages/student2/student2?orgId=" + orgId.value
+})
+
+const toCourse = computed(() => {
+	return '/pages/course2/course2?orgId=' + orgId.value
+})
+
+const toClass = computed(() => {
+	return '/pages/grade/grade?orgId=' + orgId.value
 })
 
 //@ts-ignore

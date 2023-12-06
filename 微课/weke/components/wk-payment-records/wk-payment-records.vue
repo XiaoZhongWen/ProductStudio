@@ -28,7 +28,7 @@
 			<text class="title">备注:</text>
 			<text class="content">{{r.remark}}</text>
 		</view>
-		<view class="bottom" v-if="isValidate && r.status !== 2 && r.status !== 3">
+		<view class="bottom" v-if="canOperate">
 			<text class="action" @tap="onEditTap">编辑</text>
 			<text class="action revoke" @tap="onRevokeTap">撤销</text>
 		</view>
@@ -130,6 +130,12 @@ const courseDesc = computed(() => {
 	const section1 = r.value?.status === 3? '退课':'续课'
 	const section2 = course.value?.type === 2? '次数:':'时数:'
 	return section1 + section2
+})
+
+const canOperate = computed(() => {
+	const isFrozen = r.value?.isFrozen ?? false
+	const status = r.value?.status ?? 0
+	return isValidate && status !== 2 && status !== 3 && !isFrozen
 })
 
 </script>

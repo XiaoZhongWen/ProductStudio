@@ -80,8 +80,12 @@ const forStudent = computed(() => {
 })
 
 const onAddTap = () => {
+	let url = "/pages/addTeacher/addTeacher"
+	if (organizationId.length > 0) {
+		url = "/pages/addTeacher/addTeacher?orgId="+organizationId
+	}
 	uni.navigateTo({
-		url: "/pages/addTeacher/addTeacher"
+		url
 	})
 }
 

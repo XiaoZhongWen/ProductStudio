@@ -1,6 +1,6 @@
 <template>
-	<view class="student-container">
-		<wk-student-component :orgId="organizationId"></wk-student-component>
+	<view class="course-container">
+		<wk-course-component :orgId="organizationId" />
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { computed, ref } from "vue";
+import { computed, ref } from "vue"
 import { onLoad } from '@dcloudio/uni-app'
 
 const usersStore = useUsersStore()
@@ -36,19 +36,18 @@ const isShowAddBtn = computed({
 })
 
 const onAddTap = () => {
-	let url = "/pages/addStudent/addStudent"
+	let url = "/pages/addCourse/addCourse"
 	if (organizationId.value.length > 0) {
-		url = "/pages/addStudent/addStudent?orgId="+organizationId.value
+		url = "/pages/addCourse/addCourse?orgId=" + organizationId.value
 	}
 	uni.navigateTo({
 		url
 	})
 }
-
 </script>
 
-<style lang="scss" scoped>
-.student-container {
+<style lang="scss">
+.course-container {
 	.add-container {
 		display: flex;
 		position: fixed;

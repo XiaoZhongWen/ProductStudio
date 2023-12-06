@@ -37,36 +37,55 @@ const useGrades = useGradesStore()
 
 const gradeList = ref<GradeItem[]>([])
 const userId = ref(usersStore.owner._id)
+const organizationId = ref('')
 
 onLoad(async (option) => {
-	const { id } = option as {id:string}
+	const { id, orgId } = option as { 
+		id:string, 
+		orgId?:string
+	}
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		userId.value = id
+	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId.value = orgId
 	}
 })
 
 onMounted(async () => {
 	const roles = usersStore.owner.roles
-	if (userId.value === usersStore.owner._id) {
-		if (usersStore.owner.from === 'wx') {
-			if (roles?.includes(1) || roles?.includes(2)) {
-				// 管理员 | 老师
-				const res = useOrgs.orgs.filter(org => org.creatorId === userId.value || 
-											org.teacherIds?.includes(userId.value))
-				const orgs:Org[] = []
-				orgs.push(...res)
-				orgs.forEach(org => {
-					org.classIds?.forEach(cId => {
-						const item = {
-							gradeId: cId,
-							orgId: org._id
-						}
-						gradeList.value.push(item)
+	if (organizationId.value.length === 0) {
+		if (userId.value === usersStore.owner._id) {
+			if (usersStore.owner.from === 'wx') {
+				if (roles?.includes(1) || roles?.includes(2)) {
+					// 管理员 | 老师
+					const res = useOrgs.orgs.filter(org => org.creatorId === userId.value || 
+												org.teacherIds?.includes(userId.value))
+					const orgs:Org[] = []
+					orgs.push(...res)
+					orgs.forEach(org => {
+						org.classIds?.forEach(cId => {
+							const item = {
+								gradeId: cId,
+								orgId: org._id
+							}
+							gradeList.value.push(item)
+						})
 					})
+				}
+			} else {
+				// 学生
+				const res = await useGrades.fetchGradesByStudentId(userId.value)
+				res.forEach(grade => {
+					const item = {
+						gradeId: grade._id,
+						orgId: grade.orgId
+					}
+					gradeList.value.push(item)
 				})
 			}
 		} else {
-			// 学生
+			// 家长
 			const res = await useGrades.fetchGradesByStudentId(userId.value)
 			res.forEach(grade => {
 				const item = {
@@ -77,14 +96,15 @@ onMounted(async () => {
 			})
 		}
 	} else {
-		// 家长
-		const res = await useGrades.fetchGradesByStudentId(userId.value)
-		res.forEach(grade => {
-			const item = {
-				gradeId: grade._id,
-				orgId: grade.orgId
-			}
-			gradeList.value.push(item)
+		const res = useOrgs.orgs.filter(org => org._id === organizationId.value)
+		res.forEach(org => {
+			org.classIds?.forEach(cId => {
+				const item = {
+					gradeId: cId,
+					orgId: org._id
+				}
+				gradeList.value.push(item)
+			})
 		})
 	}
 })
@@ -109,8 +129,12 @@ uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:str
 })
 
 const onAddTap = () => {
+	let url = "/pages/addGrade/addGrade"
+	if (organizationId.value.length > 0) {
+		url = "/pages/addGrade/addGrade?orgId=" + organizationId.value
+	}
 	uni.navigateTo({
-		url: "/pages/addGrade/addGrade"
+		url
 	})
 }
 

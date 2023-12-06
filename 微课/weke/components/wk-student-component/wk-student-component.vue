@@ -17,11 +17,14 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { Student } from '../../types/user'
 import wkStudentCardVue from '../wk-student-card/wk-student-card.vue';
+import { Org } from '../../types/org';
 
 const global = getApp().globalData!
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
+
+const props = defineProps(['orgId'])
 
 const refs = ref([])
 const students = ref<Student[]>()
@@ -66,44 +69,55 @@ watch(usersStore.owner, () => {
 
 const loadStudents = () => {
 	const stus:Student[] = []
-	if (usersStore.owner.from === 'wx') {
-		if (usersStore.owner.roles?.includes(1)) {
-			const res = loadOrgStudent()
-			res.forEach(s => {
-				const index = stus.findIndex(item => item._id === s._id)
-				if (index === -1) {
-					stus.push(s)
-				}
-			})
-		}
-		if (usersStore.owner.roles?.includes(2)) {
-			const res = loadTeacherStudent()
-			res.forEach(s => {
-				const index = stus.findIndex(item => item._id === s._id)
-				if (index === -1) {
-					stus.push(s)
-				}
-			})
-		}
-		if (usersStore.owner.roles?.includes(3) && 
-			usersStore.owner.roles.length === 1) {
-			// 家长 - 获取与孩子学习相同课程的学员
-			const userId = usersStore.owner._id
-			const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
-			children.forEach(child => {
-				const res = loadClassmate(child.studentNo)
+	const orgId = props.orgId
+	if (typeof(orgId) === 'undefined' || orgId.length === 0) {
+		if (usersStore.owner.from === 'wx') {
+			if (usersStore.owner.roles?.includes(1)) {
+				const res = loadOrgStudent()
 				res.forEach(s => {
 					const index = stus.findIndex(item => item._id === s._id)
 					if (index === -1) {
 						stus.push(s)
 					}
 				})
-			})
+			}
+			if (usersStore.owner.roles?.includes(2)) {
+				const res = loadTeacherStudent()
+				res.forEach(s => {
+					const index = stus.findIndex(item => item._id === s._id)
+					if (index === -1) {
+						stus.push(s)
+					}
+				})
+			}
+			if (usersStore.owner.roles?.includes(3) && 
+				usersStore.owner.roles.length === 1) {
+				// 家长 - 获取与孩子学习相同课程的学员
+				const userId = usersStore.owner._id
+				const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
+				children.forEach(child => {
+					const res = loadClassmate(child.studentNo)
+					res.forEach(s => {
+						const index = stus.findIndex(item => item._id === s._id)
+						if (index === -1) {
+							stus.push(s)
+						}
+					})
+				})
+			}
+		} if (usersStore.owner.from === 'stuNo') {
+			// 学员 - 获取学习相同课程的学员
+			const res = loadClassmate(usersStore.owner.studentNo)
+			stus.push(...res)
 		}
-	} if (usersStore.owner.from === 'stuNo') {
-		// 学员 - 获取学习相同课程的学员
-		const res = loadClassmate(usersStore.owner.studentNo)
-		stus.push(...res)
+	} else {
+		const res = loadOrgStudent()
+		res.forEach(s => {
+			const index = stus.findIndex(item => item._id === s._id)
+			if (index === -1) {
+				stus.push(s)
+			}
+		})
 	}
 	students.value = stus
 }
@@ -112,7 +126,13 @@ const loadOrgStudent = () => {
 	const students:Student[] = []
 	const userId = usersStore.owner._id
 	// 管理员 - 获取机构所有学员
-	const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+	let orgs:Org[] = []
+	const orgId = props.orgId
+	if (typeof(orgId) === 'undefined' || orgId.length === 0) {
+		orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+	} else {
+		orgs = useOrgs.orgs.filter(org => org._id === orgId)
+	}
 	orgs.forEach(org => {
 		const res = usersStore.students.filter(s => org.studentIds?.includes(s._id))
 		res.forEach(s => {

@@ -28,7 +28,8 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import OrgStudentContainer from './components/OrgStudentContainer';
 import { Student } from "../../types/user";
 import { Org } from "../../types/org";
@@ -45,6 +46,17 @@ type EditInfo = {
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const global = getApp().globalData!
+
+const organizationId = ref('')
+
+onLoad((option) => {
+	const { orgId } = option as {
+		orgId?: string
+	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId.value = orgId
+	}
+})
 
 onMounted(() => {
 	if (usersStore.isLogin) {
@@ -86,6 +98,9 @@ const orgs = computed<Org[]>({
 			if (index === -1) {
 				normalOrgs.push(useOrgs.anonymousOrg)
 			}
+		}
+		if (organizationId.value.length > 0) {
+			normalOrgs = normalOrgs.filter(org => org._id === organizationId.value)
 		}
 		return normalOrgs
 	}

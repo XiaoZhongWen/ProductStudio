@@ -1,6 +1,7 @@
 <template>
 	<view class="wk-circle-container">
 		<l-circle 
+			v-if="props.total > 0"
 			:percent="percent" 
 			size="34" 
 			strokeWidth="3" 

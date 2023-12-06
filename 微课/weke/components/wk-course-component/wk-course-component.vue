@@ -26,6 +26,8 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
+const props = defineProps(['orgId'])
+
 const items = ref<CourseItem[]>([])
 
 onMounted(async () => {
@@ -39,43 +41,79 @@ onMounted(async () => {
 const loadAllCourses = async () => {
 	const courseIds:string[] = []
 	const courseItems:CourseItem[] = []
-	if (usersStore.owner.from === 'wx') {
-		const userId = usersStore.owner._id
-		const roles = usersStore.owner.roles
-		if (roles?.includes(1)) {
-			// 管理员 - 获取机构所有课程
-			const orgs:Org[] = useOrgs.orgs.filter(org => org.creatorId === userId)
-			orgs.forEach(org => {
-				org.courseIds?.forEach(courseId => {
-					const index = courseIds.findIndex(id => id === courseId)
+	const orgId = props.orgId
+	if (typeof(orgId) === 'undefined' || orgId.length === 0) {
+		if (usersStore.owner.from === 'wx') {
+			const userId = usersStore.owner._id
+			const roles = usersStore.owner.roles
+			if (roles?.includes(1)) {
+				// 管理员 - 获取机构所有课程
+				const orgs:Org[] = useOrgs.orgs.filter(org => org.creatorId === userId)
+				orgs.forEach(org => {
+					org.courseIds?.forEach(courseId => {
+						const index = courseIds.findIndex(id => id === courseId)
+						if (index === -1) {
+							courseIds.push(courseId)
+							const item = {
+								courseId,
+								orgId: org._id
+							}
+							courseItems.push(item)
+						}
+					})
+				})
+			}
+			if (roles?.includes(2)) {
+				// 老师 - 获取所有教授的课程以及自己匿名机构的所有课程
+				const orgs:Org[] = useOrgs.orgs.filter(org => org.type === 1 && org.creatorId === userId)
+				orgs.forEach(org => {
+					org.courseIds?.forEach(courseId => {
+						const index = courseIds.findIndex(id => id === courseId)
+						if (index === -1) {
+							courseIds.push(courseId)
+							const item = {
+								courseId,
+								orgId: org._id
+							}
+							courseItems.push(item)
+						}
+					})
+				})
+				const entries:Entry[] = usersStore.entries.filter(entry => entry.teacherId === userId)
+				entries.forEach(entry => {
+					const index = courseIds.findIndex(id => id === entry.courseId)
 					if (index === -1) {
-						courseIds.push(courseId)
+						courseIds.push(entry.courseId)
 						const item = {
-							courseId,
-							orgId: org._id
+							courseId: entry.courseId,
+							orgId: entry.orgId
 						}
 						courseItems.push(item)
 					}
 				})
-			})
-		}
-		if (roles?.includes(2)) {
-			// 老师 - 获取所有教授的课程以及自己匿名机构的所有课程
-			const orgs:Org[] = useOrgs.orgs.filter(org => org.type === 1 && org.creatorId === userId)
-			orgs.forEach(org => {
-				org.courseIds?.forEach(courseId => {
-					const index = courseIds.findIndex(id => id === courseId)
-					if (index === -1) {
-						courseIds.push(courseId)
-						const item = {
-							courseId,
-							orgId: org._id
+			}
+			if (roles?.length === 1 && roles.includes(3)) {
+				// 家长 - 孩子上的所有课程
+				const students = usersStore.students.filter(student => student.associateIds?.includes(userId))
+				students.forEach(student => {
+					const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
+					result.forEach(entry => {
+						const index = courseIds.findIndex(id => id === entry.courseId)
+						if (index === -1) {
+							courseIds.push(entry.courseId)
+							const item = {
+								courseId: entry.courseId,
+								orgId: entry.orgId
+							}
+							courseItems.push(item)
 						}
-						courseItems.push(item)
-					}
+					})
 				})
-			})
-			const entries:Entry[] = usersStore.entries.filter(entry => entry.teacherId === userId)
+			}
+		} else {
+			// 获取学生上的所有课程
+			const studentNo = usersStore.owner.studentNo
+			const entries = usersStore.entries.filter(entry => entry.studentId === studentNo)
 			entries.forEach(entry => {
 				const index = courseIds.findIndex(id => id === entry.courseId)
 				if (index === -1) {
@@ -88,38 +126,17 @@ const loadAllCourses = async () => {
 				}
 			})
 		}
-		if (roles?.length === 1 && roles.includes(3)) {
-			// 家长 - 孩子上的所有课程
-			const students = usersStore.students.filter(student => student.associateIds?.includes(userId))
-			students.forEach(student => {
-				const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
-				result.forEach(entry => {
-					const index = courseIds.findIndex(id => id === entry.courseId)
-					if (index === -1) {
-						courseIds.push(entry.courseId)
-						const item = {
-							courseId: entry.courseId,
-							orgId: entry.orgId
-						}
-						courseItems.push(item)
-					}
-				})
-			})
-		}
 	} else {
-		// 获取学生上的所有课程
-		const studentNo = usersStore.owner.studentNo
-		const entries = usersStore.entries.filter(entry => entry.studentId === studentNo)
-		entries.forEach(entry => {
-			const index = courseIds.findIndex(id => id === entry.courseId)
-			if (index === -1) {
-				courseIds.push(entry.courseId)
+		const orgs:Org[] = useOrgs.orgs.filter(org => org._id === orgId)
+		orgs.forEach(org => {
+			courseIds.push(...org.courseIds ?? [])
+			org.courseIds?.forEach(courseId => {
 				const item = {
-					courseId: entry.courseId,
-					orgId: entry.orgId
+					courseId,
+					orgId: org._id
 				}
 				courseItems.push(item)
-			}
+			})
 		})
 	}
 	await courseStore.fetchCourses(courseIds)

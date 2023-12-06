@@ -137,7 +137,8 @@ module.exports = {
 				price,
 				operatorId,
 				modifyDate: Date.now(),
-				status: 0
+				status: 0,
+				isFrozen: false
 			})
 			const paymentId = result_payment.id
 			let courseRecordId = ''
@@ -189,7 +190,8 @@ module.exports = {
 			price,
 			operatorId,
 			modifyDate: Date.now(),
-			status: 0
+			status: 0,
+			isFrozen: false
 		})
 		const { id, inserted } = result
 		if (inserted === 1) {
@@ -239,21 +241,27 @@ module.exports = {
 			typeof(delta) === 'undefined') {
 			return false
 		}
+		const date = Date.now()
 		const db = uniCloud.database()
 		const result = await db.collection('wk-payment-records').add({
 			orgId,
 			studentId,
 			courseId,
-			date: Date.now(),
+			date: date,
 			count: delta,
 			price: 0,
 			operatorId,
-			modifyDate: Date.now(),
+			modifyDate: date,
 			status: 3
+		})
+		const dbCmd = db.command
+		await db.collection('wk-payment-records').where({
+			modifyDate: dbCmd.lt(date)
+		}).update({
+			isFrozen: true
 		})
 		const { id, inserted } = result
 		if (inserted === 1) {
-			const dbCmd = db.command
 			await db.collection('wk-mapping').where({
 				_id: entryId
 			}).update({

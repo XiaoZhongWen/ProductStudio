@@ -8,14 +8,23 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { AddCourseCard } from './components/AddCourseCard'
+import { Org } from "../../types/org"
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const global = getApp().globalData!
 
-onLoad(async () => {
+const organizationId = ref('')
+
+onLoad(async (option) => {
+	const { orgId } = option as {
+		orgId?: string
+	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId.value = orgId
+	}
 	if (usersStore.isLogin) {
 		// 加载所有相关机构
 		uni.showLoading({
@@ -37,7 +46,12 @@ onLoad(async () => {
 const orgs = computed({
 	get() {
 		const userId = usersStore.owner._id
-		let normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+		let normalOrgs:Org[] = []
+		if (organizationId.value.length === 0) {
+			normalOrgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+		} else {
+			normalOrgs = useOrgs.orgs.filter(org => org._id === organizationId.value)
+		}
 		return normalOrgs
 	}
 })

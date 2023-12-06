@@ -163,8 +163,9 @@
             "path" : "pages/member-course/member-course",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
-                "enablePullDownRefresh": false
+                "navigationBarTitleText": "课程",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
         }
         ,{
@@ -204,8 +205,9 @@
             "path" : "pages/student2/student2",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
-                "enablePullDownRefresh": false
+				"navigationBarTitleText": "学员",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
         }
         ,{
@@ -252,6 +254,15 @@
                 "navigationBarTitleText": "添加班级",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
+            }
+        }
+        ,{
+            "path" : "pages/course2/course2",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "课程",
+                "enablePullDownRefresh": false,
+                "backgroundColor": "#F2F4FD"
             }
             
         }

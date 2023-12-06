@@ -9,5 +9,6 @@ export type PaymentRecord = {
 	status: number,
 	operatorId: string,
 	modifyDate: number,
-	remark?: string
+	remark?: string,
+	isFrozen?: boolean
 }

@@ -1,9 +1,9 @@
 <template>
-	<view class="add-teacher-container" v-for="org in useOrgs.myOrgs" :key="org._id">
+	<view class="add-teacher-container" v-for="org in orgs" :key="org._id">
 		<view class="header">
 			<wk-icon 
 				class="icon" 
-				:url="org.logoUrl" 
+				:url="orgLogo(org)" 
 				:text="orgBriefName(org)">
 			</wk-icon>
 			<text class="org-name">{{orgName(org)}}</text>
@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { onShareAppMessage } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
@@ -71,8 +72,20 @@ const inviteInfos = ref<EditInfo[]>([])
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const teachers = ref<User[]>([])
+const orgs = ref<Org[]>([])
 const global = getApp().globalData!
 const selectedId = ref('')
+
+let organizationId = ''
+
+onLoad((option) => {
+	const { orgId } = option as {
+		orgId?: string
+	}
+	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
+		organizationId = orgId
+	}
+})
 
 onShareAppMessage((option) => {
 	const { from, target } = option
@@ -93,8 +106,14 @@ onShareAppMessage((option) => {
 
 onMounted(async () => {
 	if (usersStore.isLogin) {
+		orgs.value = useOrgs.myOrgs.filter(org => {
+			const flag = organizationId.length === 0 ||
+			(organizationId.length > 0 && org._id === organizationId)
+			return flag
+		})
+		
 		const teacherIds:string[] = []
-		useOrgs.myOrgs.forEach(org => {
+		orgs.value.forEach(org => {
 			org.teacherIds?.forEach(id => {
 				if (!teacherIds.includes(id)) {
 					teacherIds.push(id)
@@ -180,7 +199,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			icon:"none"
 		})
 	} else {
-		const org = useOrgs.orgs.filter(org => org._id === orgId)[0]
+		const org = orgs.value.filter(org => org._id === orgId)[0]
 		if (!org.teacherIds?.includes(user._id)) {
 			useOrgs.addTeachers(org._id, [user._id])
 			teachers.value.push(user)
@@ -223,6 +242,18 @@ const onDelete = async (orgId:string) => {
 const onLongPress = (e) => {
 	const { id } = e.currentTarget
 	selectedId.value = id
+}
+
+const orgLogo = (org:Org) => {
+	let logo = org.logoUrl
+	if (org.type === 1) {
+		const users = usersStore.users.filter(u => u._id === org.creatorId)
+		if (users.length === 1) {
+			const creator = users[0]
+			logo = creator.avatarUrl
+		}
+	}
+	return logo
 }
 
 const orgBriefName = (org:Org) => {

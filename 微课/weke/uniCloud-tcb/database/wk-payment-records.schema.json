@@ -56,6 +56,11 @@
 		"operatorId": {
 			"bsonType": "string",
 			"description": "操作人id"
+		},
+		"isFrozen": {
+			"bsonType": "bool",
+			"description": "是否冻结",
+			"defaultValue": false
 		}
 	}
 }

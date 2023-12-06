@@ -156,7 +156,7 @@ export const useCourseStore = defineStore('course', {
 			}
 			if (paymentId.length > 0) {
 				const payment: PaymentRecord = {
-					_id: entryId,
+					_id: paymentId,
 					orgId,
 					studentId,
 					date,
@@ -165,7 +165,8 @@ export const useCourseStore = defineStore('course', {
 					price,
 					status: 0,
 					operatorId,
-					modifyDate: Date.now()
+					modifyDate: Date.now(),
+					isFrozen: false
 				}
 				this.paymentRecords.push(payment)
 			}
@@ -227,7 +228,8 @@ export const useCourseStore = defineStore('course', {
 						price,
 						operatorId: operatorId,
 						modifyDate: Date.now(),
-						status: 0
+						status: 0,
+						isFrozen: false
 					}
 					this.paymentRecords.push(r)
 				}
@@ -272,21 +274,27 @@ export const useCourseStore = defineStore('course', {
 			}
 			const id = await course_co.revokeAllPaymentRecords(orgId, studentId, courseId, operatorId, entryId, delta)
 			if (typeof(id) !== 'undefined' && id.length > 0) {
+				const date = Date.now()
 				const index = this.paymentRecords.findIndex(r => r._id === id)
 				if (index === -1) {
 					const r:PaymentRecord = {
 						_id: id,
 						orgId,
 						studentId,
-						date: Date.now(),
+						date: date,
 						courseId,
 						count: delta,
 						price: 0,
 						operatorId: operatorId,
-						modifyDate: Date.now(),
+						modifyDate: date,
 						status: 3
 					}
 					this.paymentRecords.push(r)
+					this.paymentRecords.forEach(r => {
+						if (r.modifyDate < date) {
+							r.isFrozen = true
+						}
+					})
 				}
 			}
 			return id
