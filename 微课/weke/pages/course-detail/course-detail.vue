@@ -31,6 +31,7 @@
 				<view class="teacher-cell">
 					<wk-icon
 						class="icon" 
+						@tap.prevent="onTeacherTap"
 						:url="teacher.avatarUrl"
 						:text="teacher.nickName">
 					</wk-icon>
@@ -202,6 +203,12 @@ const onClickItem = (e: { currentIndex:number }) => {
 	if (current.value !== e.currentIndex) {
 		current.value = e.currentIndex
 	}
+}
+
+const onTeacherTap = () => {
+	uni.navigateTo({
+		url: "/pages/member-course/member-course?id=" + teacher.value?._id
+	})
 }
 
 const onEditAction = (param:{id:string}) => {

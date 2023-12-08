@@ -14,7 +14,7 @@
 				<view class="courseType">
 					<text>课程类型: {{courseDesc(item.type)}}</text>
 				</view>
-				<view class="duration">
+				<view class="duration" v-if="item.type !== 2">
 					<text>课程时长: {{item.duration}}分钟</text>
 				</view>
 				<view class="teacher">
@@ -25,6 +25,7 @@
 					<view class="cell-container">
 						<template v-for="student in item.students" :key="student._id">
 							<wk-portrait
+								@tap="onStudentTap(student._id, item.orgId)"
 								:url="student.avatarUrl" 
 								:name="student.nickName">
 							</wk-portrait>
@@ -49,6 +50,7 @@ import { ref } from 'vue';
 
 type MemberCourseInfo = {
 	id: string,
+	orgId: string,
 	name: string,
 	icon: string,
 	type: number,
@@ -116,6 +118,7 @@ onLoad(async (option) => {
 		const students = usersStore.students.filter(s => studentNos.includes(s.studentNo))
 		const info: MemberCourseInfo = {
 			id: c._id,
+			orgId,
 			name: c.name,
 			icon: c.icon,
 			type: c.type,
@@ -128,6 +131,16 @@ onLoad(async (option) => {
 		ds.value.push(info)
 	})
 })
+
+const onStudentTap = (studentId: string, orgId:string) => {
+	const students = usersStore.students.filter(student => student._id === studentId)
+	if (students.length === 1) {
+		const student = students[0]
+		uni.navigateTo({
+			url: "/pages/course-bind/course-bind?studentNo="+student.studentNo+"&orgIds="+orgId
+		})
+	}
+}
 
 const courseDesc = (type: number) => {
 	let desc = ""

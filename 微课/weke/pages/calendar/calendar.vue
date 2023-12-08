@@ -1,12 +1,74 @@
 <template>
-	<view>
+	<view class="calendar-container">
+		<wu-calendar
+			:insert="true" 
+			:fold="true"
+			color="#5073D6"
+			slideSwitchMode="horizontal"
+			@change="calendarChange">
+		</wu-calendar>
+		<view
+			class="add-container" 
+			@tap="onAddTap" 
+			v-if="isShowAddBtn">
+			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
+		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
+import { useUsersStore } from "@/store/users"
+import { computed } from 'vue';
+
+const usersStore = useUsersStore()
+
+const isShowAddBtn = computed(() => {
+	return usersStore.owner.roles?.includes(1) ||
+			usersStore.owner.roles?.includes(2)
+})
+
+const calendarChange = () => {
+	
+}
+
+const onAddTap = () => {
+	uni.navigateTo({
+		url: "/pages/addSchedule/addSchedule"
+	})
+}
 
 </script>
 
-<style lang="scss" scoped>
-
+<style lang="scss">
+.calendar-container {
+	display: flex;
+	flex-direction: column;
+	.card {
+		margin: $uni-spacing-col-sm $uni-spacing-row-base;
+		height: 100px;
+		background-color: white
+	}
+	.add-container {
+		display: flex;
+		position: fixed;
+		justify-content: center;
+		align-items: center;
+		background-color: $wk-theme-color;
+		width: 60px;
+		height: 60px;
+		border-radius: $uni-border-radius-circle;
+		bottom: 30px;
+		right: $uni-spacing-row-lg;
+		z-index: 1;
+	}
+	.wu-calendar__content {
+		background-color: transparent !important;
+		.wu-calendar__header-btn-box {
+			visibility: hidden;
+		}
+		.wu-calendar__weeks {
+			color: $wk-text-color-grey;
+		}
+	}
+}
 </style>

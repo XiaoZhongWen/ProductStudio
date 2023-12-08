@@ -266,6 +266,16 @@
             }
             
         }
+        ,{
+            "path" : "pages/addSchedule/addSchedule",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "排课",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

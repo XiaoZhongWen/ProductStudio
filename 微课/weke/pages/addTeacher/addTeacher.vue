@@ -21,6 +21,7 @@
 							@tap="onDelete(org._id)">
 						</uni-icons>
 						<wk-portrait
+							@tap="onTeacherTap(teacherId)"
 							class="portrait"
 							:url="fetchUserById(teacherId).avatarUrl" 
 							:name="fetchUserById(teacherId).nickName">
@@ -242,6 +243,12 @@ const onDelete = async (orgId:string) => {
 const onLongPress = (e) => {
 	const { id } = e.currentTarget
 	selectedId.value = id
+}
+
+const onTeacherTap = (teacherId: string) => {
+	uni.navigateTo({
+		url: "/pages/member-course/member-course?id=" + teacherId
+	})
 }
 
 const orgLogo = (org:Org) => {

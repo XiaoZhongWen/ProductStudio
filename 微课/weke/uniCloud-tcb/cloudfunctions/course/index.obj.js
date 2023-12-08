@@ -256,6 +256,9 @@ module.exports = {
 		})
 		const dbCmd = db.command
 		await db.collection('wk-payment-records').where({
+			orgId,
+			studentId,
+			courseId,
 			modifyDate: dbCmd.lt(date)
 		}).update({
 			isFrozen: true

@@ -11,6 +11,7 @@
 					@tap="onDeleteTap">
 				</uni-icons>
 				<wk-portrait
+					@tap="onStudentTap(student.studentNo)"
 					:url="student.avatarUrl" 
 					:name="student.nickName">
 				</wk-portrait>
@@ -51,6 +52,12 @@ watchEffect(async() => {
 const onLongPress = (e) => {
 	const { id } = e.currentTarget
 	selectedId.value = id
+}
+
+const onStudentTap = (studentNo: string) => {
+	uni.navigateTo({
+		url: "/pages/course-bind/course-bind?studentNo="+studentNo+"&orgIds="+props.orgId
+	})
 }
 
 const onDeleteTap = async () => {

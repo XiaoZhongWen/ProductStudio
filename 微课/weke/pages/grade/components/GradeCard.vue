@@ -100,7 +100,13 @@ const loadGradeData = async () => {
 }
 
 const onTap = (studentId:string) => {
-	console.info(studentId)
+	const students = usersStore.students.filter(student => student._id === studentId)
+	if (students.length === 1) {
+		const student = students[0]
+		uni.navigateTo({
+			url: "/pages/course-bind/course-bind?studentNo="+student.studentNo+"&orgIds="+props.orgId
+		})
+	}
 }
 
 uni.$on(global.event_name.didUpdatedGradeData, async (data:{gradeId:string}) => {

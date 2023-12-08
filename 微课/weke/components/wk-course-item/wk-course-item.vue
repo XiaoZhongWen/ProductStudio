@@ -97,7 +97,8 @@ const loadProgress = () => {
 														entry.orgId === props.orgId)
 	const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
 	const childNos = children.map(child => child.studentNo)
-	// 待验证
+	let totalValue = 0
+	let consumeValue = 0
 	entries.forEach(entry => {
 		if (usersStore.owner.from === 'wx') {
 			// 1. 有机构管理员角色并且课程属于自己创建的机构
@@ -107,17 +108,19 @@ const loadProgress = () => {
 			// 3. 有家长角色并且该授课记录中的学号属于自己的孩子
 			const forParent = roles?.includes(3) && childNos.includes(entry.studentId)
 			if (forCreator || forTeacher || forParent) {
-				total.value += entry.total
-				consume.value += entry.consume
+				totalValue += entry.total
+				consumeValue += entry.consume
 			}
 		} else if (usersStore.owner.from === 'stuNo') {
 			// 角色是学生, 统计跟自己相关的课程进度
 			if (entry.studentId === usersStore.owner.studentNo) {
-				total.value += entry.total
-				consume.value += entry.consume
+				totalValue += entry.total
+				consumeValue += entry.consume
 			}
 		}
 	})
+	total.value = totalValue
+	consume.value = consumeValue
 }
 	
 </script>

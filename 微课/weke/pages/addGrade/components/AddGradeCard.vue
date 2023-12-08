@@ -66,6 +66,7 @@
 					<view class="body">
 						<template v-for="student in students" :key="student._id">
 							<wk-portrait
+								@tap="onStudentTap(student.studentNo)"
 								:url="student.avatarUrl" 
 								:name="student.nickName">
 							</wk-portrait>
@@ -266,6 +267,12 @@ const onTapGradeIcon = () => {
 		})
 	}
 }
+
+const onStudentTap = (studentNo: string) => {
+	uni.navigateTo({
+		url: "/pages/course-bind/course-bind?studentNo="+studentNo+"&orgIds="+props.org._id
+	})
+}
 	
 const onAddTap = () => {
 	if (selectedGradeId.value.length === 0) {
@@ -302,7 +309,6 @@ const onAddStudent = () => {
 			}
 		}
 	})
-	
 	const result = usersStore.students.filter(student => studentNos.includes(student.studentNo))
 	const studentIds = result.map(student => student._id)
 	if (studentIds.length === 0) {
