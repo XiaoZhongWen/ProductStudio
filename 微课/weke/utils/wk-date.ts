@@ -22,9 +22,18 @@ const hourDuration = (date:Date) => {
 	return s + ":00" + "-" + e + ":00"
 }
 
+const daysBetweenDates = (from: Date, to: Date) => {
+	from.setHours(0, 0, 0, 0)
+	to.setHours(0, 0, 0, 0)
+	const timeDifference = to.getTime() - from.getTime()
+	const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+	return daysDifference
+}
+
 export {
 	format,
 	md,
-	hourDuration
+	hourDuration,
+	daysBetweenDates
 }
 

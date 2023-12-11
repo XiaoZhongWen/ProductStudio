@@ -70,6 +70,57 @@
 				<DateCard class="date-card" type="time" :date="curDate" />
 			</view>
 		</view>
+		<view class="section full-day">
+			<text>全天</text>
+			<switch class="switch" checked="false" color="#5073D6" style="transform:scale(0.7)" />
+		</view>
+		<view class="section other">
+			<view class="row">
+				<view class="left">
+					<view class="top">
+						<uni-icons type="notification-filled" color="#5073D6"></uni-icons>
+						<text class="notice">提醒</text>
+					</view>
+					<view class="bottom">
+						<text class="desc">课前半小时及15分钟各提醒一次</text>
+					</view>
+				</view>
+				<view class="right">
+					<switch class="switch" checked="false" color="#5073D6" style="transform:scale(0.7)" />
+				</view>
+			</view>
+			<view class="row space">
+				<text class="repeat">重复</text>
+				<uni-icons type="right" color="#c6c8cf"></uni-icons>
+			</view>
+		</view>
+		<view class="section course-content">
+			<view class="desc">
+				<textarea 
+					class="textarea" 
+					placeholder="课程内容"
+					maxlength="1000" 
+				/>
+				<text class="number">1000</text>
+			</view>
+		</view>
+		<view class="section preview-content">
+			<view class="desc">
+				<textarea 
+					class="textarea" 
+					placeholder="预习内容"
+					maxlength="1000" 
+				/>
+				<text class="number">1000</text>
+			</view>
+		</view>
+		<view class="finish">
+			<button
+				class="btn" 
+				type="default">
+				完成
+			</button>
+		</view>
 		<uni-popup ref="popup" type="bottom" id="popup">
 			<wk-choose-member
 				id="teacher"
@@ -460,6 +511,10 @@ const onConfirm = (data: {
 		margin: $uni-spacing-col-sm $uni-spacing-row-base;
 		padding: $uni-padding-normal;
 		box-sizing: border-box;
+		.switch {
+			position: relative;
+			left: $uni-spacing-row-base;
+		}
 	}
 	.type {
 		display: flex;
@@ -505,6 +560,73 @@ const onConfirm = (data: {
 				width: 45%;
 			}
 		}
+	}
+	.full-day {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		font-size: $uni-font-size-base;
+		color: $wk-text-color;
+	}
+	.other {
+		display: flex;
+		flex-direction: column;
+		.row {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			.notice {
+				font-size: $uni-font-size-base;
+				color: $wk-text-color;
+				margin-left: $uni-spacing-row-sm;
+			}
+			.desc {
+				font-size: $uni-font-size-sm;
+				color: $wk-text-color-grey;
+			}
+			.repeat {
+				font-size: $uni-font-size-base;
+				color: $wk-text-color;
+			}
+		}
+		.space {
+			margin-top: $uni-spacing-col-base;
+		}
+	}
+	.course-content, .preview-content {
+		.desc {
+			position: relative;
+			width: 100%;
+			.textarea {
+				width: 100%;
+				height: 100px;
+				caret-color: $wk-theme-color;
+				font-size: $uni-font-size-base;
+				border-radius: $uni-border-radius-base;
+			}
+			.number {
+				position: absolute;
+				right: 0px;
+				bottom: 0px;
+				font-size: $uni-font-size-base;
+				color: $wk-text-color-grey;
+			}
+		}
+	}
+	.btn {
+		margin: 10px 0 40px 0;
+		background-color: $wk-theme-color;
+		font-size: $uni-font-size-base;
+		color: white;
+		width: 100%;
+	}
+	.finish {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin: $uni-spacing-col-sm $uni-spacing-row-base;
 	}
 }
 </style>
