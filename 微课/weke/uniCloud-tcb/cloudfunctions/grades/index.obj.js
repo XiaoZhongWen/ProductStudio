@@ -48,7 +48,7 @@ module.exports = {
 			const dbCmd = db.command
 			// 1. 创建班级记录
 			let result = await db.collection('wk-classes').add({
-				name, icon, desc, courseId, teacherId, studentIds,
+				name, icon, desc, courseId, teacherId, studentIds,orgId,
 				createTime: Date.now()
 			})
 			const gradeId = result.id

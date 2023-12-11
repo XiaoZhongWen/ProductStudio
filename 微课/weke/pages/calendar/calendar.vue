@@ -18,7 +18,10 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { format } from '@/utils/wk-date'
+
+const selectedDate = ref(format(new Date()))
 
 const usersStore = useUsersStore()
 
@@ -27,13 +30,14 @@ const isShowAddBtn = computed(() => {
 			usersStore.owner.roles?.includes(2)
 })
 
-const calendarChange = () => {
-	
+const calendarChange = (e:{fulldate:string}) => {
+	const { fulldate } = e
+	selectedDate.value = fulldate
 }
 
 const onAddTap = () => {
 	uni.navigateTo({
-		url: "/pages/addSchedule/addSchedule"
+		url: "/pages/addSchedule/addSchedule?date="+selectedDate.value
 	})
 }
 

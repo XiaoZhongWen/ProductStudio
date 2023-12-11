@@ -9,7 +9,22 @@ const format = (date:Date) => {
 	return dateString;
 }
 
+const md = (date:Date) => {
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return month + "月" + day + "日"
+}
+
+const hourDuration = (date:Date) => {
+	const hour = date.getHours();
+	const s = String(hour).padStart(2, '0');
+	const e = String(hour + 1).padStart(2, '0');
+	return s + ":00" + "-" + e + ":00"
+}
+
 export {
-	format
+	format,
+	md,
+	hourDuration
 }
 

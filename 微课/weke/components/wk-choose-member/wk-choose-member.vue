@@ -13,13 +13,18 @@
 		<scroll-view class="body" scroll-y="true">
 			<view class="cell" v-for="member in members" :key="member._id" @tap="onMemberTap(member._id)">
 				<view class="left">
-					<wk-icon
-						class="icon"
-						:url="member.avatarUrl"
-						:text="briefName(member.nickName)">
-					</wk-icon>
+					<template v-if="isUserOrStudent(member)">
+						<wk-icon
+							class="icon"
+							:url="member.avatarUrl"
+							:text="briefName(member)">
+						</wk-icon>
+					</template>
+					<template v-else>
+						<view :class="member.icon"></view>
+					</template>
 					<view class="nickName">
-						{{member.nickName}}
+						{{fullName(member)}}
 					</view>
 				</view>
 				<template v-if="chooseType === 'single'">
@@ -55,16 +60,23 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
+import { useCourseStore } from "@/store/course"
+import { useGradesStore } from "@/store/grades"
 import { computed, ref } from "../../uni_modules/lime-shared/vue";
 import { Student, User } from "../../types/user";
+import { Course } from "../../types/course";
+import { Grade } from "../../types/grade";
 const emit = defineEmits(['onConfirm'])
 const usersStore = useUsersStore()
-const members = ref<User[]|Student[]>([])
+const courseStore = useCourseStore()
+const gradesStore = useGradesStore()
+const members = ref<User[]|Student[]|Course[]|Grade[]>([])
 const selectedId = ref('')
 const selectedIds = ref<string[]>([])
 const invitedMemberIds = ref<string[]>([])
 
 const chooseType = ref('single')
+const chooseRole = ref('')
 const title = ref('')
 
 const initial = async (data:{
@@ -81,6 +93,7 @@ const initial = async (data:{
 		return
 	}
 	chooseType.value = type
+	chooseRole.value = role
 	if (type === "multiple" && (typeof(invitedIds) !== 'undefined')) {
 		invitedMemberIds.value = invitedIds ?? []
 	}
@@ -94,6 +107,10 @@ const initial = async (data:{
 		members.value = await usersStore.fetchUsers(memberIds ?? []) as User[]
 	} else if (role === 'student') {
 		members.value = usersStore.students.filter(student => memberIds.includes(student._id)) as Student[]
+	} else if (role === 'course') {
+		members.value = courseStore.course.filter(c => memberIds.includes(c._id)) as Course[]
+	} else if (role === 'class') {
+		members.value = gradesStore.grades.filter(c => memberIds.includes(c._id)) as Grade[]
 	}
 	selectedIds.value = []
 }
@@ -120,9 +137,14 @@ const onMemberTap = (id:string) => {
 
 const onConfirmTap = () => {
 	if (chooseType.value === 'single') {
-		emit('onConfirm', { memberId: selectedId.value })
+		emit('onConfirm', { 
+			role: chooseRole.value,
+			type: chooseType.value,
+			memberId: selectedId.value ,
+		})
 	} else if (chooseType.value === 'multiple' || chooseType.value === 'remove') {
 		emit('onConfirm', { 
+			role: chooseRole.value,
 			type: chooseType.value,
 			memberIds: [...selectedIds.value]
 		})
@@ -137,13 +159,44 @@ const count = computed(() => {
 	}
 })
 
-const briefName = (name:string) => {
+const isUserOrStudent = (member:User|Student|Course|Grade) => {
+	return isUser(member) || isStudent(member)
+}
+
+const fullName = (member:User|Student|Course|Grade) => {
+	let name = ""
+	if (isUser(member) || isStudent(member)) {
+		name = member.nickName
+	} else if (isCourse(member) || isGrade(member)) {
+		name = member.name
+	}
+	return name
+}
+
+const briefName = (member:User|Student|Course|Grade) => {
+	let name = fullName(member)
 	const length = name.length
 	if (length < 3) {
 		return name
 	} else {
 		return name.substring(length - 2)
 	}
+}
+
+function isCourse(obj:any): obj is Course {
+	return obj.type !== undefined
+}
+
+function isGrade(obj:any): obj is Grade {
+	return obj.orgId !== undefined
+}
+
+function isUser(obj:any): obj is User {
+	return obj.expireDate !== undefined
+}
+
+function isStudent(obj:any): obj is Student {
+	return obj.studentNo !== undefined
 }
 
 </script>
