@@ -66,13 +66,28 @@
 		</view>
 		<view class="section datePicker">
 			<view class="picker-container">
-				<DateCard class="date-card" type="date" :date="curDate" />
-				<DateCard class="date-card" type="time" :date="curDate" />
+				<DateCard 
+					class="date-card" 
+					type="date" 
+					@onDateChange="onDateChange"
+					:date="curDate" 
+					:isFullDay="isFullDay" />
+				<DateCard 
+					class="date-card" 
+					type="time" 
+					@onTimeChange="onTimeChange"
+					:date="curDate" 
+					:isFullDay="isFullDay" />
 			</view>
 		</view>
 		<view class="section full-day">
 			<text>全天</text>
-			<switch class="switch" checked="false" color="#5073D6" style="transform:scale(0.7)" />
+			<switch 
+				class="switch" 
+				:checked="false" 
+				color="#5073D6" 
+				style="transform:scale(0.7)"
+				@change="onFullDaySwitchChange" />
 		</view>
 		<view class="section other">
 			<view class="row">
@@ -86,10 +101,15 @@
 					</view>
 				</view>
 				<view class="right">
-					<switch class="switch" checked="false" color="#5073D6" style="transform:scale(0.7)" />
+					<switch 
+						class="switch" 
+						:checked="false" 
+						color="#5073D6" 
+						style="transform:scale(0.7)" 
+						@change="onNoticeSwitchChange" />
 				</view>
 			</view>
-			<view class="row space">
+			<view class="row space" @tap="onRepeatTap">
 				<text class="repeat">重复</text>
 				<uni-icons type="right" color="#c6c8cf"></uni-icons>
 			</view>
@@ -128,6 +148,13 @@
 				@onConfirm="onConfirm">
 			</wk-choose-member>
 		</uni-popup>
+		<uni-popup ref="repeatPopup" type="center">
+			<RepeatCard
+				v-if="curDate"
+				:day="curDate.getDay()"
+				@onCancel="onCancel" 
+				@onRepeatConfirm="onRepeatConfirm" />
+		</uni-popup>
 	</view>
 </template>
 
@@ -142,8 +169,11 @@ import { useGradesStore } from "@/store/grades"
 import { Grade } from '../../types/grade'
 import { onLoad } from '@dcloudio/uni-app'
 import DateCard from './components/DateCard.vue'
+import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
 
+const isFullDay = ref(false)
+const isNotice = ref(false)
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
@@ -153,6 +183,12 @@ const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
+
+const repeatPopup = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
 const chooseMemberRef = ref(null)
 
 const selectedCourseType = ref<number>(0)
@@ -166,12 +202,12 @@ const grades = ref<Grade[]>([])
 const courses = ref<Course[]>([])
 const teachers = ref<User[]>([])
 
-const curDate = ref('')
+const curDate = ref<Date>()
 onLoad(async (option) => {
 	const { date } = option as {
 		date: string
 	}
-	curDate.value = date
+	curDate.value = new Date(date)
 })
 
 watch(selectedCourseType, async (type) => {
@@ -464,6 +500,18 @@ const onCourseTap = () => {
 	}
 }
 
+const onRepeatTap = () => {
+	repeatPopup.value?.open()
+}
+
+const onCancel = () => {
+	repeatPopup.value?.close()
+}
+
+const onRepeatConfirm = () => {
+	debugger
+}
+
 const radioChange = (e:{detail:{value:string}}) => {
 	const { value } = e.detail
 	selectedCourseType.value = parseInt(value)
@@ -471,6 +519,16 @@ const radioChange = (e:{detail:{value:string}}) => {
 
 const onColorChanged = (data:{gradient: string[]}) => {
 	
+}
+
+const onFullDaySwitchChange = (e:{detail:{value: boolean}}) => {
+	const { value } = e.detail
+	isFullDay.value = value
+}
+
+const onNoticeSwitchChange = (e:{detail:{value: boolean}}) => {
+	const { value } = e.detail
+	isNotice.value = value
 }
 
 const onConfirm = (data: {
@@ -497,6 +555,20 @@ const onConfirm = (data: {
 		selectedClassId.value = memberId
 	}
 	popup.value?.close()
+}
+
+const onDateChange = (data: {date:Date}) => {
+	const { date } = data
+	curDate.value = date
+}
+
+const onTimeChange = (data: {
+	start:{hour:number, min:number}, 
+	end: {hour:number, min:number},
+}) => {
+	const { start, end } = data
+	console.info(start)
+	console.info(end)
 }
 
 </script>
@@ -557,7 +629,7 @@ const onConfirm = (data: {
 			flex-direction: row;
 			justify-content: space-between;
 			.date-card {
-				width: 45%;
+				width: 48%;
 			}
 		}
 	}
@@ -577,6 +649,10 @@ const onConfirm = (data: {
 			flex-direction: row;
 			justify-content: space-between;
 			align-items: center;
+			.top {
+				display: flex;
+				align-items: center;
+			}
 			.notice {
 				font-size: $uni-font-size-base;
 				color: $wk-text-color;

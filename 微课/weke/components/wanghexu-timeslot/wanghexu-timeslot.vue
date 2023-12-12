@@ -48,6 +48,7 @@
 </template>
 
 <script>
+import props from '../../uni_modules/lime-circle/components/l-circle/props';
 export default {
 	name:"time_slot",
 	props: {
@@ -57,6 +58,22 @@ export default {
 		       return "选择时间段";
 		    }
 		},
+		start: {
+			type: Number,
+			default: 14
+		},
+		end: {
+			type: Number,
+			default: 15
+		},
+		startMin: {
+			type: Number,
+			default: 0
+		},
+		endMin: {
+			type: Number,
+			default: 0
+		}
 	},
     data() {
         return {
@@ -64,8 +81,8 @@ export default {
 			isShow:false,//显示
 			typeList:["开始时间","结束时间"],
 			typeIndex:0,//下标
-			startvalue:[14,0],//默认下标，14时 00分
-			endvalue:[15,0],//默认下标，15时 00分
+			startvalue:[this.start, this.startMin],//默认下标，14时 00分
+			endvalue:[this.end, this.endMin],//默认下标，15时 00分
 			indicatorStyle: 'height: 50px;',
 			// timeList:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
 			timeHour:[],
@@ -159,7 +176,7 @@ export default {
 		handleType(index){
 			if(index!=this.typeIndex){
 				if(index==1){
-					this.endvalue = [this.startvalue[0]+1,0]
+					// this.endvalue = [this.startvalue[0]+1,0]
 				}
 				this.typeIndex = index
 			}
