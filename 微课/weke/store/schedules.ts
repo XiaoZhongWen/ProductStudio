@@ -8,9 +8,15 @@ const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
 })
 
+type Range = {
+	from: number,
+	to: number
+}
+
 export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
+			didLoadRanges: [] as Range[],
 			schedules: [] as Schedule[]
 		}
 	},
@@ -124,12 +130,23 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			return result
 		},
+		async fetchSchedules(date:Date) {
+			const from = timestampForBeginOfMonth(date)
+			const to = timestampForEndOfMonth(date)
+			
+			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
+			if (index === -1) {
+				await this.loadSchedules(date)
+			}
+			const schedules = this.schedules.filter(s => s.startTime >= from && s.endTime <= to)
+			return schedules
+		},
 		async loadSchedules(date:Date) {
 			const from = timestampForBeginOfMonth(date)
 			const to = timestampForEndOfMonth(date)
 			
-			const res = this.schedules.filter(s => s.startTime > from && s.endTime < to)
-			if (res.length > 0) {
+			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
+			if (index !== -1) {
 				return
 			}
 			
@@ -139,37 +156,48 @@ export const useScheduleStore = defineStore('schedules', {
 			const roles = userStore.owner.roles
 			const type = userStore.owner.from
 			
+			const schedules:Schedule[] = []
 			if (type === 'stuNo') {
 				// 学生
-				const schedules = await schedules_co.loadSchedules({
+				const res = await schedules_co.loadSchedules({
 					from, to, 
 					roles: [],
 					ids: [userId]
 				}) as Schedule[]
-				this.schedules.push(...schedules)
-				return
+				schedules.push(...res)
 			} else if (type === 'wx') {
 				if (roles?.includes(3) && roles.length === 1) {
 					// 家长
 					const children = userStore.students.filter(s => s.associateIds?.includes(userId))
 					if (children.length > 0) {
-						const schedules = await schedules_co.loadSchedules({
+						const res = await schedules_co.loadSchedules({
 							from, to, roles,
 							ids: children.map(s => s._id)
 						})
-						this.schedules.push(...schedules)
-						return
+						schedules.push(...res)
 					}
 				} else {
 					const orgs = orgStore.orgs.filter(org => org.creatorId === userId)
 					// 管理员|老师
-					const schedules = await schedules_co.loadSchedules({
+					const res = await schedules_co.loadSchedules({
 						from, to, roles,
 						orgIds: orgs.map(o => o._id),
 						ids: [userId]
 					}) as Schedule[]
-					this.schedules.push(...schedules)
+					schedules.push(...res)
 				}
+			}
+			
+			if (schedules.length > 0) {
+				schedules.forEach(s => {
+					const index = this.schedules.findIndex(item => item._id === s._id)
+					if (index === -1) {
+						this.schedules.push(s)
+					}
+				})
+				this.didLoadRanges.push({
+					from, to
+				})
 			}
 		}
 	}

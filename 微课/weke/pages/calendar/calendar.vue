@@ -3,10 +3,18 @@
 		<wu-calendar
 			:insert="true" 
 			:fold="true"
+			:selected="selected"
 			color="#5073D6"
 			slideSwitchMode="horizontal"
-			@change="calendarChange">
+			@change="calendarChange"
+			@monthSwitch="onMonthSwitch">
 		</wu-calendar>
+		<view class="unfinished">
+			
+		</view>
+		<view class="finished">
+			
+		</view>
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -18,21 +26,53 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
+import { useScheduleStore } from "@/store/schedules"
+import { computed, onMounted, ref } from 'vue';
+import { format, yyyyMMdd } from '@/utils/wk-date'
+import { Schedule } from "../../types/schedule";
 
-import { computed, ref } from 'vue';
-import { format } from '@/utils/wk-date'
+type CourseTag = {
+	date: string,
+	info: string,
+	infoColor: string
+}
 
 const selectedDate = ref(format(new Date()))
 const usersStore = useUsersStore()
+const scheduleStore = useScheduleStore()
+const scheduleList = ref<Schedule[]>([])
 
 const isShowAddBtn = computed(() => {
 	return usersStore.owner.roles?.includes(1) ||
 			usersStore.owner.roles?.includes(2)
 })
 
+onMounted(async () => {
+	const schedules = await scheduleStore.fetchSchedules(new Date())
+	scheduleList.value.push(...schedules)
+})
+
+const selected = computed(() => {
+	const result:CourseTag[] = []
+	debugger
+	scheduleList.value.forEach(s => {
+		const tag:CourseTag = {
+			date: yyyyMMdd(new Date(s.startTime)),
+			info: '课',
+			infoColor: '#5073D6'
+		}
+		result.push(tag)
+	})
+	return result
+})
+
 const calendarChange = (e:{fulldate:string}) => {
 	const { fulldate } = e
 	selectedDate.value = fulldate
+}
+
+const onMonthSwitch = (e:{year:number, month:number}) => {
+	console.info(e)
 }
 
 const onAddTap = () => {

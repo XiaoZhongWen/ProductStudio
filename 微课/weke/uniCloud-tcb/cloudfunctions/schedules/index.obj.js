@@ -98,22 +98,27 @@ module.exports = {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
 				orgId: dbCmd.in(orgIds)
-			})
+			}).get()
 			schedules.push(...r1.data)
 			if (roles.includes(2) && ids.length > 0) {
 				const r2 = await db.collection('wk-schedules').where({
 					startTime: dbCmd.gte(from),
 					endTime: dbCmd.lte(to),
 					teacherId: dbCmd.in(ids)
+				}).get()
+				r2.data.forEach(r => {
+					const index = schedules.findIndex(item => item._id === r._id)
+					if (index === -1) {
+						schedules.push(r)
+					}
 				})
-				schedules.push(...r2.data)
 			}
 		} else {
 			const result = await db.collection('wk-schedules').where({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
 				studentId: dbCmd.in(ids)
-			})
+			}).get()
 			schedules = result.data
 		}
 		return schedules
