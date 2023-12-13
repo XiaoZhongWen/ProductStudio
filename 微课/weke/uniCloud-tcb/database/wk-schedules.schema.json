@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["teacherId", "date", "startTime", "endTime", "repeatType", "courseId"],
+	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "repeatType", "courseId"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -11,6 +11,11 @@
 	"properties": {
 		"_id": {
 			"description": "ID，系统自动生成"
+		},
+		"orgId": {
+			"bsonType": "string",
+			"description": "机构id",
+			"foreignKey": "wk-orgs._id"
 		},
 		"teacherId": {
 			"bsonType": "string",
@@ -36,7 +41,11 @@
 		},
 		"repeatType": {
 			"bsonType": "int",
-			"description": "重复类型, 0 不重发 1 每天 2 每个工作日 3 每个周末 4 每周"
+			"description": "重复类型, 0 不重复 1 每天 2 每周 3 自定义"
+		},
+		"repeat": {
+			"bsonType": "array",
+			"description": "重复星期数集合, [0: 星期日、1星期一 ...]"
 		},
 		"courseId": {
 			"bsonType": "string",
@@ -48,7 +57,7 @@
 			"description": "班级id",
 			"foreignKey": "wk-classes._id"
 		},
-		"studentIds": {
+		"presentIds": {
 			"bsonType": "array",
 			"description": "班级上课的学生id集合",
 			"foreignKey": "wk-users._id"
@@ -63,9 +72,10 @@
 			"description": "预习内容",
 			"maxLength": 1000
 		},
-		"color": {
-			"bsonType": "string",
-			"description": "颜色标签"
+		"gradients": {
+			"bsonType": "array",
+			"description": "颜色标签",
+			"defaultValue": ["#4e54c8", "#8f94fb"]
 		},
 		"remind": {
 			"bsonType": "bool",

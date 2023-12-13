@@ -57,6 +57,7 @@ const emits = defineEmits(['onCancel', 'onRepeatConfirm'])
 const props = defineProps(['day'])
 const selectedOption = ref<number>(0)
 const selectedDays = ref<number[]>([props.day])
+const didConfirm = ref(false)
 const weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
 
 const desc = computed(() => {
@@ -89,11 +90,19 @@ const onSelectedDay = (e:{target:{id:string}}) => {
 }
 
 const onCancel = () => {
+	if (!didConfirm.value) {
+		selectedOption.value = 0
+		selectedDays.value = [props.day]
+	}
 	emits('onCancel')
 }
 
 const onConfirm = () => {
-	emits('onRepeatConfirm')
+	didConfirm.value = true
+	emits('onRepeatConfirm', {
+		option: selectedOption.value,
+		days: selectedDays.value
+	})
 }
 
 </script>

@@ -1,6 +1,7 @@
 <script>
 	import { useUsersStore } from "@/store/users"
 	import { useOrgsStore } from "@/store/orgs"
+	import { useScheduleStore } from "@/store/schedules"
 	import navigateInterceptor from './libs/interceptor/navigateInterceptor'
 	export default {
 		onLaunch: function() {
@@ -18,6 +19,7 @@
 						})
 						const usersStore = useUsersStore()
 						const orgsStore = useOrgsStore()
+						const scheduleStore = useScheduleStore()
 						const result = await usersStore.login()
 						uni.hideLoading()
 						uni.showToast({
@@ -36,6 +38,7 @@
 							if (usersStore.owner.from === 'wx') {
 								await orgsStore.fetchAnonymousOrg()
 							}
+							await scheduleStore.loadSchedules(new Date())
 							uni.hideLoading()
 						}
 					}

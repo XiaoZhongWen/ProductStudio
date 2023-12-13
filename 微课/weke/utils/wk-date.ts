@@ -30,10 +30,28 @@ const daysBetweenDates = (from: Date, to: Date) => {
 	return daysDifference
 }
 
+const timestampForBeginOfMonth = (date: Date) => {
+	const year = date.getFullYear()
+	const month = date.getMonth()
+	const newDate = new Date(year, month, 1)
+	newDate.setHours(0, 0, 0, 0)
+	return newDate.getTime()
+}
+
+const timestampForEndOfMonth = (date: Date) => {
+	const year = date.getFullYear()
+	const month = date.getMonth()
+	const newDate = new Date(year, month + 1, 0)
+	newDate.setHours(23, 59, 59, 999)
+	return newDate.getTime()
+}
+
 export {
 	format,
 	md,
 	hourDuration,
-	daysBetweenDates
+	daysBetweenDates,
+	timestampForBeginOfMonth,
+	timestampForEndOfMonth
 }
 

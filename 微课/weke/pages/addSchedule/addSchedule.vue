@@ -70,13 +70,13 @@
 					class="date-card" 
 					type="date" 
 					@onDateChange="onDateChange"
-					:date="curDate" 
+					:date="selectedDate" 
 					:isFullDay="isFullDay" />
 				<DateCard 
 					class="date-card" 
 					type="time" 
 					@onTimeChange="onTimeChange"
-					:date="curDate" 
+					:date="selectedDate" 
 					:isFullDay="isFullDay" />
 			</view>
 		</view>
@@ -111,7 +111,10 @@
 			</view>
 			<view class="row space" @tap="onRepeatTap">
 				<text class="repeat">重复</text>
-				<uni-icons type="right" color="#c6c8cf"></uni-icons>
+				<view class="right">
+					<text>{{repeatDesc}}</text>
+					<uni-icons type="right" color="#c6c8cf"></uni-icons>
+				</view>
 			</view>
 		</view>
 		<view class="section course-content">
@@ -119,9 +122,10 @@
 				<textarea 
 					class="textarea" 
 					placeholder="课程内容"
-					maxlength="1000" 
+					maxlength="1000"
+					v-model="courseInfo"
 				/>
-				<text class="number">1000</text>
+				<text class="number">{{1000 - courseInfo.length}}</text>
 			</view>
 		</view>
 		<view class="section preview-content">
@@ -129,13 +133,15 @@
 				<textarea 
 					class="textarea" 
 					placeholder="预习内容"
-					maxlength="1000" 
+					maxlength="1000"
+					v-model="previewInfo"
 				/>
-				<text class="number">1000</text>
+				<text class="number">{{1000 - previewInfo.length}}</text>
 			</view>
 		</view>
 		<view class="finish">
 			<button
+				@tap="onSchedule"
 				class="btn" 
 				type="default">
 				完成
@@ -150,8 +156,8 @@
 		</uni-popup>
 		<uni-popup ref="repeatPopup" type="center">
 			<RepeatCard
-				v-if="curDate"
-				:day="curDate.getDay()"
+				v-if="selectedDate"
+				:day="selectedDate.getDay()"
 				@onCancel="onCancel" 
 				@onRepeatConfirm="onRepeatConfirm" />
 		</uni-popup>
@@ -166,6 +172,7 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
+import { useScheduleStore } from "@/store/schedules"
 import { Grade } from '../../types/grade'
 import { onLoad } from '@dcloudio/uni-app'
 import DateCard from './components/DateCard.vue'
@@ -178,6 +185,7 @@ const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 const gradesStore = useGradesStore()
+const scheduleStore = useScheduleStore()
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -196,18 +204,37 @@ const selectedClassId = ref('')
 const selectedStudentId = ref('')
 const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
+const repeatOption = ref<number>(0)
+const repeatDays = ref<number[]>([])
+const courseInfo = ref('')
+const previewInfo = ref('')
+const selectedGradient = ref<string[]>(['#4e54c8', '#8f94fb'])
 
 const students = ref<Student[]>([])
 const grades = ref<Grade[]>([])
 const courses = ref<Course[]>([])
 const teachers = ref<User[]>([])
 
-const curDate = ref<Date>()
+const selectedDate = ref<Date>()
+const selectedStartTime = ref<{hour:number, min:number}>()
+const selectedEndTime = ref<{hour:number, min:number}>()
+
+const global = getApp().globalData!
+
 onLoad(async (option) => {
 	const { date } = option as {
 		date: string
 	}
-	curDate.value = new Date(date)
+	selectedDate.value = new Date(date)
+	const hour = selectedDate.value.getHours()
+	selectedStartTime.value = {
+		hour: hour,
+		min: 0
+	}
+	selectedEndTime.value = {
+		hour: hour + 1,
+		min: 0
+	}
 })
 
 watch(selectedCourseType, async (type) => {
@@ -436,6 +463,28 @@ const selectedTeacher = computed(() => {
 	}
 })
 
+const repeatDesc = computed(() => {
+	const weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+	let str = "无"
+	if (repeatOption.value === 3) {
+		const s:string[] = []
+		repeatDays.value.forEach(day => {
+			s.push(weeks[day])
+		})
+		str = s.join('、')
+	} else {
+		if (repeatOption.value === 0) {
+			str = "无"
+		} else if (repeatOption.value === 1) {
+			str = "每天"
+		} else if (repeatOption.value === 2) {
+			const day = selectedDate.value?.getDay() ?? 0
+			str = "每" + weeks[day]
+		}
+	}
+	return str
+})
+
 const onStudentTap = (type:string) => {
 	if (students.value.length < 2) {
 		return
@@ -508,8 +557,14 @@ const onCancel = () => {
 	repeatPopup.value?.close()
 }
 
-const onRepeatConfirm = () => {
-	debugger
+const onRepeatConfirm = (data: {
+	option: number,
+	days: number[]
+}) => {
+	const { option, days } = data
+	repeatOption.value = option
+	repeatDays.value = days
+	repeatPopup.value?.close()
 }
 
 const radioChange = (e:{detail:{value:string}}) => {
@@ -518,7 +573,8 @@ const radioChange = (e:{detail:{value:string}}) => {
 }
 
 const onColorChanged = (data:{gradient: string[]}) => {
-	
+	const { gradient } = data
+	selectedGradient.value = gradient
 }
 
 const onFullDaySwitchChange = (e:{detail:{value: boolean}}) => {
@@ -559,7 +615,7 @@ const onConfirm = (data: {
 
 const onDateChange = (data: {date:Date}) => {
 	const { date } = data
-	curDate.value = date
+	selectedDate.value = date
 }
 
 const onTimeChange = (data: {
@@ -567,8 +623,151 @@ const onTimeChange = (data: {
 	end: {hour:number, min:number},
 }) => {
 	const { start, end } = data
-	console.info(start)
-	console.info(end)
+	selectedStartTime.value = start
+	selectedEndTime.value = end
+}
+
+const validate = () => {
+	if (selectedCourseType.value === 0) {
+		// 学员
+		if (selectedStudentId.value.length === 0) {
+			uni.showToast({
+				title: "请选择学员",
+				duration: global.duration_toast
+			})
+			return false
+		}
+	} else if (selectedCourseType.value === 1) {
+		// 班级
+		if (selectedClassId.value.length === 0) {
+			uni.showToast({
+				title: "请选择班级",
+				duration: global.duration_toast
+			})
+			return false
+		}
+		// 上课学员
+		if (students.value.length === 0) {
+			uni.showToast({
+				title: "请选择上课学员",
+				duration: global.duration_toast
+			})
+			return false
+		}
+	}
+	// 1. 课程
+	if (selectedCourseId.value.length === 0) {
+		uni.showToast({
+			title: "请选择课程",
+			duration: global.duration_toast
+		})
+		return false
+	}
+	// 2. 老师
+	if (selectedTeacherId.value.length === 0) {
+		uni.showToast({
+			title: "请选择老师",
+			duration: global.duration_toast
+		})
+		return false
+	}
+	return true
+}
+
+const onSchedule = async () => {
+	const isValid = validate()
+	if (!isValid) {
+		return
+	}
+	const date = Date.now()
+	const courseId = selectedCourseId.value
+	const teacherId = selectedTeacherId.value
+	const gradients = selectedGradient.value
+	
+	let studentId = ''
+	let classId = ''
+	let presentIds:string[] = []
+	if (selectedCourseType.value === 0) {
+		studentId = selectedStudentId.value
+	} else {
+		classId = selectedClassId.value
+		presentIds = students.value.map(s => s._id)
+	}
+	
+	let orgId = ''
+	const res = useOrgs.orgs.filter(org => org.courseIds?.includes(courseId))
+	if (res.length === 1) {
+		const org = res[0]
+		orgId = org._id
+	}
+	if (orgId.length === 0) {
+		uni.showToast({
+			title: "排课失败",
+			duration: global.duration_toast
+		})
+		return
+	}
+	const start = new Date(selectedDate.value as Date)
+	let sh = selectedStartTime.value?.hour ?? 0
+	let sm = selectedStartTime.value?.min ?? 0
+	if (isFullDay.value) {
+		sh = 0
+		sm = 0
+	}
+	start?.setHours(sh)
+	start?.setMinutes(sm)
+	const end = new Date(selectedDate.value as Date)
+	let eh = selectedEndTime.value?.hour ?? 0
+	let em = selectedEndTime.value?.min ?? 0
+	if (isFullDay.value) {
+		eh = 23
+		em = 59
+	}
+	end?.setHours(eh)
+	end?.setMinutes(em)
+	const startTime = start!.getTime()
+	const endTime = end!.getTime()
+	const remind = isNotice.value
+	const repeatType = repeatOption.value
+	const repeat = repeatDays.value
+	
+	const courseContent = courseInfo.value
+	const previewContent = previewInfo.value
+	
+	uni.showLoading({
+		title: ""
+	})
+	const result = await scheduleStore.createSchedule({
+		date,
+		orgId,
+		studentId,
+		classId,
+		presentIds,
+		courseId,
+		teacherId,
+		gradients,
+		startTime,
+		endTime,
+		remind,
+		repeatType,
+		repeat,
+		courseContent,
+		previewContent
+	})
+	uni.hideLoading()
+	uni.showToast({
+		title: result?"排课成功":"排课失败",
+		duration: global.duration_toast
+	})
+	if (result) {
+		selectedStudentId.value = ''
+		selectedClassId.value = ''
+		selectedTeacherId.value = ''
+		courseInfo.value = ''
+		previewInfo.value = ''
+		repeatOption.value = 0
+		repeatDays.value = []
+	}
 }
 
 </script>
@@ -662,13 +861,19 @@ const onTimeChange = (data: {
 				font-size: $uni-font-size-sm;
 				color: $wk-text-color-grey;
 			}
-			.repeat {
-				font-size: $uni-font-size-base;
-				color: $wk-text-color;
-			}
 		}
 		.space {
+			font-size: $uni-font-size-base;
 			margin-top: $uni-spacing-col-base;
+			.repeat {
+				color: $wk-text-color;
+			}
+			.right {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				color: $wk-text-color-grey;
+			}
 		}
 	}
 	.course-content, .preview-content {
