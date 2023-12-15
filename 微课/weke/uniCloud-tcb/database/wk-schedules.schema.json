@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "repeatType", "courseId"],
+	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "startDate", "endDate", "repeatType", "courseId", "count", "status"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -32,12 +32,20 @@
 			"description": "排课操作时间"
 		},
 		"startTime": {
-			"bsonType": "timestamp",
-			"description": "排课的开始时间"
+			"bsonType": "string",
+			"description": "排课的开始时间 hh:mm"
 		},
 		"endTime": {
+			"bsonType": "string",
+			"description": "排课的结束时间 hh:mm"
+		},
+		"startDate": {
 			"bsonType": "timestamp",
-			"description": "排课的结束时间"
+			"description": "排课的开始日期"
+		},
+		"endDate": {
+			"bsonType": "timestamp",
+			"description": "排课的结束日期"
 		},
 		"repeatType": {
 			"bsonType": "int",
@@ -72,6 +80,24 @@
 			"description": "预习内容",
 			"maxLength": 1000
 		},
+		"feedback": {
+			"bsonType": "string",
+			"description": "课程反馈",
+			"maxLength": 1000
+		},
+		"assignment": {
+			"bsonType": "string",
+			"description": "作业",
+			"maxLength": 1000
+		},
+		"consume": {
+			"bsonType": "int",
+			"description": "消耗课时数"
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "0:排课, 1:消课, 2:撤销, 3:编辑"
+		},
 		"gradients": {
 			"bsonType": "array",
 			"description": "颜色标签",
@@ -80,6 +106,14 @@
 		"remind": {
 			"bsonType": "bool",
 			"description": "true 提醒，false 不提醒; 课前半小时及15分钟各提醒一次"
+		},
+		"modifyDate": {
+			"bsonType": "timestamp",
+			"description": "变更时间戳"
+		},
+		"operatorId": {
+			"bsonType": "string",
+			"description": "操作人id"
 		}
 	}
 }

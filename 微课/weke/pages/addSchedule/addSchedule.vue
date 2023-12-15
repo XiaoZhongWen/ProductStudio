@@ -89,6 +89,24 @@
 				style="transform:scale(0.7)"
 				@change="onFullDaySwitchChange" />
 		</view>
+		<view class="section duration" v-if="selectedCourseId">
+			<view class="row">
+				<text>课程类型</text>
+				<text class="type">{{courseType}}</text>
+			</view>
+			<view class="row consume" v-if="courseTypeValue !== 2">
+				<text>课程时长</text>
+				<text class="type">{{duration + "分钟"}}</text>
+			</view>
+			<view class="row consume">
+				<text>预计消耗</text>
+				<uni-data-select
+					:clear="false"
+					v-model="consume"
+					:localdata="range">
+				</uni-data-select>
+			</view>
+		</view>
 		<view class="section other">
 			<view class="row">
 				<view class="left">
@@ -187,6 +205,10 @@ const courseStore = useCourseStore()
 const gradesStore = useGradesStore()
 const scheduleStore = useScheduleStore()
 
+const range = ref<{value:number, text:string}[]>([])
+
+const consume = ref(0)
+
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
@@ -209,6 +231,9 @@ const repeatDays = ref<number[]>([])
 const courseInfo = ref('')
 const previewInfo = ref('')
 const selectedGradient = ref<string[]>(['#4e54c8', '#8f94fb'])
+const courseType = ref('')
+const courseTypeValue = ref()
+const duration = ref(0)
 
 const students = ref<Student[]>([])
 const grades = ref<Grade[]>([])
@@ -410,6 +435,64 @@ watch(selectedClassId, (classId) => {
 		selectedTeacherId.value = grade.teacherId ?? ''
 	}
 })
+
+watch(selectedCourseId, (id) => {
+	const res = courseStore.course.filter(c => c._id === id)
+	if (res.length === 1) {
+		range.value = []
+		const course = res[0]
+		
+		duration.value = course.duration
+		courseTypeValue.value = course.type
+		
+		if (course.type === 0) {
+			courseType.value = "一对一"
+		} else if (course.type === 1) {
+			courseType.value = "班课"
+		} else if (course.type === 2) {
+			courseType.value = "次课"
+		} else if (course.type === 3) {
+			courseType.value = "试听课"
+		}
+		
+		let unit = "课时"
+		if (course.type === 2) {
+			unit = "次课"
+			consume.value = 1
+		} else {
+			const hourOffset = (selectedEndTime.value?.hour ?? 0) - (selectedStartTime.value?.hour ?? 0)
+			const minOffset =  (selectedEndTime.value?.min ?? 0) - (selectedStartTime.value?.min ?? 0)
+			const offset = hourOffset * 60 + minOffset
+			const count = Math.floor(offset / course.duration)
+			consume.value = count
+		}
+		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(i => {
+			range.value.push({
+				value: i + 1,
+				text: i + 1 + unit
+			})
+		})
+	}
+})
+
+watch([selectedStartTime, selectedEndTime], ([s, e]) => {
+	const res = courseStore.course.filter(c => c._id === selectedCourseId.value)
+	if (res.length === 1) {
+		const course = res[0]
+		if (course.type === 2) {
+			consume.value = 1
+		} else {
+			const hourOffset = (e?.hour ?? 0) - (s?.hour ?? 0)
+			const minOffset =  (e?.min ?? 0) - (s?.min ?? 0)
+			const offset = hourOffset * 60 + minOffset
+			const count = Math.floor(offset / course.duration)
+			consume.value = count
+			if (count === 0) {
+				consume.value = 1
+			}
+		}
+	}
+},{ deep: true })
 
 const selectedStudent = computed(() => {
 	const sId = selectedStudentId.value
@@ -707,26 +790,20 @@ const onSchedule = async () => {
 		})
 		return
 	}
-	const start = new Date(selectedDate.value as Date)
 	let sh = selectedStartTime.value?.hour ?? 0
 	let sm = selectedStartTime.value?.min ?? 0
 	if (isFullDay.value) {
 		sh = 0
 		sm = 0
 	}
-	start?.setHours(sh)
-	start?.setMinutes(sm)
-	const end = new Date(selectedDate.value as Date)
 	let eh = selectedEndTime.value?.hour ?? 0
 	let em = selectedEndTime.value?.min ?? 0
 	if (isFullDay.value) {
 		eh = 23
 		em = 59
 	}
-	end?.setHours(eh)
-	end?.setMinutes(em)
-	const startTime = start!.getTime()
-	const endTime = end!.getTime()
+	const startTime = sh + ":" + sm
+	const endTime = eh + ":" + em
 	const remind = isNotice.value
 	const repeatType = repeatOption.value
 	const repeat = repeatDays.value
@@ -737,6 +814,23 @@ const onSchedule = async () => {
 	uni.showLoading({
 		title: ""
 	})
+	
+	const startDate = new Date(selectedDate.value as Date)
+	const endDate = new Date(selectedDate.value as Date)
+	if (repeatType !== 0) {
+		// 剩余课时数
+		usersStore.entries.filter(e => e.orgId === orgId &&
+										e.courseId === courseId &&
+										e.teacherId === teacherId)
+		if (repeatType === 1) {
+			// 每天
+		} else if (repeatType === 2) {
+			// 每周
+		} else if (repeatType === 3) {
+			// 自定义 repeat
+		} 
+	}
+	
 	const result = await scheduleStore.createSchedule({
 		date,
 		orgId,
@@ -748,11 +842,14 @@ const onSchedule = async () => {
 		gradients,
 		startTime,
 		endTime,
+		startDate: startDate.getTime(),
+		endDate: endDate.getTime(),
 		remind,
 		repeatType,
 		repeat,
 		courseContent,
-		previewContent
+		previewContent,
+		consume: consume.value
 	})
 	uni.hideLoading()
 	uni.showToast({
@@ -839,6 +936,25 @@ const onSchedule = async () => {
 		align-items: center;
 		font-size: $uni-font-size-base;
 		color: $wk-text-color;
+	}
+	.duration {
+		font-size: $uni-font-size-base;
+		color: $wk-text-color;
+		.row {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			.type {
+				color: $wk-text-color-grey;
+			}
+		}
+		.consume {
+			margin-top: $uni-spacing-col-base;
+			.input {
+				text-align: right;
+			}
+		}
 	}
 	.other {
 		display: flex;

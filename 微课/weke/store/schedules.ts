@@ -31,13 +31,16 @@ export const useScheduleStore = defineStore('schedules', {
 			courseId: string,
 			teacherId: string,
 			gradients: string[],
-			startTime: number,
-			endTime: number,
+			startTime: string,
+			endTime: string,
+			startDate: number,
+			endDate: number,
 			remind: boolean,
 			repeatType: number,
 			repeat: number[],
 			courseContent: string,
-			previewContent: string
+			previewContent: string,
+			consume: number
 		}) {
 			let { 
 				date, 
@@ -50,11 +53,14 @@ export const useScheduleStore = defineStore('schedules', {
 				gradients, 
 				startTime, 
 				endTime, 
+				startDate,
+				endDate,
 				remind, 
 				repeatType, 
 				repeat, 
 				courseContent, 
-				previewContent 
+				previewContent,
+				consume
 			} = param
 			if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 ||
@@ -62,7 +68,10 @@ export const useScheduleStore = defineStore('schedules', {
 				typeof(gradients) === 'undefined' || gradients.length === 0 ||
 				typeof(date) === 'undefined' || 
 				typeof(startTime) === 'undefined' ||
-				typeof(endTime) === 'undefined') {
+				typeof(endTime) === 'undefined' ||
+				typeof(startDate) === 'undefined' ||
+				typeof(endDate) === 'undefined' ||
+				typeof(consume) === 'undefined') {
 				return false
 			}
 			if ( (typeof(studentId) === 'undefined' || studentId.length === 0) &&
@@ -98,11 +107,14 @@ export const useScheduleStore = defineStore('schedules', {
 				gradients,
 				startTime,
 				endTime,
+				startDate,
+				endDate,
 				remind,
 				repeatType,
 				repeat,
 				courseContent,
-				previewContent
+				previewContent,
+				consume
 			})
 			if (typeof(scheduleId) !== 'undefined' &&
 				scheduleId.length > 0) {
@@ -118,11 +130,15 @@ export const useScheduleStore = defineStore('schedules', {
 					gradients,
 					startTime,
 					endTime,
+					startDate,
+					endDate,
 					remind,
 					repeatType,
 					repeat,
 					courseContent,
-					previewContent
+					previewContent,
+					consume,
+					status: 0
 				}
 				this.schedules.push(schedule)
 			} else {

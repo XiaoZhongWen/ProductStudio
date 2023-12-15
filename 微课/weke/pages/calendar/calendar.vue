@@ -54,7 +54,6 @@ onMounted(async () => {
 
 const selected = computed(() => {
 	const result:CourseTag[] = []
-	debugger
 	scheduleList.value.forEach(s => {
 		const tag:CourseTag = {
 			date: yyyyMMdd(new Date(s.startTime)),

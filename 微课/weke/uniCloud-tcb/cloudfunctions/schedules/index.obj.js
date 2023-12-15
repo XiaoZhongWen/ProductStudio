@@ -16,11 +16,14 @@ module.exports = {
 			gradients, 
 			startTime, 
 			endTime, 
+			startDate,
+			endDate
 			remind, 
 			repeatType, 
 			repeat, 
 			courseContent, 
-			previewContent 
+			previewContent,
+			consume
 		} = param
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
@@ -28,7 +31,10 @@ module.exports = {
 			typeof(gradients) === 'undefined' || gradients.length === 0 ||
 			typeof(date) === 'undefined' || 
 			typeof(startTime) === 'undefined' ||
-			typeof(endTime) === 'undefined') {
+			typeof(endTime) === 'undefined' ||
+			typeof(startDate) === 'undefined' ||
+			typeof(endDate) === 'undefined' ||
+			typeof(consume) === 'undefined') {
 			return ''
 		}
 		if ( (typeof(studentId) === 'undefined' || studentId.length === 0) &&
@@ -64,11 +70,15 @@ module.exports = {
 			gradients, 
 			startTime, 
 			endTime, 
+			startDate,
+			endDate,
 			remind, 
 			repeatType, 
 			repeat, 
 			courseContent, 
-			previewContent
+			previewContent,
+			consume,
+			status: 0
 		})
 		const { id, inserted } = res
 		return id
@@ -97,14 +107,16 @@ module.exports = {
 			const r1 = await db.collection('wk-schedules').where({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				orgId: dbCmd.in(orgIds)
+				orgId: dbCmd.in(orgIds),
+				status: 0
 			}).get()
 			schedules.push(...r1.data)
 			if (roles.includes(2) && ids.length > 0) {
 				const r2 = await db.collection('wk-schedules').where({
 					startTime: dbCmd.gte(from),
 					endTime: dbCmd.lte(to),
-					teacherId: dbCmd.in(ids)
+					teacherId: dbCmd.in(ids),
+					status: 0
 				}).get()
 				r2.data.forEach(r => {
 					const index = schedules.findIndex(item => item._id === r._id)
@@ -117,7 +129,8 @@ module.exports = {
 			const result = await db.collection('wk-schedules').where({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				studentId: dbCmd.in(ids)
+				studentId: dbCmd.in(ids),
+				status: 0
 			}).get()
 			schedules = result.data
 		}
