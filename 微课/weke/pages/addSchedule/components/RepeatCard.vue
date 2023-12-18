@@ -36,6 +36,13 @@
 						color="#5073D6" />
 					<text :class="selectedOption === 3?'selected':'normal'">自定义</text>
 				</label>
+				<label class="radio-item">
+					<radio 
+						:checked="selectedOption === 4" 
+						:value="4" 
+						color="#5073D6" />
+					<text :class="selectedOption === 4?'selected':'normal'">自选日期</text>
+				</label>
 			</radio-group>
 		</view>
 		<view class="custom" v-if="selectedOption === 3">
@@ -45,6 +52,15 @@
 					<text :id="index" :class="selectedDays.includes(index)?'selectedDay':'day'">{{day}}</text>
 				</template>
 			</view>
+		</view>
+		<view class="select-date-byself" v-else-if="selectedOption === 4">
+			<wu-calendar
+				:insert="true"
+				:date="dates"
+				mode="multiple"
+				color="#5073D6"
+				slideSwitchMode="horizontal">
+			</wu-calendar>
 		</view>
 		<view class="bottom"></view>
 	</view>
@@ -59,6 +75,10 @@ const selectedOption = ref<number>(0)
 const selectedDays = ref<number[]>([props.day])
 const didConfirm = ref(false)
 const weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+
+const dates = ref<string[]>([])
+
+const global = getApp().globalData!
 
 const desc = computed(() => {
 	const s:string[] = []
@@ -98,16 +118,35 @@ const onCancel = () => {
 }
 
 const onConfirm = () => {
+	if (selectedOption.value === 4) {
+		if (dates.value.length > 50) {
+			uni.showToast({
+				title: "重复次数不能超过50次",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return
+		}
+		if (dates.value.length <= 0) {
+			uni.showToast({
+				title: "请选择日期",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return
+		}
+	}
 	didConfirm.value = true
 	emits('onRepeatConfirm', {
 		option: selectedOption.value,
-		days: selectedDays.value
+		days: selectedDays.value,
+		dates
 	})
 }
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .repeat-card-container {
 	display: flex;
 	flex-direction: column;
@@ -186,6 +225,18 @@ const onConfirm = () => {
 				background-color: $wk-theme-color;
 				border-radius: $uni-border-radius-lg;
 				margin: $uni-spacing-row-mini $uni-spacing-row-sm;
+			}
+		}
+		.row {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			background-color: $wk-bg-color-grey;
+			padding: 0 $uni-padding-base;
+			border-radius: $uni-border-radius-base;
+			.uni-data-select :v-deep(.uni-select) {
+			    border: none !important;
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "startDate", "endDate", "repeatType", "courseId", "count", "status"],
+	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "repeatType", "courseId", "count", "status"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -32,28 +32,12 @@
 			"description": "排课操作时间"
 		},
 		"startTime": {
-			"bsonType": "string",
+			"bsonType": "timestamp",
 			"description": "排课的开始时间 hh:mm"
 		},
 		"endTime": {
-			"bsonType": "string",
+			"bsonType": "timestamp",
 			"description": "排课的结束时间 hh:mm"
-		},
-		"startDate": {
-			"bsonType": "timestamp",
-			"description": "排课的开始日期"
-		},
-		"endDate": {
-			"bsonType": "timestamp",
-			"description": "排课的结束日期"
-		},
-		"repeatType": {
-			"bsonType": "int",
-			"description": "重复类型, 0 不重复 1 每天 2 每周 3 自定义"
-		},
-		"repeat": {
-			"bsonType": "array",
-			"description": "重复星期数集合, [0: 星期日、1星期一 ...]"
 		},
 		"courseId": {
 			"bsonType": "string",

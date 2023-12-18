@@ -15,12 +15,12 @@ module.exports = {
 			teacherId, 
 			gradients, 
 			startTime, 
-			endTime, 
-			startDate,
-			endDate
+			endTime,
 			remind, 
 			repeatType, 
-			repeat, 
+			repeatDays, 
+			repeatDates,
+			endRepeatDate,
 			courseContent, 
 			previewContent,
 			consume
@@ -32,8 +32,6 @@ module.exports = {
 			typeof(date) === 'undefined' || 
 			typeof(startTime) === 'undefined' ||
 			typeof(endTime) === 'undefined' ||
-			typeof(startDate) === 'undefined' ||
-			typeof(endDate) === 'undefined' ||
 			typeof(consume) === 'undefined') {
 			return ''
 		}
@@ -48,8 +46,14 @@ module.exports = {
 		if ((typeof(repeatType) === 'undefined')) {
 			repeatType = 0
 		}
-		if ((typeof(repeat) === 'undefined')) {
-			repeat = []
+		if ((typeof(repeatDays) === 'undefined')) {
+			repeatDays = []
+		}
+		if ((typeof(repeatDates) === 'undefined')) {
+			repeatDates = []
+		}
+		if ((typeof(endRepeatDate) === 'undefined')) {
+			endRepeatDate = ''
 		}
 		if ((typeof(courseContent) === 'undefined')) {
 			courseContent = ''
@@ -58,30 +62,95 @@ module.exports = {
 			previewContent = ''
 		}
 		
+		const start = new Date(startTime)
+		const end = new Date(endTime)
+		
 		const db = uniCloud.database()
-		const res = await db.collection('wk-schedules').add({
-			date,
-			orgId, 
-			studentId, 
-			classId, 
-			presentIds, 
-			courseId, 
-			teacherId, 
-			gradients, 
-			startTime, 
-			endTime, 
-			startDate,
-			endDate,
-			remind, 
-			repeatType, 
-			repeat, 
-			courseContent, 
-			previewContent,
-			consume,
-			status: 0
-		})
-		const { id, inserted } = res
-		return id
+		const ranges = []
+		let daysOfWeek = []
+		if (repeatType === 0) {
+			// 无
+			ranges.push({startTime, endTime})
+		} else if (repeatType === 1) {
+			// 每天
+			daysOfWeek = [0, 1, 2, 3, 4, 5, 6]
+		} else if (repeatType === 2) {
+			// 每周
+			const cur = new Date()
+			daysOfWeek = [cur.getDay()]
+		} else if (repeatType === 3) {
+			// 自定义
+			daysOfWeek = repeatDays
+		} else if (repeatType === 4) {
+			// 自选
+			repeatDates.forEach(rd => {
+				const s = new Date(rd)
+				s.setHours(start.getHours())
+				s.setMinutes(start.getMinutes())
+				const e = new Date(rd)
+				e.setHours(end.getHours())
+				e.setMinutes(end.getMinutes())
+				ranges.push({
+					startTime: s.getTime(),
+					endTime: e.getTime()
+				})
+			})
+		}
+		
+		if (daysOfWeek.length > 0) {
+			let from = new Date(start)
+			from.setHours(0, 0, 0, 0)
+			const to = new Date(endRepeatDate)
+			to.setHours(23, 59, 59, 999)
+			while (from <= to) {
+			    const currentDayOfWeek = from.getDay(); // 获取当前日期的星期几（0 表示星期日，1 表示星期一，以此类推）
+			    // 检查当前日期是否在指定的排课日期内
+			    if (daysOfWeek.includes(currentDayOfWeek)) {
+					const s = new Date(from)
+					s.setHours(start.getHours())
+					s.setMinutes(start.getMinutes())
+					const e = new Date(from)
+					e.setHours(end.getHours())
+					e.setMinutes(end.getMinutes())
+					ranges.push({
+						startTime: s.getTime(),
+						endTime: e.getTime()
+					})
+			    }
+			    // 将日期增加一天
+			    from.setDate(from.getDate() + 1);
+			}
+		}
+		
+		const transaction = await db.startTransaction()
+		try {
+			const items = []
+			for (let r of ranges) {
+				const res = await db.collection('wk-schedules').add({
+					date,
+					orgId, 
+					studentId, 
+					classId, 
+					presentIds, 
+					courseId, 
+					teacherId, 
+					gradients, 
+					startTime: r.startTime, 
+					endTime: r.endTime,
+					remind,
+					courseContent, 
+					previewContent,
+					consume,
+					status: 0
+				})
+				const { id, inserted } = res
+				items.push({id, startTime: r.startTime, endTime: r.endTime})
+			}
+			return items
+		} catch(e) {
+			await transaction.commit()
+			return []
+		}
 	},
 	async loadSchedules(param) {
 		const { from, to, roles, orgIds, ids } = param

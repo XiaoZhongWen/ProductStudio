@@ -31,13 +31,13 @@ export const useScheduleStore = defineStore('schedules', {
 			courseId: string,
 			teacherId: string,
 			gradients: string[],
-			startTime: string,
-			endTime: string,
-			startDate: number,
-			endDate: number,
+			startTime: number,
+			endTime: number,
 			remind: boolean,
 			repeatType: number,
-			repeat: number[],
+			repeatDays: number[],
+			repeatDates: string[],
+			endRepeatDate: string,
 			courseContent: string,
 			previewContent: string,
 			consume: number
@@ -53,11 +53,11 @@ export const useScheduleStore = defineStore('schedules', {
 				gradients, 
 				startTime, 
 				endTime, 
-				startDate,
-				endDate,
 				remind, 
 				repeatType, 
-				repeat, 
+				repeatDays, 
+				repeatDates,
+				endRepeatDate,
 				courseContent, 
 				previewContent,
 				consume
@@ -69,8 +69,6 @@ export const useScheduleStore = defineStore('schedules', {
 				typeof(date) === 'undefined' || 
 				typeof(startTime) === 'undefined' ||
 				typeof(endTime) === 'undefined' ||
-				typeof(startDate) === 'undefined' ||
-				typeof(endDate) === 'undefined' ||
 				typeof(consume) === 'undefined') {
 				return false
 			}
@@ -85,8 +83,14 @@ export const useScheduleStore = defineStore('schedules', {
 			if ((typeof(repeatType) === 'undefined')) {
 				repeatType = 0
 			}
-			if ((typeof(repeat) === 'undefined')) {
-				repeat = []
+			if ((typeof(repeatDays) === 'undefined')) {
+				repeatDays = []
+			}
+			if ((typeof(repeatDates) === 'undefined')) {
+				repeatDates = []
+			}
+			if ((typeof(endRepeatDate) === 'undefined')) {
+				endRepeatDate = ''
 			}
 			if ((typeof(courseContent) === 'undefined')) {
 				courseContent = ''
@@ -96,7 +100,7 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			
 			let result = true
-			const scheduleId = await schedules_co.createSchedule({
+			const items = await schedules_co.createSchedule({
 				date,
 				orgId, 
 				studentId, 
@@ -107,40 +111,38 @@ export const useScheduleStore = defineStore('schedules', {
 				gradients,
 				startTime,
 				endTime,
-				startDate,
-				endDate,
 				remind,
 				repeatType,
-				repeat,
+				repeatDays,
+				repeatDates,
+				endRepeatDate,
 				courseContent,
 				previewContent,
 				consume
-			})
-			if (typeof(scheduleId) !== 'undefined' &&
-				scheduleId.length > 0) {
-				const schedule: Schedule = {
-					_id: scheduleId,
-					date, 
-					orgId, 
-					studentId, 
-					classId, 
-					presentIds, 
-					courseId, 
-					teacherId,
-					gradients,
-					startTime,
-					endTime,
-					startDate,
-					endDate,
-					remind,
-					repeatType,
-					repeat,
-					courseContent,
-					previewContent,
-					consume,
-					status: 0
-				}
-				this.schedules.push(schedule)
+			}) as {id:string, startTime: number, endTime: number}[]
+			if (typeof(items) !== 'undefined' &&
+				items.length > 0) {
+				items.forEach(item => {
+					const schedule: Schedule = {
+						_id: item.id,
+						date, 
+						orgId, 
+						studentId, 
+						classId, 
+						presentIds, 
+						courseId, 
+						teacherId,
+						gradients,
+						startTime: item.startTime,
+						endTime: item.endTime,
+						remind,
+						courseContent,
+						previewContent,
+						consume,
+						status: 0
+					}
+					this.schedules.push(schedule)
+				})
 			} else {
 				result = false
 			}

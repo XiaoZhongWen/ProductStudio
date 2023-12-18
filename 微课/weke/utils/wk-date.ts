@@ -53,6 +53,21 @@ const timestampForEndOfMonth = (date: Date) => {
 	return newDate.getTime()
 }
 
+const totalClasses = (from: Date, to: Date, daysOfWeek: number[]) => {
+	let date = new Date(from)
+	let total = 0
+	while (date <= to) {
+	    const currentDayOfWeek = date.getDay(); // 获取当前日期的星期几（0 表示星期日，1 表示星期一，以此类推）
+	    // 检查当前日期是否在指定的排课日期内
+	    if (daysOfWeek.includes(currentDayOfWeek)) {
+	        total++;
+	    }
+	    // 将日期增加一天
+	    date.setDate(date.getDate() + 1);
+	}
+	return total
+}
+
 export {
 	format,
 	yyyyMMdd,
@@ -60,6 +75,7 @@ export {
 	hourDuration,
 	daysBetweenDates,
 	timestampForBeginOfMonth,
-	timestampForEndOfMonth
+	timestampForEndOfMonth,
+	totalClasses
 }
 

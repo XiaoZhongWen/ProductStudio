@@ -128,11 +128,23 @@
 				</view>
 			</view>
 			<view class="row space" @tap="onRepeatTap">
-				<text class="repeat">重复</text>
+				<view class="left">
+					<view class="top">
+						<uni-icons type="loop" color="#5073D6"></uni-icons>
+						<text class="repeat">重复</text>
+					</view>
+					<view class="bottom">
+						<text class="desc">重复次数不超过50次</text>
+					</view>
+				</view>
 				<view class="right">
 					<text>{{repeatDesc}}</text>
 					<uni-icons type="right" color="#c6c8cf"></uni-icons>
 				</view>
+			</view>
+			<view class="row deadline" @tap="onDeadlineTap" v-if="repeatOption !== 0 && repeatOption !== 4">
+				<text>结束重复</text>
+				<text style="color: #c6c8cf;">{{endRepeatDate.length > 0? endRepeatDate: '请选择截止日期'}}</text>
 			</view>
 		</view>
 		<view class="section course-content">
@@ -179,6 +191,7 @@
 				@onCancel="onCancel" 
 				@onRepeatConfirm="onRepeatConfirm" />
 		</uni-popup>
+		<wu-calendar ref="calendar" @confirm="calendarConfirm" :insert="false"></wu-calendar>
 	</view>
 </template>
 
@@ -193,6 +206,7 @@ import { useGradesStore } from "@/store/grades"
 import { useScheduleStore } from "@/store/schedules"
 import { Grade } from '../../types/grade'
 import { onLoad } from '@dcloudio/uni-app'
+import { totalClasses } from '@/utils/wk-date'
 import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
@@ -219,6 +233,11 @@ const repeatPopup = ref<{
 	close: () => void
 }>()
 
+const calendar = ref<{
+	open: (type?: UniHelper.UniPopupType) => void
+	close: () => void
+}>()
+
 const chooseMemberRef = ref(null)
 
 const selectedCourseType = ref<number>(0)
@@ -228,6 +247,8 @@ const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
 const repeatOption = ref<number>(0)
 const repeatDays = ref<number[]>([])
+const repeatDates = ref<string[]>([])
+const endRepeatDate = ref<string>('')
 const courseInfo = ref('')
 const previewInfo = ref('')
 const selectedGradient = ref<string[]>(['#4e54c8', '#8f94fb'])
@@ -549,7 +570,9 @@ const selectedTeacher = computed(() => {
 const repeatDesc = computed(() => {
 	const weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
 	let str = "无"
-	if (repeatOption.value === 3) {
+	if (repeatOption.value === 4) {
+		str = "自选日期"
+	} else if (repeatOption.value === 3) {
 		const s:string[] = []
 		repeatDays.value.forEach(day => {
 			s.push(weeks[day])
@@ -642,11 +665,13 @@ const onCancel = () => {
 
 const onRepeatConfirm = (data: {
 	option: number,
-	days: number[]
+	days: number[],
+	dates: string[]
 }) => {
-	const { option, days } = data
+	const { option, days, dates } = data
 	repeatOption.value = option
 	repeatDays.value = days
+	repeatDates.value = dates
 	repeatPopup.value?.close()
 }
 
@@ -710,13 +735,23 @@ const onTimeChange = (data: {
 	selectedEndTime.value = end
 }
 
+const onDeadlineTap = () => {
+	calendar.value?.open()
+}
+
+const calendarConfirm = (e:{fulldate:string}) => {
+	const { fulldate } = e
+	endRepeatDate.value = fulldate
+}
+
 const validate = () => {
 	if (selectedCourseType.value === 0) {
 		// 学员
 		if (selectedStudentId.value.length === 0) {
 			uni.showToast({
 				title: "请选择学员",
-				duration: global.duration_toast
+				duration: global.duration_toast,
+				icon: "none"
 			})
 			return false
 		}
@@ -725,7 +760,8 @@ const validate = () => {
 		if (selectedClassId.value.length === 0) {
 			uni.showToast({
 				title: "请选择班级",
-				duration: global.duration_toast
+				duration: global.duration_toast,
+				icon: "none"
 			})
 			return false
 		}
@@ -733,7 +769,8 @@ const validate = () => {
 		if (students.value.length === 0) {
 			uni.showToast({
 				title: "请选择上课学员",
-				duration: global.duration_toast
+				duration: global.duration_toast,
+				icon: "none"
 			})
 			return false
 		}
@@ -742,7 +779,8 @@ const validate = () => {
 	if (selectedCourseId.value.length === 0) {
 		uni.showToast({
 			title: "请选择课程",
-			duration: global.duration_toast
+			duration: global.duration_toast,
+			icon: "none"
 		})
 		return false
 	}
@@ -750,7 +788,51 @@ const validate = () => {
 	if (selectedTeacherId.value.length === 0) {
 		uni.showToast({
 			title: "请选择老师",
-			duration: global.duration_toast
+			duration: global.duration_toast,
+			icon: "none"
+		})
+		return false
+	}
+	if (repeatOption.value !== 0 && 
+		repeatOption.value !== 4) {
+		if (endRepeatDate.value.length === 0) {
+			uni.showToast({
+				title: "请选择截止日期",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return false
+		} else {
+			const deadline = new Date(endRepeatDate.value)
+			let daysOfWeek:number[] = []
+			if (repeatOption.value === 1) {
+				// 每天
+				daysOfWeek = [0, 1, 2, 3, 4, 5, 6]
+			}
+			if (repeatOption.value === 2) {
+				// 每周
+				const day = selectedDate.value?.getDay() ?? 0
+				daysOfWeek = [day]
+			}
+			if (repeatOption.value === 3) {
+				daysOfWeek = repeatDays.value
+			}
+			const total = totalClasses(selectedDate.value!, deadline, daysOfWeek)
+			if (total > 50) {
+				uni.showToast({
+					title: "重复次数不能超过50次",
+					duration: global.duration_toast,
+					icon: "none"
+				})
+				return false
+			}
+		}
+	}
+	if (repeatOption.value === 4 && repeatDates.value.length > 50) {
+		uni.showToast({
+			title: "重复次数不能超过50次",
+			duration: global.duration_toast,
+			icon: "none"
 		})
 		return false
 	}
@@ -786,50 +868,39 @@ const onSchedule = async () => {
 	if (orgId.length === 0) {
 		uni.showToast({
 			title: "排课失败",
-			duration: global.duration_toast
+			duration: global.duration_toast,
+			icon: "fail"
 		})
 		return
 	}
+	const start = new Date(selectedDate.value as Date)
 	let sh = selectedStartTime.value?.hour ?? 0
 	let sm = selectedStartTime.value?.min ?? 0
 	if (isFullDay.value) {
 		sh = 0
 		sm = 0
 	}
+	start?.setHours(sh)
+	start?.setMinutes(sm)
+	const end = new Date(selectedDate.value as Date)
 	let eh = selectedEndTime.value?.hour ?? 0
 	let em = selectedEndTime.value?.min ?? 0
 	if (isFullDay.value) {
 		eh = 23
 		em = 59
 	}
-	const startTime = sh + ":" + sm
-	const endTime = eh + ":" + em
+	end?.setHours(eh)
+	end?.setMinutes(em)
+	const startTime = start!.getTime()
+	const endTime = end!.getTime()
+
 	const remind = isNotice.value
 	const repeatType = repeatOption.value
-	const repeat = repeatDays.value
+	const days = repeatDays.value
+	const dates = repeatDates.value
 	
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
-	
-	uni.showLoading({
-		title: ""
-	})
-	
-	const startDate = new Date(selectedDate.value as Date)
-	const endDate = new Date(selectedDate.value as Date)
-	if (repeatType !== 0) {
-		// 剩余课时数
-		usersStore.entries.filter(e => e.orgId === orgId &&
-										e.courseId === courseId &&
-										e.teacherId === teacherId)
-		if (repeatType === 1) {
-			// 每天
-		} else if (repeatType === 2) {
-			// 每周
-		} else if (repeatType === 3) {
-			// 自定义 repeat
-		} 
-	}
 	
 	const result = await scheduleStore.createSchedule({
 		date,
@@ -842,11 +913,11 @@ const onSchedule = async () => {
 		gradients,
 		startTime,
 		endTime,
-		startDate: startDate.getTime(),
-		endDate: endDate.getTime(),
 		remind,
 		repeatType,
-		repeat,
+		repeatDays: days,
+		repeatDates: dates,
+		endRepeatDate: endRepeatDate.value,
 		courseContent,
 		previewContent,
 		consume: consume.value
@@ -854,7 +925,8 @@ const onSchedule = async () => {
 	uni.hideLoading()
 	uni.showToast({
 		title: result?"排课成功":"排课失败",
-		duration: global.duration_toast
+		duration: global.duration_toast,
+		icon: result?"success":"fail"
 	})
 	if (result) {
 		selectedStudentId.value = ''
@@ -864,6 +936,8 @@ const onSchedule = async () => {
 		previewInfo.value = ''
 		repeatOption.value = 0
 		repeatDays.value = []
+		repeatDates.value = []
+		endRepeatDate.value = ''
 	}
 }
 
@@ -981,8 +1055,11 @@ const onSchedule = async () => {
 		.space {
 			font-size: $uni-font-size-base;
 			margin-top: $uni-spacing-col-base;
-			.repeat {
-				color: $wk-text-color;
+			.left {
+				.repeat {
+					margin-left: $uni-spacing-row-sm;
+					color: $wk-text-color;
+				}
 			}
 			.right {
 				display: flex;
@@ -990,6 +1067,11 @@ const onSchedule = async () => {
 				align-items: center;
 				color: $wk-text-color-grey;
 			}
+		}
+		.deadline {
+			color: $wk-text-color;
+			font-size: $uni-font-size-base;
+			margin-top: $uni-spacing-col-base;
 		}
 	}
 	.course-content, .preview-content {
