@@ -9,12 +9,7 @@
 			@change="calendarChange"
 			@monthSwitch="onMonthSwitch">
 		</wu-calendar>
-		<view class="unfinished">
-			
-		</view>
-		<view class="finished">
-			
-		</view>
+		<ScheduleCard class="scheduleCard" />
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -28,6 +23,7 @@
 import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
 import { computed, onMounted, ref } from 'vue';
+import ScheduleCard from './components/ScheduleCard.vue'
 import { format, timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 import { Schedule } from "../../types/schedule";
 
@@ -76,9 +72,17 @@ const selected = computed(() => {
 	return result
 })
 
-const calendarChange = (e:{fulldate:string}) => {
+const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
 	selectedDate.value = fulldate
+	
+	const result = await scheduleStore.fetchSchedules(fulldate)
+	result.forEach(r => {
+		const index = scheduleList.value.findIndex(s => s._id === r._id)
+		if (index === -1) {
+			scheduleList.value.push(r)
+		}
+	})
 }
 
 const onMonthSwitch = async (e:{year:number, month:number}) => {
@@ -133,6 +137,9 @@ const onAddTap = () => {
 		.wu-calendar__weeks {
 			color: $wk-text-color-grey;
 		}
+	}
+	.scheduleCard {
+		margin: $uni-spacing-row-base;
 	}
 }
 </style>

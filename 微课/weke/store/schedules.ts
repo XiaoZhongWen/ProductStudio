@@ -2,8 +2,6 @@ import { defineStore } from 'pinia'
 import { Schedule } from '../types/schedule'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
-import { timestampForBeginOfMonth, timestampForEndOfMonth } from '@/utils/wk-date'
-import { type } from 'os'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -193,13 +191,13 @@ export const useScheduleStore = defineStore('schedules', {
 						result.push(...res)
 					}
 				}
+				result.forEach(r => {
+					const index = this.schedules.findIndex(s => s._id === r._id)
+					if (index === -1) {
+						this.schedules.push(r)
+					}
+				})
 			}
-			result.forEach(r => {
-				const index = this.schedules.findIndex(s => s._id === r._id)
-				if (index === -1) {
-					this.schedules.push(r)
-				}
-			})
 			return result
 		},
 		async fetchSchedulesDate(from: number, to:number) {

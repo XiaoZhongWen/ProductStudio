@@ -246,9 +246,6 @@ const onConfirm = () => {
 			background-color: $wk-bg-color-grey;
 			padding: 0 $uni-padding-base;
 			border-radius: $uni-border-radius-base;
-			.uni-data-select :v-deep(.uni-select) {
-			    border: none !important;
-			}
 		}
 	}
 	.bottom {
