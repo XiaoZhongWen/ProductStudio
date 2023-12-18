@@ -80,6 +80,17 @@ const dates = ref<string[]>([])
 
 const global = getApp().globalData!
 
+const initial = (selectedDates: string[]) => {
+	if (typeof(selectedDates) !== 'undefined' && 
+		selectedDates.length > 0) {
+		dates.value = selectedDates
+	}
+}
+
+defineExpose({
+	initial
+})
+
 const desc = computed(() => {
 	const s:string[] = []
 	selectedDays.value.sort((d1, d2) => {
@@ -140,7 +151,7 @@ const onConfirm = () => {
 	emits('onRepeatConfirm', {
 		option: selectedOption.value,
 		days: selectedDays.value,
-		dates
+		dates: dates.value
 	})
 }
 

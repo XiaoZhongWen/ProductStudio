@@ -3,6 +3,7 @@ import { Schedule } from '../types/schedule'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
 import { timestampForBeginOfMonth, timestampForEndOfMonth } from '@/utils/wk-date'
+import { type } from 'os'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -17,6 +18,7 @@ export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
 			didLoadRanges: [] as Range[],
+			scheduleDates: [] as Number[],
 			schedules: [] as Schedule[]
 		}
 	},
@@ -119,13 +121,14 @@ export const useScheduleStore = defineStore('schedules', {
 				courseContent,
 				previewContent,
 				consume
-			}) as {id:string, startTime: number, endTime: number}[]
+			}) as {id:string, startTime: number, endTime: number, courseDate: string}[]
 			if (typeof(items) !== 'undefined' &&
 				items.length > 0) {
 				items.forEach(item => {
 					const schedule: Schedule = {
 						_id: item.id,
 						date, 
+						courseDate: item.courseDate,
 						orgId, 
 						studentId, 
 						classId, 
@@ -148,74 +151,106 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			return result
 		},
-		async fetchSchedules(date:Date) {
-			const from = timestampForBeginOfMonth(date)
-			const to = timestampForEndOfMonth(date)
-			
-			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
-			if (index === -1) {
-				await this.loadSchedules(date)
+		async fetchSchedules(date: string) {
+			if (typeof(date) === 'undefined' || date.length === 0) {
+				return []
 			}
-			const schedules = this.schedules.filter(s => s.startTime >= from && s.endTime <= to)
-			return schedules
-		},
-		async loadSchedules(date:Date) {
-			const from = timestampForBeginOfMonth(date)
-			const to = timestampForEndOfMonth(date)
-			
-			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
-			if (index !== -1) {
-				return
-			}
-			
-			const userStore = useUsersStore()
-			const orgStore = useOrgsStore()
-			const userId = userStore.owner._id
-			const roles = userStore.owner.roles
-			const type = userStore.owner.from
-			
-			const schedules:Schedule[] = []
-			if (type === 'stuNo') {
-				// 学生
-				const res = await schedules_co.loadSchedules({
-					from, to, 
-					roles: [],
-					ids: [userId]
-				}) as Schedule[]
-				schedules.push(...res)
-			} else if (type === 'wx') {
-				if (roles?.includes(3) && roles.length === 1) {
-					// 家长
-					const children = userStore.students.filter(s => s.associateIds?.includes(userId))
-					if (children.length > 0) {
-						const res = await schedules_co.loadSchedules({
-							from, to, roles,
-							ids: children.map(s => s._id)
-						})
-						schedules.push(...res)
-					}
-				} else {
-					const orgs = orgStore.orgs.filter(org => org.creatorId === userId)
-					// 管理员|老师
-					const res = await schedules_co.loadSchedules({
-						from, to, roles,
-						orgIds: orgs.map(o => o._id),
+			let result = []
+			result = this.schedules.filter(s => s.courseDate === date)
+			if (result.length === 0) {
+				const userStore = useUsersStore()
+				const orgStore = useOrgsStore()
+				const userId = userStore.owner._id
+				const roles = userStore.owner.roles
+				const type = userStore.owner.from
+				if (type === 'stuNo') {
+					// 学生
+					const res = await schedules_co.fetchSchedules({
+						date, 
+						roles: [],
 						ids: [userId]
 					}) as Schedule[]
-					schedules.push(...res)
+					result.push(...res)
+				} else if (type === 'wx') {
+					if (roles?.includes(3) && roles.length === 1) {
+						// 家长
+						const children = userStore.students.filter(s => s.associateIds?.includes(userId))
+						if (children.length > 0) {
+							const res = await schedules_co.fetchSchedules({
+								date, roles,
+								ids: children.map(s => s._id)
+							})
+							result.push(...res)
+						}
+					} else {
+						const orgs = orgStore.orgs.filter(org => org.creatorId === userId)
+						// 管理员|老师
+						const res = await schedules_co.fetchSchedules({
+							date, roles,
+							orgIds: orgs.map(o => o._id),
+							ids: [userId]
+						}) as Schedule[]
+						result.push(...res)
+					}
 				}
 			}
-			
-			if (schedules.length > 0) {
-				schedules.forEach(s => {
-					const index = this.schedules.findIndex(item => item._id === s._id)
-					if (index === -1) {
-						this.schedules.push(s)
+			result.forEach(r => {
+				const index = this.schedules.findIndex(s => s._id === r._id)
+				if (index === -1) {
+					this.schedules.push(r)
+				}
+			})
+			return result
+		},
+		async fetchSchedulesDate(from: number, to:number) {
+			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
+			if (index !== -1) {
+				return this.scheduleDates.filter(s => s >= from && s <= to)
+			} else {
+				const userStore = useUsersStore()
+				const orgStore = useOrgsStore()
+				const userId = userStore.owner._id
+				const roles = userStore.owner.roles
+				const type = userStore.owner.from
+				
+				const result = []
+				if (type === 'stuNo') {
+					// 学生
+					const res = await schedules_co.fetchSchedulesDate({
+						from, to, 
+						roles: [],
+						ids: [userId]
+					}) as Schedule[]
+					result.push(...res)
+				} else if (type === 'wx') {
+					if (roles?.includes(3) && roles.length === 1) {
+						// 家长
+						const children = userStore.students.filter(s => s.associateIds?.includes(userId))
+						if (children.length > 0) {
+							const res = await schedules_co.fetchSchedulesDate({
+								from, to, roles,
+								ids: children.map(s => s._id)
+							})
+							result.push(...res)
+						}
+					} else {
+						const orgs = orgStore.orgs.filter(org => org.creatorId === userId)
+						// 管理员|老师
+						const res = await schedules_co.fetchSchedulesDate({
+							from, to, roles,
+							orgIds: orgs.map(o => o._id),
+							ids: [userId]
+						}) as Schedule[]
+						result.push(...res)
 					}
-				})
-				this.didLoadRanges.push({
-					from, to
-				})
+				}
+				this.scheduleDates.push(...result)
+				if (result.length > 0) {
+					this.didLoadRanges.push({
+						from, to
+					})
+				}
+				return result
 			}
 		}
 	}

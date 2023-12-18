@@ -1,7 +1,7 @@
 // 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
 {
 	"bsonType": "object",
-	"required": ["orgId", "teacherId", "date", "startTime", "endTime", "repeatType", "courseId", "count", "status"],
+	"required": ["orgId", "teacherId", "date", "courseDate", "startTime", "endTime", "courseId", "count", "status"],
 	"permission": {
 		"read": false,
 		"create": false,
@@ -30,6 +30,10 @@
 		"date": {
 			"bsonType": "timestamp",
 			"description": "排课操作时间"
+		},
+		"courseDate": {
+			"bsonType": "string",
+			"description": "课程日期"
 		},
 		"startTime": {
 			"bsonType": "timestamp",

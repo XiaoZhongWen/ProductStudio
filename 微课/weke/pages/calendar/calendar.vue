@@ -28,7 +28,7 @@
 import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
 import { computed, onMounted, ref } from 'vue';
-import { format, yyyyMMdd } from '@/utils/wk-date'
+import { format, timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 import { Schedule } from "../../types/schedule";
 
 type CourseTag = {
@@ -40,23 +40,34 @@ type CourseTag = {
 const selectedDate = ref(format(new Date()))
 const usersStore = useUsersStore()
 const scheduleStore = useScheduleStore()
+const dates = ref<string[]>([])
 const scheduleList = ref<Schedule[]>([])
+
+const global = getApp().globalData!
 
 const isShowAddBtn = computed(() => {
 	return usersStore.owner.roles?.includes(1) ||
 			usersStore.owner.roles?.includes(2)
 })
 
-onMounted(async () => {
-	const schedules = await scheduleStore.fetchSchedules(new Date())
-	scheduleList.value.push(...schedules)
+onMounted(() => {
+	uni.$on(global.didFinishedInitialData, async () => {
+		const date = new Date()
+		const from = timestampForBeginOfMonth(date)
+		const to = timestampForEndOfMonth(date)
+		const scheduleDates = await scheduleStore.fetchSchedulesDate(from, to)
+		dates.value.push(...scheduleDates)
+		
+		const result = await scheduleStore.fetchSchedules(yyyyMMdd(date))
+		scheduleList.value.push(...result)
+	})
 })
 
 const selected = computed(() => {
 	const result:CourseTag[] = []
-	scheduleList.value.forEach(s => {
+	dates.value.forEach(s => {
 		const tag:CourseTag = {
-			date: yyyyMMdd(new Date(s.startTime)),
+			date: s,
 			info: '课',
 			infoColor: '#5073D6'
 		}
@@ -70,8 +81,18 @@ const calendarChange = (e:{fulldate:string}) => {
 	selectedDate.value = fulldate
 }
 
-const onMonthSwitch = (e:{year:number, month:number}) => {
-	console.info(e)
+const onMonthSwitch = async (e:{year:number, month:number}) => {
+	const { year, month } = e
+	const str = year + '-' + month + '-' + '1'
+	const date = new Date(str)
+	const from = timestampForBeginOfMonth(date)
+	const to = timestampForEndOfMonth(date)
+	const scheduleDates = await scheduleStore.fetchSchedulesDate(from, to)
+	scheduleDates.forEach(s => {
+		if (!dates.value.includes(s)) {
+			dates.value.push(s)
+		}
+	})
 }
 
 const onAddTap = () => {

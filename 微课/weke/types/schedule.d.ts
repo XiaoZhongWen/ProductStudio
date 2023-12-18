@@ -1,6 +1,7 @@
 export type Schedule = {
 	_id: string,
 	date: number,
+	courseDate: string,
 	orgId: string,
 	studentId?: string,
 	classId?: string,

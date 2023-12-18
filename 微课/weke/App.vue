@@ -37,6 +37,7 @@
 								await orgsStore.fetchAnonymousOrg()
 							}
 							uni.hideLoading()
+							uni.$emit(this.globalData.didFinishedInitialData)
 						}
 					}
 				}
@@ -63,7 +64,8 @@
 				didUpdateCourseData: "didUpdateCourseData",
 				didUpdateOrgData: "didUpdateOrgData",
 				didUpdatedGradeData: "didUpdatedGradeData",
-				didCreateGrade: "didCreateGrade"
+				didCreateGrade: "didCreateGrade",
+				didFinishedInitialData: "didFinishedInitialData"
 			}
 		}
 	}

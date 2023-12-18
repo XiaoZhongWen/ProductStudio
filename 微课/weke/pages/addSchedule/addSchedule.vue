@@ -186,6 +186,7 @@
 		</uni-popup>
 		<uni-popup ref="repeatPopup" type="center">
 			<RepeatCard
+				ref="repeatCardRef"
 				v-if="selectedDate"
 				:day="selectedDate.getDay()"
 				@onCancel="onCancel" 
@@ -206,7 +207,7 @@ import { useGradesStore } from "@/store/grades"
 import { useScheduleStore } from "@/store/schedules"
 import { Grade } from '../../types/grade'
 import { onLoad } from '@dcloudio/uni-app'
-import { totalClasses } from '@/utils/wk-date'
+import { totalClasses, yyyyMMdd } from '@/utils/wk-date'
 import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
@@ -239,6 +240,7 @@ const calendar = ref<{
 }>()
 
 const chooseMemberRef = ref(null)
+const repeatCardRef = ref(null)
 
 const selectedCourseType = ref<number>(0)
 const selectedClassId = ref('')
@@ -657,6 +659,16 @@ const onCourseTap = () => {
 
 const onRepeatTap = () => {
 	repeatPopup.value?.open()
+	if (repeatCardRef.value) {
+		const instance:InstanceType<typeof RepeatCard> = repeatCardRef.value
+		let selectedDates = []
+		if (repeatDates.value.length > 0) {
+			selectedDates = repeatDates.value
+		} else {
+			selectedDates = [yyyyMMdd(selectedDate.value!)]
+		}
+		instance.initial(selectedDates)
+	}
 }
 
 const onCancel = () => {
@@ -898,7 +910,6 @@ const onSchedule = async () => {
 	const repeatType = repeatOption.value
 	const days = repeatDays.value
 	const dates = repeatDates.value
-	
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
 	
