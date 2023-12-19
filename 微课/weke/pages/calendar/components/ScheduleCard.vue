@@ -3,39 +3,56 @@
 		<view class="top">今天</view>
 		<view class="content">
 			<view class="left">
-				<view class="check-box"></view>
+				<label>
+					<checkbox :value="false" />
+				</label>
 			</view>
 			<view class="right">
 				<view class="main">
-					<view class="wk-icon">
-						<wk-icon
-							text="孙允珠"
-							url="https://img1.baidu.com/it/u=1493065438,4162663216&fm=253&fmt=auto&app=138&f=JPEG?w=403&h=500">
-						</wk-icon>
-					</view>
-					<text class="nickName">孙允珠</text>
-					<wk-circle-progress
-						class="circle-progress" 
-						:total="100" 
-						:consume="20">
-					</wk-circle-progress>
+					<template v-if="props.schedule.classId">
+						<view v-if="grade" :class="grade.icon"></view>
+						<text v-if="grade" class="class-name">{{grade.name}}</text>
+						<uni-icons class="icon" type="flag-filled" :color="props.schedule.gradients[0]"></uni-icons>
+						<wk-circle-progress
+							v-if="total > 0"
+							class="circle-progress" 
+							:total="total" 
+							:consume="consume">
+						</wk-circle-progress>
+					</template>
+					<template v-else>
+						<view class="wk-icon" v-if="student">
+							<wk-icon
+								:text="student.nickName"
+								:url="student.avatarUrl">
+							</wk-icon>
+						</view>
+						<text class="nickName" v-if="student">{{student.nickName}}</text>
+						<uni-icons class="icon" type="flag-filled" :color="props.schedule.gradients[0]"></uni-icons>
+						<wk-circle-progress
+							v-if="total > 0"
+							class="circle-progress" 
+							:total="total" 
+							:consume="consume">
+						</wk-circle-progress>
+					</template>
 				</view>
-				<view class="section course">
-					<text>课程: 英语</text>
+				<view class="section course" v-if="course">
+					<text>课程: {{course.name}}</text>
 				</view>
-				<view class="section teacher">
-					<text>老师: Julien</text>
+				<view class="section teacher" v-if="teacher">
+					<text>老师: {{teacher.nickName}}</text>
 				</view>
 				<view class="section duration">
-					<text>上课时间: 9:00 - 10:00 ⏰</text>
+					<text>上课时间: {{start}} - {{end}} {{props.schedule.remind?'⏰':''}} </text>
 				</view>
-				<view class="students">
+				<view class="students" v-if="presents.length > 0">
 					<text>学员: </text>
 					<view class="cell-container">
-						<template v-for="index in [1, 2, 3, 4, 5, 6, 7, 8]" :key="index">
+						<template v-for="student in presents" :key="student._id">
 							<wk-portrait
-								url="https://img1.baidu.com/it/u=1493065438,4162663216&fm=253&fmt=auto&app=138&f=JPEG?w=403&h=500" 
-								name="孙允珠">
+								:url="student.avatarUrl" 
+								:name="student.nickName">
 							</wk-portrait>
 						</template>
 					</view>
@@ -43,7 +60,7 @@
 			</view>
 		</view>
 		<view class="bottom">
-			<text>兮子英语</text>
+			<text v-if="org">{{org.name}}</text>
 			<view class="right">
 				<text class="action leave">请假</text>
 				<text class="action delete">删除</text>
@@ -53,6 +70,100 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { Student, User } from '../../../types/user';
+import { useUsersStore } from "@/store/users"
+import { useCourseStore } from "@/store/course"
+import { useOrgsStore } from '@/store/orgs'
+import { useGradesStore } from "@/store/grades"
+import { Course } from '../../../types/course';
+import { hhmm } from '@/utils/wk-date'
+import { Org } from '../../../types/org';
+import { Grade } from '../../../types/grade';
+
+const props = defineProps(['schedule'])
+
+const usersStore = useUsersStore()
+const courseStore = useCourseStore()
+const useOrgs = useOrgsStore()
+const gradesStore = useGradesStore()
+
+const student = ref<Student>()
+const total = ref(0)
+const consume = ref(0)
+const course = ref<Course>()
+const teacher = ref<User>()
+const start = ref(hhmm(new Date(props.schedule.startTime)))
+const end = ref(hhmm(new Date(props.schedule.endTime)))
+const presents = ref<Student[]>([])
+const org = ref<Org>()
+const grade = ref<Grade>()
+
+onMounted(async () => {
+	const courseId = props.schedule.courseId ?? ''
+	const teacherId = props.schedule.teacherId ?? ''
+	const orgId = props.schedule.orgId ?? ''
+	
+	if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+		typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+		typeof(orgId) === 'undefined' || orgId.length === 0) {
+		return
+	}
+	const courses = await courseStore.fetchCourses([courseId])
+	if (courses.length === 1) {
+		course.value = courses[0]
+	}
+	
+	const users = await usersStore.fetchUsers([teacherId]) as User[]
+	if (users.length === 1) {
+		teacher.value = users[0]
+	}
+	
+	const orgs = useOrgs.orgs.filter(org => org._id === orgId)
+	if (orgs.length === 1) {
+		org.value = orgs[0]
+	}
+	
+	const classId = props.schedule.classId ?? ''
+	if (typeof(classId) !== 'undefined' && 
+		classId.length > 0) {
+		const grades = await gradesStore.fetchGrades([classId])
+		if (grades.length === 1) {
+			grade.value = grades[0]
+			const studentIds = grade.value.studentIds ?? []
+			presents.value = usersStore.students.filter(s => studentIds.includes(s._id))
+			const studentNos = presents.value.map(s => s.studentNo)
+			usersStore.entries.forEach(e => {
+				if (studentNos.includes(e.studentId) && 
+					e.courseId === courseId &&
+					e.teacherId === teacherId &&
+					e.orgId === orgId) {
+					total.value += e.total
+					consume.value += e.consume
+				}
+			})
+		}
+	} else {
+		const studentId = props.schedule.studentId
+		if (typeof(studentId) !== 'undefined' && 
+			studentId.length > 0) {
+			const res = usersStore.students.filter(s => s._id === studentId)
+			if (res.length === 1) {
+				student.value = res[0]
+			}
+			
+			const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
+											e.courseId === courseId &&
+											e.teacherId === teacherId &&
+											e.orgId === orgId)
+			if (entries.length === 1) {
+				const entry = entries[0]
+				total.value = entry.total
+				consume.value = entry.consume
+			}
+		}
+	}
+})
 
 </script>
 
@@ -77,12 +188,6 @@
 			height: 30px;
 			justify-content: center;
 			align-items: center;
-			.check-box {
-				width: 20px;
-				height: 20px;
-				border: 2px solid;
-				border-image: linear-gradient(to right, #8f41e9, #578aef) 1;
-			}
 		}
 		.right {
 			display: flex;
@@ -108,6 +213,9 @@
 					top: 0px;
 					right: 0px;
 				}
+				.icon {
+					margin-left: $uni-spacing-row-sm;
+				}
 			}
 			.section {
 				font-size: $uni-font-size-sm;
@@ -117,6 +225,9 @@
 				margin-top: $uni-spacing-col-lg;
 			}
 			.teacher {
+				margin-top: $uni-spacing-col-sm;
+			}
+			.duration {
 				margin-top: $uni-spacing-col-sm;
 			}
 			.students {

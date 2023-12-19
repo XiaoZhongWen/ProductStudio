@@ -127,9 +127,9 @@ module.exports = {
 			const items = []
 			for (let r of ranges) {
 				const cDate = new Date(r.startTime)
-				const year = courseDate.getFullYear()
-				const month = String(courseDate.getMonth() + 1).padStart(2, '0')
-				const day = String(courseDate.getDate()).padStart(2, '0')
+				const year = cDate.getFullYear()
+				const month = String(cDate.getMonth() + 1).padStart(2, '0')
+				const day = String(cDate.getDate()).padStart(2, '0')
 				const courseDate = year + '-' + month + '-' + day
 				const res = await db.collection('wk-schedules').add({
 					date,

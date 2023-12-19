@@ -16,7 +16,7 @@ export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
 			didLoadRanges: [] as Range[],
-			scheduleDates: [] as Number[],
+			scheduleDates: [] as string[],
 			schedules: [] as Schedule[]
 		}
 	},
@@ -70,12 +70,12 @@ export const useScheduleStore = defineStore('schedules', {
 				typeof(startTime) === 'undefined' ||
 				typeof(endTime) === 'undefined' ||
 				typeof(consume) === 'undefined') {
-				return false
+				return []
 			}
 			if ( (typeof(studentId) === 'undefined' || studentId.length === 0) &&
 				 ((typeof(classId) === 'undefined' || classId.length === 0) ||
 				 (typeof(presentIds) === 'undefined' || presentIds.length === 0)) ) {
-				return false
+				return []
 			}
 			if ((typeof(remind) === 'undefined')) {
 				remind = false
@@ -99,7 +99,6 @@ export const useScheduleStore = defineStore('schedules', {
 				previewContent = ''
 			}
 			
-			let result = true
 			const items = await schedules_co.createSchedule({
 				date,
 				orgId, 
@@ -143,11 +142,12 @@ export const useScheduleStore = defineStore('schedules', {
 						status: 0
 					}
 					this.schedules.push(schedule)
+					if (!this.scheduleDates.includes(item.courseDate)) {
+						this.scheduleDates.push(item.courseDate)
+					}
 				})
-			} else {
-				result = false
 			}
-			return result
+			return items
 		},
 		async fetchSchedules(date: string) {
 			if (typeof(date) === 'undefined' || date.length === 0) {
@@ -203,7 +203,10 @@ export const useScheduleStore = defineStore('schedules', {
 		async fetchSchedulesDate(from: number, to:number) {
 			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
 			if (index !== -1) {
-				return this.scheduleDates.filter(s => s >= from && s <= to)
+				return this.scheduleDates.filter(s => {
+					const date = new Date(s).getTime()
+					return date >= from && date <= to
+				})
 			} else {
 				const userStore = useUsersStore()
 				const orgStore = useOrgsStore()
@@ -218,7 +221,7 @@ export const useScheduleStore = defineStore('schedules', {
 						from, to, 
 						roles: [],
 						ids: [userId]
-					}) as Schedule[]
+					}) as string[]
 					result.push(...res)
 				} else if (type === 'wx') {
 					if (roles?.includes(3) && roles.length === 1) {
@@ -228,7 +231,7 @@ export const useScheduleStore = defineStore('schedules', {
 							const res = await schedules_co.fetchSchedulesDate({
 								from, to, roles,
 								ids: children.map(s => s._id)
-							})
+							}) as string[]
 							result.push(...res)
 						}
 					} else {
@@ -238,7 +241,7 @@ export const useScheduleStore = defineStore('schedules', {
 							from, to, roles,
 							orgIds: orgs.map(o => o._id),
 							ids: [userId]
-						}) as Schedule[]
+						}) as string[]
 						result.push(...res)
 					}
 				}

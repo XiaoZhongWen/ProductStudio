@@ -16,6 +16,12 @@ const yyyyMMdd = (date:Date) => {
 	return year + "-" + month + "-" + day
 }
 
+const hhmm = (date:Date) => {
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+	return hours + ":" + minutes
+}
+
 const md = (date:Date) => {
 	const month = String(date.getMonth() + 1).padStart(2, '0');
 	const day = String(date.getDate()).padStart(2, '0');
@@ -71,6 +77,7 @@ const totalClasses = (from: Date, to: Date, daysOfWeek: number[]) => {
 export {
 	format,
 	yyyyMMdd,
+	hhmm,
 	md,
 	hourDuration,
 	daysBetweenDates,

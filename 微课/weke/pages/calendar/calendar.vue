@@ -9,7 +9,9 @@
 			@change="calendarChange"
 			@monthSwitch="onMonthSwitch">
 		</wu-calendar>
-		<ScheduleCard class="scheduleCard" />
+		<template v-for="schedule in schedules" :key="schedule._id">
+			<ScheduleCard class="scheduleCard" :schedule="schedule" />
+		</template>
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -24,8 +26,7 @@ import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
 import { computed, onMounted, ref } from 'vue';
 import ScheduleCard from './components/ScheduleCard.vue'
-import { format, timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
-import { Schedule } from "../../types/schedule";
+import { timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 
 type CourseTag = {
 	date: string,
@@ -33,11 +34,9 @@ type CourseTag = {
 	infoColor: string
 }
 
-const selectedDate = ref(format(new Date()))
+const selectedDate = ref(yyyyMMdd(new Date()))
 const usersStore = useUsersStore()
 const scheduleStore = useScheduleStore()
-const dates = ref<string[]>([])
-const scheduleList = ref<Schedule[]>([])
 
 const global = getApp().globalData!
 
@@ -51,17 +50,14 @@ onMounted(() => {
 		const date = new Date()
 		const from = timestampForBeginOfMonth(date)
 		const to = timestampForEndOfMonth(date)
-		const scheduleDates = await scheduleStore.fetchSchedulesDate(from, to)
-		dates.value.push(...scheduleDates)
-		
-		const result = await scheduleStore.fetchSchedules(yyyyMMdd(date))
-		scheduleList.value.push(...result)
+		await scheduleStore.fetchSchedulesDate(from, to)
+		await scheduleStore.fetchSchedules(yyyyMMdd(date))
 	})
 })
 
 const selected = computed(() => {
 	const result:CourseTag[] = []
-	dates.value.forEach(s => {
+	scheduleStore.scheduleDates.forEach(s => {
 		const tag:CourseTag = {
 			date: s,
 			info: '课',
@@ -72,17 +68,15 @@ const selected = computed(() => {
 	return result
 })
 
+const schedules = computed(() => {
+	const result = scheduleStore.schedules.filter(s => s.courseDate === selectedDate.value)
+	return result
+})
+
 const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
 	selectedDate.value = fulldate
-	
-	const result = await scheduleStore.fetchSchedules(fulldate)
-	result.forEach(r => {
-		const index = scheduleList.value.findIndex(s => s._id === r._id)
-		if (index === -1) {
-			scheduleList.value.push(r)
-		}
-	})
+	await scheduleStore.fetchSchedules(fulldate)
 }
 
 const onMonthSwitch = async (e:{year:number, month:number}) => {
@@ -91,12 +85,7 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 	const date = new Date(str)
 	const from = timestampForBeginOfMonth(date)
 	const to = timestampForEndOfMonth(date)
-	const scheduleDates = await scheduleStore.fetchSchedulesDate(from, to)
-	scheduleDates.forEach(s => {
-		if (!dates.value.includes(s)) {
-			dates.value.push(s)
-		}
-	})
+	await scheduleStore.fetchSchedulesDate(from, to)
 }
 
 const onAddTap = () => {
@@ -139,7 +128,7 @@ const onAddTap = () => {
 		}
 	}
 	.scheduleCard {
-		margin: $uni-spacing-row-base;
+		margin: $uni-spacing-row-base $uni-spacing-row-base 0 $uni-spacing-row-base;
 	}
 }
 </style>

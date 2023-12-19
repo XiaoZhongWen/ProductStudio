@@ -274,7 +274,7 @@ onLoad(async (option) => {
 		date: string
 	}
 	selectedDate.value = new Date(date)
-	const hour = selectedDate.value.getHours()
+	const hour = (new Date()).getHours()
 	selectedStartTime.value = {
 		hour: hour,
 		min: 0
@@ -877,6 +877,7 @@ const onSchedule = async () => {
 		const org = res[0]
 		orgId = org._id
 	}
+	
 	if (orgId.length === 0) {
 		uni.showToast({
 			title: "排课失败",
@@ -912,7 +913,6 @@ const onSchedule = async () => {
 	const dates = repeatDates.value
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
-	
 	const result = await scheduleStore.createSchedule({
 		date,
 		orgId,
@@ -935,11 +935,11 @@ const onSchedule = async () => {
 	})
 	uni.hideLoading()
 	uni.showToast({
-		title: result?"排课成功":"排课失败",
+		title: result.length > 0?"排课成功":"排课失败",
 		duration: global.duration_toast,
-		icon: result?"success":"fail"
+		icon: result.length > 0?"success":"fail"
 	})
-	if (result) {
+	if (result.length > 0) {
 		selectedStudentId.value = ''
 		selectedClassId.value = ''
 		selectedTeacherId.value = ''
