@@ -6,7 +6,7 @@
 				:url="orgLogo(org)" 
 				:text="orgBriefName(org)">
 			</wk-icon>
-			<text class="org-name">{{orgName(org)}}</text>
+			<text class="org-name">{{org.name}}</text>
 		</view>
 		<view class="org-teacher-container" v-if="org.teacherIds?.length ?? 0 > 0">
 			<template v-for="teacherId in org.teacherIds" :key="teacherId">
@@ -265,18 +265,7 @@ const orgLogo = (org:Org) => {
 
 const orgBriefName = (org:Org) => {
 	let name = org.name
-	if (org.type === 1) {
-		name = usersStore.owner.nickName
-	}
 	return name.length > 2? name.substring(0, 2): name
-}
-
-const orgName = (org:Org) => {
-	let name = org.name
-	if (org.type === 1) {
-		name = usersStore.owner.nickName
-	}
-	return name
 }
 
 </script>

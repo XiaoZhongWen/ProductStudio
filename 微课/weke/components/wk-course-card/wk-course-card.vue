@@ -172,15 +172,7 @@ onMounted(async () => {
 			teacherIds.value.push(userId)
 		}
 		canReplaceTeacher.value = isCreator.value && hasAdminOrTeacherRole.value && teacherIds.value.length > 1
-		if (org.value.type === 0) {
-			orgName.value = org.value.name
-		} else {
-			const users = await usersStore.fetchUsers([org.value.creatorId])
-			if (users.length === 1) {
-				const creator = users[0]
-				orgName.value = creator.nickName
-			}
-		}
+		orgName.value = org.value.name
 	}
 	const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
 	if (entries.length > 0) {

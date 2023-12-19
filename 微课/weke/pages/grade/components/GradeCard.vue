@@ -68,13 +68,6 @@ onMounted(async () => {
 	if (orgs.length === 1) {
 		const org = orgs[0]
 		orgName.value = org.name
-		if (org.type === 1) {
-			const users = await usersStore.fetchUsers([org.creatorId])
-			if (users.length === 1) {
-				const user = users[0]
-				orgName.value = user.nickName
-			}
-		}
 	}
 	
 	uni.hideLoading()

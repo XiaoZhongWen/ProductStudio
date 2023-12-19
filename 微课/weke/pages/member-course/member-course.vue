@@ -104,15 +104,7 @@ onLoad(async (option) => {
 		const orgs = useOrgs.orgs.filter(org => org._id === orgId)
 		if (orgs.length === 1) {
 			const org = orgs[0]
-			if (org.type === 1) {
-				const users = usersStore.users.filter(u => u._id === org.creatorId)
-				if (users.length === 1) {
-					const user = users[0]
-					orgName = user.nickName
-				}
-			} else {
-				orgName = org.name
-			}
+			orgName = org.name
 		}
 		
 		const students = usersStore.students.filter(s => studentNos.includes(s.studentNo))

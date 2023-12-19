@@ -19,7 +19,7 @@
 			</template>
 		</view>
 		<view class="bottom" v-if="org">
-			<text>{{org.type === 0?org.name:creator}}</text>
+			<text>{{org.name}}</text>
 			<text>{{typeName}}</text>
 		</view>
 	</view>
@@ -45,7 +45,6 @@ const props = defineProps(['courseId', 'orgId'])
 const total = ref(0)
 const consume = ref(0)
 const typeName = ref('')
-const creator = ref('')
 
 onMounted(async () => {
 	if (typeof(props.courseId) === 'undefined' || props.courseId.length === 0 ||
@@ -55,12 +54,6 @@ onMounted(async () => {
 	const orgs = useOrgs.orgs.filter(org => org._id === props.orgId)
 	if (orgs.length > 0) {
 		org.value = orgs[0]
-		if (org.value.type === 1) {
-			const users = await usersStore.fetchUsers([org.value.creatorId])
-			if (users.length > 0) {
-				creator.value = users[0].nickName
-			}
-		}
 	}
 	
 	loadProgress()

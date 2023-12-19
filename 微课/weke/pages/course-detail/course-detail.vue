@@ -186,15 +186,7 @@ onLoad(async (option) => {
 		return
 	}
 	org.value = orgs[0]
-	if (org.value.type === 0) {
-		orgName.value = org.value.name
-	} else {
-		const users = await usersStore.fetchUsers([org.value.creatorId])
-		if (users.length === 1) {
-			const creator = users[0]
-			orgName.value = creator.nickName
-		}
-	}
+	orgName.value = org.value.name
 	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
 	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
 })

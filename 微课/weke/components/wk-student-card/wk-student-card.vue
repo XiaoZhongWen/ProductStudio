@@ -127,15 +127,7 @@ const fetchOrgName = async () => {
 		const res = useOrgs.orgs.filter(org => org._id === orgId)
 		if (res.length === 1) {
 			const org = res[0]
-			if (org.type === 0) {
-				names += org.name + " "
-			} else {
-				const users = await usersStore.fetchUsers([org.creatorId])
-				if (users.length === 1) {
-					const creator = users[0]
-					names += creator.nickName + " "
-				}
-			}
+			names += org.name + " "
 			index++
 			if (index > 2) {
 				names += "等"
