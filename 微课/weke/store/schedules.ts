@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { Schedule } from '../types/schedule'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
+import { Student } from '../types/user'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -264,9 +265,7 @@ export const useScheduleStore = defineStore('schedules', {
 			courseId: string,
 			classId: string,
 			presentIds: string[],
-			count: number,
-			modifyDate: number,
-			operatorId: string
+			consume: number
 		}) {
 			const { 
 				scheduleId, 
@@ -276,19 +275,75 @@ export const useScheduleStore = defineStore('schedules', {
 				courseId, 
 				classId, 
 				presentIds, 
-				count } = param
+				consume } = param
 			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
 				typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(count) === 'undefined') {
+				typeof(consume) === 'undefined') {
 				return false
 			}
 			if ((typeof(studentId) === 'undefined' || studentId.length === 0) &&
-				(typeof(classId) === 'undefined' || classId.length === 0) ||
-				(typeof(presentIds) === 'undefined' || presentIds.length === 0)) {
+				((typeof(classId) === 'undefined' || classId.length === 0) ||
+				(typeof(presentIds) === 'undefined' || presentIds.length === 0))) {
 				return false
 			}
+			const userStore = useUsersStore()
+			let studentNo = ''
+			if (studentId.length > 0) {
+				const students = userStore.students.filter(s => s._id === studentId)
+				if (students.length === 1) {
+					const student = students[0]
+					studentNo = student.studentNo
+				}
+			}
+			
+			let studentNos:string[] = []
+			if (classId.length > 0 && presentIds.length > 0) {
+				const students = userStore.students.filter(s => presentIds.includes(s._id))
+				studentNos = students.map(s => s.studentNo)
+			}
+			debugger
+			const result = await schedules_co.finishSchedule({
+				scheduleId,
+				orgId,
+				teacherId,
+				studentId: studentNo,
+				courseId,
+				classId: classId ?? '',
+				presentIds: studentNos,
+				consume,
+				operatorId: userStore.owner._id
+			})
+			if (result) {
+				debugger
+				const res = this.schedules.filter(s => s._id === scheduleId)
+				if (res.length === 1) {
+					const schedule = res[0]
+					schedule.status = 1;
+					
+					if (studentId.length > 0) {
+						userStore.entries.forEach(e => {
+							if (e.studentId === studentNo &&
+								e.courseId === courseId &&
+								e.teacherId === teacherId &&
+								e.orgId === orgId) {
+								e.consume += consume
+							}
+						})
+					} else if (classId.length > 0 && presentIds.length > 0) {
+						userStore.entries.forEach(e => {
+							if (studentNos.includes(e.studentId) &&
+								e.courseId === courseId &&
+								e.teacherId === teacherId &&
+								e.orgId === orgId) {
+								e.consume += consume		
+							}
+						})
+					}
+				}
+			}
+			return result
 		},
 		async recallFinishSchedule(param: {
 			scheduleId: string,

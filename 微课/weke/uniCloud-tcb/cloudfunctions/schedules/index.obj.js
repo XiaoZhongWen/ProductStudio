@@ -259,5 +259,70 @@ module.exports = {
 			scheduleDates = result.data.map(item => item.courseDate)
 		}
 		return scheduleDates
+	},
+	async finishSchedule(param) {
+		const {
+			scheduleId, 
+			orgId, 
+			teacherId, 
+			studentId, 
+			courseId, 
+			classId, 
+			presentIds, 
+			consume,
+			operatorId } = param
+		if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
+			typeof(orgId) === 'undefined' || orgId.length === 0 ||
+			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+			typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(consume) === 'undefined') {
+			return false
+		}
+		if ((typeof(studentId) === 'undefined' || studentId.length === 0) &&
+			((typeof(classId) === 'undefined' || classId.length === 0) ||
+			(typeof(presentIds) === 'undefined' || presentIds.length === 0))) {
+			return false
+		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const result = await db.collection("wk-schedules").where({
+			_id: scheduleId
+		}).update({
+			status: 1,
+			modifyDate: (new Date()).getTime(),
+			operatorId
+		})
+		const { updated } = result
+		if (updated === 1) {
+			if (studentId.length > 0) {
+				const res = await db.collection("wk-mapping").where({
+					studentId,
+					courseId,
+					teacherId,
+					orgId
+				}).update({
+					consume: dbCmd.inc(consume),
+					operatorId,
+					modifyDate: (new Date()).getTime()
+				})
+				const { updated } = res
+				return updated === 1
+			} else if (classId.length > 0 && presentIds.length > 0) {
+				const res = await db.collection("wk-mapping").where({
+					studentId: dbCmd.in(presentIds),
+					courseId,
+					teacherId,
+					orgId
+				}).update({
+					consume: dbCmd.inc(consume),
+					operatorId,
+					modifyDate: (new Date()).getTime()
+				})
+				const { updated } = res
+				return updated === presentIds.length
+			}
+			return false
+		}
+		return false
 	}
 }

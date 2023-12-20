@@ -82,6 +82,7 @@ import { Course } from '../../../types/course';
 import { hhmm, md } from '@/utils/wk-date'
 import { Org } from '../../../types/org';
 import { Grade } from '../../../types/grade';
+import { Schedule } from '../../../types/schedule';
 
 const props = defineProps(['schedule'])
 
@@ -169,10 +170,23 @@ onMounted(async () => {
 	}
 })
 
-const onCheckedTap = () => {
-	checked.value = !checked.value
-	if (checked.value) {
-		scheduleStore.playChecked()
+const onCheckedTap = async () => {
+	const schedule:Schedule = props.schedule
+	const result = await scheduleStore.finishSchedule({
+		scheduleId: schedule._id,
+		orgId: schedule.orgId,
+		teacherId: schedule.teacherId,
+		studentId: schedule.studentId ?? '',
+		courseId: schedule.courseId,
+		classId: schedule.classId ?? '',
+		presentIds: schedule.presentIds ?? [],
+		consume: schedule.consume,
+	})
+	if (result) {
+		checked.value = !checked.value
+		if (checked.value) {
+			scheduleStore.playChecked()
+		}
 	}
 }
 
