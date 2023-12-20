@@ -85,26 +85,26 @@
     -webkit-appearance: none;  
     background: transparent;  
 }
-checkbox .wx-checkbox-input.wx-checkbox-input-disabled {
-  border : 2rpx solid $wk-bg-color-grey;
-  background : $wk-bg-color-grey;
-}
-checkbox .wx-checkbox-input.wx-checkbox-input-checked {
-  border-color: $wk-theme-color !important;
-  background : $wk-theme-color !important;
-  }
+// checkbox .wx-checkbox-input.wx-checkbox-input-disabled {
+//   border : 2rpx solid $wk-bg-color-grey;
+//   background : $wk-bg-color-grey;
+// }
+// checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+//   border-color: $wk-theme-color !important;
+//   background : $wk-theme-color !important;
+//   }
   
-  checkbox .wx-checkbox-input.wx-checkbox-input-checked::before {
-  width : 20px;
-  height : 20px;
-  line-height : 20px;
-  text-align : center;
-  font-size : 15px;
-  color : #fff;
-  background : transparent;
-  transform : translate(-50%, -50%) scale(1);
-  -webkit-transform: translate(-50%, -50%) scale(1);
-  }
+//   checkbox .wx-checkbox-input.wx-checkbox-input-checked::before {
+//   width : 20px;
+//   height : 20px;
+//   line-height : 20px;
+//   text-align : center;
+//   font-size : 15px;
+//   color : #fff;
+//   background : transparent;
+//   transform : translate(-50%, -50%) scale(1);
+//   -webkit-transform: translate(-50%, -50%) scale(1);
+//   }
 	/*每个页面公共css */
 	page {
 		background-color: #F2F4FD;

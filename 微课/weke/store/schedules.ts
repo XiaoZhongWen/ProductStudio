@@ -17,7 +17,9 @@ export const useScheduleStore = defineStore('schedules', {
 		return {
 			didLoadRanges: [] as Range[],
 			scheduleDates: [] as string[],
-			schedules: [] as Schedule[]
+			schedules: [] as Schedule[],
+			checkedAudioFileId: "cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/audio/jingle.aac",
+			checkedAudioUrl: ''
 		}
 	},
 	
@@ -253,6 +255,65 @@ export const useScheduleStore = defineStore('schedules', {
 				}
 				return result
 			}
+		},
+		async finishSchedule(param: {
+			scheduleId: string,
+			orgId: string,
+			teacherId: string,
+			studentId: string,
+			courseId: string,
+			classId: string,
+			presentIds: string[],
+			count: number,
+			modifyDate: number,
+			operatorId: string
+		}) {
+			const { 
+				scheduleId, 
+				orgId, 
+				teacherId, 
+				studentId, 
+				courseId, 
+				classId, 
+				presentIds, 
+				count } = param
+			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
+				typeof(orgId) === 'undefined' || orgId.length === 0 ||
+				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
+				typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(count) === 'undefined') {
+				return false
+			}
+			if ((typeof(studentId) === 'undefined' || studentId.length === 0) &&
+				(typeof(classId) === 'undefined' || classId.length === 0) ||
+				(typeof(presentIds) === 'undefined' || presentIds.length === 0)) {
+				return false
+			}
+		},
+		async recallFinishSchedule(param: {
+			scheduleId: string,
+			orgId: string,
+			teacherId: string,
+			studentId: string,
+			courseId: string,
+			classId: string,
+			presentIds: string[],
+			count: number
+		}) {
+			
+		},
+		async playChecked() {
+			if (this.checkedAudioUrl.length === 0) {
+				const result = await uniCloud.getTempFileURL({
+					fileList: [this.checkedAudioFileId]
+				})
+				const { tempFileURL } = result.fileList[0]
+				this.checkedAudioUrl = tempFileURL
+			}
+			const innerAudioContext = uni.createInnerAudioContext();
+			innerAudioContext.autoplay = true;
+			innerAudioContext.src = this.checkedAudioUrl
+			innerAudioContext.onPlay(() => {})
 		}
 	}
 })

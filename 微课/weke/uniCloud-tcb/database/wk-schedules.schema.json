@@ -84,7 +84,7 @@
 		},
 		"status": {
 			"bsonType": "int",
-			"description": "0:排课, 1:消课, 2:撤销, 3:编辑"
+			"description": "0:排课, 1:消课, 2:请假, 3:撤销, 4:编辑"
 		},
 		"gradients": {
 			"bsonType": "array",

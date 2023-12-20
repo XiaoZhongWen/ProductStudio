@@ -1,18 +1,20 @@
 <template>
 	<view class="schedule-card-container">
-		<view class="top">今天</view>
+		<view :class="statusCls">{{statusDesc}}</view>
 		<view class="content">
 			<view class="left">
-				<label>
-					<checkbox :value="false" />
-				</label>
+				<view 
+					@tap="onCheckedTap"
+					:checked="checked" 
+					:class="cBoxCls"
+					:style="{color: checked?'#c6c8cf':`${props.schedule.gradients[0]}`}">
+				</view>
 			</view>
 			<view class="right">
 				<view class="main">
 					<template v-if="props.schedule.classId">
 						<view v-if="grade" :class="grade.icon"></view>
 						<text v-if="grade" class="class-name">{{grade.name}}</text>
-						<uni-icons class="icon" type="flag-filled" :color="props.schedule.gradients[0]"></uni-icons>
 						<wk-circle-progress
 							v-if="total > 0"
 							class="circle-progress" 
@@ -28,7 +30,6 @@
 							</wk-icon>
 						</view>
 						<text class="nickName" v-if="student">{{student.nickName}}</text>
-						<uni-icons class="icon" type="flag-filled" :color="props.schedule.gradients[0]"></uni-icons>
 						<wk-circle-progress
 							v-if="total > 0"
 							class="circle-progress" 
@@ -43,9 +44,6 @@
 				<view class="section teacher" v-if="teacher">
 					<text>老师: {{teacher.nickName}}</text>
 				</view>
-				<view class="section duration">
-					<text>上课时间: {{start}} - {{end}} {{props.schedule.remind?'⏰':''}} </text>
-				</view>
 				<view class="students" v-if="presents.length > 0">
 					<text>学员: </text>
 					<view class="cell-container">
@@ -57,12 +55,15 @@
 						</template>
 					</view>
 				</view>
+				<view :class="duration">
+					<text>上课时间: {{dateDesc}} {{start}} - {{end}} {{props.schedule.remind?'⏰':''}} </text>
+				</view>
 			</view>
 		</view>
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
-			<view class="right">
-				<text class="action leave">请假</text>
+			<view class="right" v-if="!checked">
+				<text class="action leave">标记请假</text>
 				<text class="action delete">删除</text>
 			</view>
 		</view>
@@ -70,14 +71,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Student, User } from '../../../types/user';
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { useGradesStore } from "@/store/grades"
+import { useScheduleStore } from "@/store/schedules"
 import { Course } from '../../../types/course';
-import { hhmm } from '@/utils/wk-date'
+import { hhmm, md } from '@/utils/wk-date'
 import { Org } from '../../../types/org';
 import { Grade } from '../../../types/grade';
 
@@ -87,6 +89,7 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 const gradesStore = useGradesStore()
+const scheduleStore = useScheduleStore()
 
 const student = ref<Student>()
 const total = ref(0)
@@ -98,6 +101,7 @@ const end = ref(hhmm(new Date(props.schedule.endTime)))
 const presents = ref<Student[]>([])
 const org = ref<Org>()
 const grade = ref<Grade>()
+const checked = ref(false)
 
 onMounted(async () => {
 	const courseId = props.schedule.courseId ?? ''
@@ -165,6 +169,110 @@ onMounted(async () => {
 	}
 })
 
+const onCheckedTap = () => {
+	checked.value = !checked.value
+	if (checked.value) {
+		scheduleStore.playChecked()
+	}
+}
+
+const statusDesc = computed(() => {
+	const status = props.schedule.status
+	let str = ''
+	switch (status) {
+		case 0: {
+			str = "已排课"
+			break
+		}
+		case 1: {
+			str = "已消课"
+			break
+		}
+		case 2: {
+			str = "已请假"
+			break
+		}
+	}
+	if (checked.value) {
+		str = "已消课"
+	}
+	return str
+})
+
+const statusCls = computed(() => {
+	const status = props.schedule.status
+	let cls = 'top'
+	switch (status) {
+		case 0: {
+			cls = "top status_0"
+			break
+		}
+		case 1: {
+			cls = "top status_1"
+			break
+		}
+		case 2: {
+			cls = "top status_2"
+			break
+		}
+	}
+	if (checked.value) {
+		cls = "top status_1"
+	}
+	return cls
+})
+
+const cBoxCls = computed(() => {
+	if (checked.value) {
+		return 'iconfont icon-round-check_box-px checkbox'
+	} else {
+		return 'iconfont icon-checkbox-blank-outline checkbox'
+	}
+})
+
+const dateDesc = computed(() => {
+	const cur = new Date()
+	const date = new Date(props.schedule.startTime)
+	const offset = cur.getDate() - date.getDate()
+	let str = ''
+	switch (offset) {
+		case 0: {
+			str = "今天, "
+			break
+		}
+		case 1: {
+			str = "昨天, "
+			break
+		}
+		case -1: {
+			str = "明天, "
+			break
+		}
+		case 2: {
+			str = "前天, "
+			break
+		}
+		case -2: {
+			str = "后天, "
+			break
+		}
+		default: {
+			str = md(date) + ", "
+		}
+	}
+	return str
+})
+
+const duration = computed(() => {
+	const cur = new Date()
+	const date = new Date(props.schedule.startTime)
+	const offset = cur.getDate() - date.getDate()
+	if (checked.value) {
+		return 'section done'
+	}
+	return offset > 0? "section expired": "section duration"
+})
+
 </script>
 
 <style lang="scss" scoped>
@@ -175,9 +283,17 @@ onMounted(async () => {
 	padding: $uni-padding-normal;
 	border-radius: $uni-border-radius-lg;
 	.top {
-		color: $wk-text-color;
 		font-size: $uni-font-size-sm;
 		margin-bottom: $uni-spacing-row-base;;
+	}
+	.status_0 {
+		color: $wk-theme-color;
+	}
+	.status_1 {
+		color: $wk-text-color-grey;
+	}
+	.status_2 {
+		color: $uni-color-warning;
 	}
 	.content {
 		display: flex;
@@ -188,6 +304,14 @@ onMounted(async () => {
 			height: 30px;
 			justify-content: center;
 			align-items: center;
+			.checkbox {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				font-size: 20px;
+				width: 30px;
+				height: 30px;
+			}
 		}
 		.right {
 			display: flex;
@@ -227,8 +351,17 @@ onMounted(async () => {
 			.teacher {
 				margin-top: $uni-spacing-col-sm;
 			}
+			.expired {
+				margin-top: $uni-spacing-col-sm;
+				color: $uni-color-error;
+			}
+			.done {
+				margin-top: $uni-spacing-col-sm;
+				color: $wk-text-color-grey;
+			}
 			.duration {
 				margin-top: $uni-spacing-col-sm;
+				color: $wk-theme-color;
 			}
 			.students {
 				display: flex;
