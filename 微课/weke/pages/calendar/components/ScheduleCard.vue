@@ -184,6 +184,7 @@ const onCheckedTap = async () => {
 	})
 	if (result) {
 		checked.value = !checked.value
+		consume.value += schedule.consume
 		if (checked.value) {
 			scheduleStore.playChecked()
 		}
