@@ -80,12 +80,13 @@ const chooseRole = ref('')
 const title = ref('')
 
 const initial = async (data:{
+	selectedMemberId?: string,
 	memberIds: string[],
 	type: string,
 	role: string,
 	invitedIds?: string[]
 }) => {
-	const { memberIds, type, role, invitedIds } = data
+	const { memberIds, type, role, invitedIds, selectedMemberId } = data
 	if (typeof(memberIds) === 'undefined' ||
 		typeof(type) === 'undefined' ||
 		typeof(role) === 'undefined' ||
@@ -113,6 +114,11 @@ const initial = async (data:{
 		members.value = gradesStore.grades.filter(c => memberIds.includes(c._id)) as Grade[]
 	}
 	selectedIds.value = []
+	if (typeof(selectedMemberId) !== 'undefined' && selectedMemberId.length > 0) {
+		selectedId.value = selectedMemberId
+	} else {
+		selectedId.value = ''
+	}
 }
 
 defineExpose({

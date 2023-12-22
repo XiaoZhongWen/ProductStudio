@@ -245,8 +245,14 @@ const repeatCardRef = ref(null)
 const selectedCourseType = ref<number>(0)
 const selectedClassId = ref('')
 const selectedStudentId = ref('')
+// 学员课程
 const selectedCourseId = ref('')
+// 学员老师
 const selectedTeacherId = ref('')
+// 班级课程
+const selectedClassCourseId = ref('')
+// 班级老师
+const selectedClassTeacherId = ref('')
 const repeatOption = ref<number>(0)
 const repeatDays = ref<number[]>([])
 const repeatDates = ref<string[]>([])
@@ -333,37 +339,35 @@ watch(selectedCourseType, async (type) => {
 		courses.value = await courseStore.fetchCourses(courseIds)
 		if (courses.value.length === 1) {
 			selectedCourseId.value = courseIds[0]
-		} else {
-			selectedCourseId.value = ''
 		}
 		teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
 		if (teachers.value.length === 1) {
 			selectedTeacherId.value = teacherIds[0]
-		} else {
-			selectedTeacherId.value = ''
 		}
 	} else {
-		const classIds:string[] = []
-		if (selectedClassId.value.length > 0) {
-			classIds.push(selectedClassId.value)
-		} else {
-			useOrgs.orgs.forEach(org => {
-				if (org.creatorId === userId) {
-					classIds.push(...org.classIds ?? [])
-				}
-			})
-		}
+		const classIds:string[] = [] 
+		useOrgs.orgs.forEach(org => {
+			if (org.creatorId === userId) {
+				classIds.push(...org.classIds ?? [])
+			}
+		})
 		grades.value = await gradesStore.fetchGrades(classIds)
-		if (grades.value.length === 1) {
-			const grade = grades.value[0]
+		if (selectedClassId.value.length > 0 || grades.value.length === 1) {
+			let grade = grades.value[0]
+			if (selectedClassId.value.length > 0) {
+				const res = grades.value.filter(c => c._id === selectedClassId.value)
+				if (res.length === 1) {
+					grade = res[0]
+				}
+			}
 			const courseId = grade.courseId ?? ''
 			const teacherId = grade.teacherId ?? ''
 			students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
 			courses.value = await courseStore.fetchCourses([courseId])
 			teachers.value = usersStore.users.filter(u => u._id === teacherId)
-			selectedClassId.value = classIds[0]
-			selectedCourseId.value = courseId
-			selectedTeacherId.value = teacherId
+			selectedClassId.value = grade._id
+			selectedClassCourseId.value = courseId
+			selectedClassTeacherId.value = teacherId
 		} else {
 			const studentIds:string[] = []
 			const courseIds:string[] = []
@@ -388,15 +392,11 @@ watch(selectedCourseType, async (type) => {
 			}
 			courses.value = await courseStore.fetchCourses(courseIds)
 			if (courses.value.length === 1) {
-				selectedCourseId.value = courseIds[0]
-			} else {
-				selectedCourseId.value = ''
+				selectedClassCourseId.value = courseIds[0]
 			}
 			teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
 			if (teachers.value.length === 1) {
-				selectedTeacherId.value = teacherIds[0]
-			} else {
-				selectedTeacherId.value = ''
+				selectedClassTeacherId.value = teacherIds[0]
 			}
 		}
 	}
@@ -448,18 +448,18 @@ watch(selectedClassId, (classId) => {
 	if (res.length === 1) {
 		const grade = res[0]
 		students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
-		if (students.value.length === 1) {
-			const student = students.value[0]
-			selectedStudentId.value = student._id
-		}
 		courses.value = courseStore.course.filter(c => c._id === grade.courseId)
 		teachers.value = usersStore.users.filter(u => u._id === grade.teacherId)
-		selectedCourseId.value = grade.courseId ?? ''
-		selectedTeacherId.value = grade.teacherId ?? ''
+		selectedClassCourseId.value = grade.courseId ?? ''
+		selectedClassTeacherId.value = grade.teacherId ?? ''
 	}
 })
 
-watch(selectedCourseId, (id) => {
+watch([selectedCourseId, selectedClassCourseId], ([id1, id2]) => {
+	let id = id1
+	if (selectedCourseType.value === 1) {
+		id = id2
+	}
 	const res = courseStore.course.filter(c => c._id === id)
 	if (res.length === 1) {
 		range.value = []
@@ -550,7 +550,10 @@ const selectedGrade = computed(() => {
 })
 
 const selectedCourse = computed(() => {
-	const courseId = selectedCourseId.value
+	let courseId = selectedCourseId.value
+	if (selectedCourseType.value === 1) {
+		courseId = selectedClassCourseId.value
+	}
 	if (courseId.length > 0 && courses.value.length > 0) {
 		const res = courses.value.filter(c => c._id === courseId)
 		return res[0].name
@@ -560,7 +563,10 @@ const selectedCourse = computed(() => {
 })
 
 const selectedTeacher = computed(() => {
-	const teacherId = selectedTeacherId.value
+	let teacherId = selectedTeacherId.value
+	if (selectedCourseType.value === 1) {
+		teacherId = selectedClassTeacherId.value
+	}
 	if (teacherId.length > 0 && teachers.value.length > 0) {
 		const res = teachers.value.filter(t => t._id === teacherId)
 		return res[0].nickName
@@ -600,11 +606,20 @@ const onStudentTap = (type:string) => {
 	if (chooseMemberRef.value) {
 		const studentIds = students.value.map(s => s._id)
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
-		instance.initial({
-			memberIds: studentIds,
-			type,
-			role: "student"
-		})
+		if (type === 'single') {
+			instance.initial({
+				selectedMemberId: selectedStudentId.value,
+				memberIds: studentIds,
+				type,
+				role: "student"
+			})
+		} else {
+			instance.initial({
+				memberIds: studentIds,
+				type,
+				role: "student"
+			})
+		}
 		popup.value?.open()
 	}
 }
@@ -616,7 +631,12 @@ const onTeacherTap = () => {
 	if (chooseMemberRef.value) {
 		const teacherIds = teachers.value.map(s => s._id)
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
+		let teacherId = selectedTeacherId.value
+		if (selectedCourseType.value === 1) {
+			teacherId = selectedClassTeacherId.value
+		}
 		instance.initial({
+			selectedMemberId: teacherId,
 			memberIds: teacherIds,
 			type: "single",
 			role: "teacher"
@@ -633,6 +653,7 @@ const onClassTap = () => {
 		const classIds = grades.value.map(c => c._id)
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
 		instance.initial({
+			selectedMemberId: selectedClassId.value,
 			memberIds: classIds,
 			type: "single",
 			role: "class"
@@ -649,6 +670,7 @@ const onCourseTap = () => {
 		const courseIds = courses.value.map(c => c._id)
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
 		instance.initial({
+			selectedMemberId: selectedCourseId.value,
 			memberIds: courseIds,
 			type: "single",
 			role: "course"
@@ -724,9 +746,17 @@ const onConfirm = (data: {
 			})
 		}
 	} else if (role === 'teacher') {
-		selectedTeacherId.value = memberId
+		if (selectedCourseType.value === 0) {
+			selectedTeacherId.value = memberId
+		} else if (selectedCourseType.value === 1) {
+			selectedClassTeacherId.value = memberId
+		}
 	} else if (role === 'course') {
-		selectedCourseId.value = memberId
+		if (selectedCourseType.value === 0) {
+			selectedCourseId.value = memberId
+		} else if (selectedCourseType.value === 1) {
+			selectedClassCourseId.value = memberId
+		}
 	} else if (role === 'class') {
 		selectedClassId.value = memberId
 	}

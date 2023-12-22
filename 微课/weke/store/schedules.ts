@@ -257,7 +257,7 @@ export const useScheduleStore = defineStore('schedules', {
 				return result
 			}
 		},
-		async finishSchedule(param: {
+		async dealSchedule(param: {
 			scheduleId: string,
 			orgId: string,
 			teacherId: string,
@@ -265,9 +265,10 @@ export const useScheduleStore = defineStore('schedules', {
 			courseId: string,
 			classId: string,
 			presentIds: string[],
-			consume: number
+			consume: number,
+			status: number
 		}) {
-			const { 
+			const {
 				scheduleId, 
 				orgId, 
 				teacherId, 
@@ -275,12 +276,14 @@ export const useScheduleStore = defineStore('schedules', {
 				courseId, 
 				classId, 
 				presentIds, 
-				consume } = param
+				consume,
+				status} = param
 			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
 				typeof(orgId) === 'undefined' || orgId.length === 0 ||
 				typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 				typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(consume) === 'undefined') {
+				typeof(consume) === 'undefined' ||
+				typeof(status) === 'undefined') {
 				return false
 			}
 			if ((typeof(studentId) === 'undefined' || studentId.length === 0) &&
@@ -303,8 +306,8 @@ export const useScheduleStore = defineStore('schedules', {
 				const students = userStore.students.filter(s => presentIds.includes(s._id))
 				studentNos = students.map(s => s.studentNo)
 			}
-			debugger
-			const result = await schedules_co.finishSchedule({
+			const result = await schedules_co.dealSchedule({
+				status,
 				scheduleId,
 				orgId,
 				teacherId,
@@ -316,19 +319,38 @@ export const useScheduleStore = defineStore('schedules', {
 				operatorId: userStore.owner._id
 			})
 			if (result) {
-				debugger
 				const res = this.schedules.filter(s => s._id === scheduleId)
 				if (res.length === 1) {
 					const schedule = res[0]
-					schedule.status = 1;
-					
+					schedule.status = status
+					if (status === 0) {
+						if (!this.scheduleDates.includes(schedule.courseDate)) {
+							this.scheduleDates.push(schedule.courseDate)
+						}
+					}
+					if (status === 1 || status === 2) {
+						let index = this.schedules.findIndex(s => s.status === 0 && s.courseDate === schedule.courseDate)
+						if (index === -1) {
+							index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
+							if (index !== -1) {
+								this.scheduleDates.splice(index, 1)
+							}
+						}
+					}
+					if (status === 2 || consume === 0) {
+						return true
+					}
 					if (studentId.length > 0) {
 						userStore.entries.forEach(e => {
 							if (e.studentId === studentNo &&
 								e.courseId === courseId &&
 								e.teacherId === teacherId &&
 								e.orgId === orgId) {
-								e.consume += consume
+								if (status === 0) {
+									e.consume -= consume
+								} else if (status === 1) {
+									e.consume += consume
+								}
 							}
 						})
 					} else if (classId.length > 0 && presentIds.length > 0) {
@@ -337,7 +359,11 @@ export const useScheduleStore = defineStore('schedules', {
 								e.courseId === courseId &&
 								e.teacherId === teacherId &&
 								e.orgId === orgId) {
-								e.consume += consume		
+								if (status === 0) {
+									e.consume -= consume
+								} else if (status === 1) {
+									e.consume += consume
+								}		
 							}
 						})
 					}
@@ -345,17 +371,24 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			return result
 		},
-		async recallFinishSchedule(param: {
-			scheduleId: string,
-			orgId: string,
-			teacherId: string,
-			studentId: string,
-			courseId: string,
-			classId: string,
-			presentIds: string[],
-			count: number
-		}) {
-			
+		async deleteSchedule(scheduleId: string) {
+			if (typeof(scheduleId) === 'undefined' || 
+				scheduleId.length === 0) {
+				return false
+			}
+			const result = await schedules_co.deleteSchedule(scheduleId)
+			if (result) {
+				let index = this.schedules.findIndex(s => s._id === scheduleId)
+				if (index !== -1) {
+					this.schedules.splice(index, 1)
+					const schedule = this.schedules[index]
+					index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
+					if (index !== -1) {
+						this.scheduleDates.splice(index, 1)
+					}
+				}
+			}
+			return result
 		},
 		async playChecked() {
 			if (this.checkedAudioUrl.length === 0) {

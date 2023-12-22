@@ -260,8 +260,9 @@ module.exports = {
 		}
 		return scheduleDates
 	},
-	async finishSchedule(param) {
+	async dealSchedule(param) {
 		const {
+			status,
 			scheduleId, 
 			orgId, 
 			teacherId, 
@@ -275,7 +276,8 @@ module.exports = {
 			typeof(orgId) === 'undefined' || orgId.length === 0 ||
 			typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 			typeof(courseId) === 'undefined' || courseId.length === 0 ||
-			typeof(consume) === 'undefined') {
+			typeof(consume) === 'undefined' ||
+			typeof(status) === 'undefined') {
 			return false
 		}
 		if ((typeof(studentId) === 'undefined' || studentId.length === 0) &&
@@ -288,12 +290,15 @@ module.exports = {
 		const result = await db.collection("wk-schedules").where({
 			_id: scheduleId
 		}).update({
-			status: 1,
+			status,
 			modifyDate: (new Date()).getTime(),
 			operatorId
 		})
 		const { updated } = result
 		if (updated === 1) {
+			if (status === 2 || consume === 0) {
+				return true
+			}
 			if (studentId.length > 0) {
 				const res = await db.collection("wk-mapping").where({
 					studentId,
@@ -301,7 +306,7 @@ module.exports = {
 					teacherId,
 					orgId
 				}).update({
-					consume: dbCmd.inc(consume),
+					consume: dbCmd.inc(status === 1?consume: -consume),
 					operatorId,
 					modifyDate: (new Date()).getTime()
 				})
@@ -314,7 +319,7 @@ module.exports = {
 					teacherId,
 					orgId
 				}).update({
-					consume: dbCmd.inc(consume),
+					consume: dbCmd.inc(status === 1?consume: -consume),
 					operatorId,
 					modifyDate: (new Date()).getTime()
 				})
@@ -324,5 +329,16 @@ module.exports = {
 			return false
 		}
 		return false
+	},
+	async deleteSchedule(scheduleId) {
+		if (typeof(scheduleId) === 'undefined' ||
+			scheduleId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection("wk-schedules").where({
+			_id: scheduleId
+		}).remove()
+		return result.deleted === 1
 	}
 }

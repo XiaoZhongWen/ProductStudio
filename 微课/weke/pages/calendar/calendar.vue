@@ -70,6 +70,15 @@ const selected = computed(() => {
 
 const schedules = computed(() => {
 	const result = scheduleStore.schedules.filter(s => s.courseDate === selectedDate.value)
+	result.sort((a, b) => {
+	  // 先按status递增排序
+	  if (a.status !== b.status) {
+	    return a.status - b.status;
+	  }
+	
+	  // 如果status相同，再按startTime递增排序
+	  return a.startTime - b.startTime;
+	})
 	return result
 })
 

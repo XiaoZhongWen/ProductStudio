@@ -55,16 +55,19 @@
 						</template>
 					</view>
 				</view>
+				<view class="section row" v-if="course">
+					<text>{{course.type === 1?'课次:':'课时:'}} {{props.schedule.consume}} {{course.type === 1?'次课':'课时'}}</text>
+				</view>
 				<view :class="duration">
-					<text>上课时间: {{dateDesc}} {{start}} - {{end}} {{props.schedule.remind?'⏰':''}} </text>
+					<text>上课时间: {{dateDesc}} {{start}} ~ {{end}} {{props.schedule.remind?'⏰':''}} </text>
 				</view>
 			</view>
 		</view>
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
 			<view class="right" v-if="!checked">
-				<text class="action leave">标记请假</text>
-				<text class="action delete">删除</text>
+				<text class="action leave" @tap="onLeaveTap">标记请假</text>
+				<text class="action delete" @tap="onDeleteTap">删除</text>
 			</view>
 		</view>
 	</view>
@@ -104,6 +107,8 @@ const org = ref<Org>()
 const grade = ref<Grade>()
 const checked = ref(false)
 
+const global = getApp().globalData!
+
 onMounted(async () => {
 	const courseId = props.schedule.courseId ?? ''
 	const teacherId = props.schedule.teacherId ?? ''
@@ -114,6 +119,7 @@ onMounted(async () => {
 		typeof(orgId) === 'undefined' || orgId.length === 0) {
 		return
 	}
+	checked.value = props.schedule.status !== 0
 	const courses = await courseStore.fetchCourses([courseId])
 	if (courses.length === 1) {
 		course.value = courses[0]
@@ -171,8 +177,41 @@ onMounted(async () => {
 })
 
 const onCheckedTap = async () => {
+	const isChecked = !checked.value
 	const schedule:Schedule = props.schedule
-	const result = await scheduleStore.finishSchedule({
+	const status = schedule.status
+	const result = await scheduleStore.dealSchedule({
+		scheduleId: schedule._id,
+		orgId: schedule.orgId,
+		teacherId: schedule.teacherId,
+		studentId: schedule.studentId ?? '',
+		courseId: schedule.courseId,
+		classId: schedule.classId ?? '',
+		presentIds: schedule.presentIds ?? [],
+		consume: status === 2?0:schedule.consume,
+		status: isChecked?1:0
+	})
+	if (result) {
+		props.schedule.status = schedule.status
+		checked.value = !checked.value
+		if (status === 2) {
+			return
+		}
+		if (schedule.status === 0) {
+			consume.value -= schedule.consume
+		} else {
+			consume.value += schedule.consume
+		}
+		if (checked.value && schedule.status === 1) {
+			scheduleStore.playChecked()
+		}
+	}
+}
+
+const onLeaveTap = async () => {
+	const schedule:Schedule = props.schedule
+	const status = 2
+	const result = await scheduleStore.dealSchedule({
 		scheduleId: schedule._id,
 		orgId: schedule.orgId,
 		teacherId: schedule.teacherId,
@@ -181,14 +220,26 @@ const onCheckedTap = async () => {
 		classId: schedule.classId ?? '',
 		presentIds: schedule.presentIds ?? [],
 		consume: schedule.consume,
+		status
 	})
 	if (result) {
-		checked.value = !checked.value
-		consume.value += schedule.consume
-		if (checked.value) {
-			scheduleStore.playChecked()
-		}
+		props.schedule.status = status
+		checked.value = true
+		scheduleStore.playChecked()
 	}
+}
+
+const onDeleteTap = () => {
+	const content = "确定要删除学员" + student.value?.nickName + "在" + dateDesc.value + start.value + "~" + end.value + "的" + course.value?.name + "课程吗?"
+	uni.showModal({
+		title: global.appName,
+		content: content,
+		success: async (res) => {
+			if (res.confirm) {
+				await scheduleStore.deleteSchedule(props.schedule._id)
+			}
+		}
+	})
 }
 
 const statusDesc = computed(() => {
@@ -207,9 +258,6 @@ const statusDesc = computed(() => {
 			str = "已请假"
 			break
 		}
-	}
-	if (checked.value) {
-		str = "已消课"
 	}
 	return str
 })
@@ -230,9 +278,6 @@ const statusCls = computed(() => {
 			cls = "top status_2"
 			break
 		}
-	}
-	if (checked.value) {
-		cls = "top status_1"
 	}
 	return cls
 })
@@ -364,6 +409,9 @@ const duration = computed(() => {
 				margin-top: $uni-spacing-col-lg;
 			}
 			.teacher {
+				margin-top: $uni-spacing-col-sm;
+			}
+			.row {
 				margin-top: $uni-spacing-col-sm;
 			}
 			.expired {

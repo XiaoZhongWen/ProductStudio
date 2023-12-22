@@ -8,7 +8,7 @@
 			trailWidth="3"
 			trailColor="#f4f5f6"
 			strokeColor="#5073D6">
-			<text class="text" :style="style">{{percent === 0? "未排课":`${percent}%`}}</text>
+			<text class="text" :style="style">{{progress}}</text>
 		</l-circle>
 		<text class="progress" v-if="percent > 0">{{props.consume}}/{{props.total}}</text>
 	</view>
@@ -25,6 +25,14 @@ const percent = computed(() => {
 		return parseFloat(progress)
 	}
 	return 0
+})
+
+const progress = computed(() => {
+	if (percent.value === 0) {
+		return props.consume + "/" + props.total
+	} else {
+		return percent.value + "%"
+	}
 })
 
 // @ts-ignore
