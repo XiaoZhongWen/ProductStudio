@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { Schedule } from '../types/schedule'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
-import { Student } from '../types/user'
+import { useCourseStore } from "@/store/course"
+import { useGradesStore } from "@/store/grades"
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -157,9 +158,9 @@ export const useScheduleStore = defineStore('schedules', {
 				return []
 			}
 			let result = []
+			const userStore = useUsersStore()
 			result = this.schedules.filter(s => s.courseDate === date)
 			if (result.length === 0) {
-				const userStore = useUsersStore()
 				const orgStore = useOrgsStore()
 				const userId = userStore.owner._id
 				const roles = userStore.owner.roles
@@ -194,13 +195,37 @@ export const useScheduleStore = defineStore('schedules', {
 						result.push(...res)
 					}
 				}
-				result.forEach(r => {
-					const index = this.schedules.findIndex(s => s._id === r._id)
-					if (index === -1) {
-						this.schedules.push(r)
-					}
-				})
 			}
+			const courseIds:string[] = []
+			const userIds:string[] = []
+			const classIds:string[] = []
+			result.forEach(s => {
+				// 课程
+				if (!courseIds.includes(s.courseId)) {
+					courseIds.push(s.courseId)
+				}
+				// 老师
+				if (!userIds.includes(s.teacherId)) {
+					userIds.push(s.teacherId)
+				}
+				// 班级
+				if (typeof(s.classId) !== 'undefined' && 
+					s.classId.length > 0 &&
+					!classIds.includes(s.classId)) {
+					classIds.push(s.classId)
+				}
+			})
+			const courseStore = useCourseStore()
+			const gradesStore = useGradesStore()
+			await courseStore.fetchCourses(courseIds)
+			await userStore.fetchUsers(userIds)
+			await gradesStore.fetchGrades(classIds)
+			result.forEach(r => {
+				const index = this.schedules.findIndex(s => s._id === r._id)
+				if (index === -1) {
+					this.schedules.push(r)
+				}
+			})
 			return result
 		},
 		async fetchSchedulesDate(from: number, to:number) {
@@ -380,8 +405,8 @@ export const useScheduleStore = defineStore('schedules', {
 			if (result) {
 				let index = this.schedules.findIndex(s => s._id === scheduleId)
 				if (index !== -1) {
-					this.schedules.splice(index, 1)
 					const schedule = this.schedules[index]
+					this.schedules.splice(index, 1)
 					index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
 					if (index !== -1) {
 						this.scheduleDates.splice(index, 1)

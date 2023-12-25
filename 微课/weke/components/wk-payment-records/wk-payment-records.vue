@@ -74,7 +74,7 @@ onMounted(() => {
 			isValidate.value = index !== -1
 		}
 	}
-	const courses = courseStore.course.filter(c => c._id === courseId)
+	const courses = courseStore.courses.filter(c => c._id === courseId)
 	if (courses.length === 1) {
 		course.value = courses[0]
 	}

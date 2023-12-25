@@ -11,7 +11,7 @@ const course_co = uniCloud.importObject('course', {
 export const useCourseStore = defineStore('course', {
 	state: () => {
 		return {
-			course:[] as Course[],
+			courses:[] as Course[],
 			paymentRecords:[] as PaymentRecord[],
 			courseConsumeRecords: [] as CourseConsumeRecord[]
 		}
@@ -40,7 +40,7 @@ export const useCourseStore = defineStore('course', {
 			}
 			const courseId = await course_co.addCourse(param)
 			if (typeof(courseId) !== 'undefined' && courseId.length > 0) {
-				this.course.push({
+				this.courses.push({
 					_id: courseId,
 					name: name,
 					desc: desc ?? '',
@@ -65,13 +65,13 @@ export const useCourseStore = defineStore('course', {
 			if (typeof(ids) === 'undefined' || ids.length === 0) {
 				return []
 			}
-			const g1 = this.course.filter(course => ids.includes(course._id))
+			const g1 = this.courses.filter(course => ids.includes(course._id))
 			const ids1 = g1.map(course => course._id)
 			const ids2 = ids.filter(id => !ids1.includes(id))
 			let other = [] as Course[]
 			if (ids2.length > 0) {
 				other = await course_co.fetchCourses(ids2) as Course[]
-				this.course.push(...other)
+				this.courses.push(...other)
 			}
 			return [...g1, ...other]
 		},
@@ -104,9 +104,9 @@ export const useCourseStore = defineStore('course', {
 			}
 			const result = await course_co.removeCourse(courseId, orgId)
 			if (result) {
-				const index = this.course.findIndex(course => course._id === courseId)
+				const index = this.courses.findIndex(course => course._id === courseId)
 				if (index !== -1) {
-					this.course.splice(index, 1)
+					this.courses.splice(index, 1)
 					
 					const orgStore = useOrgsStore()
 					let result = orgStore.orgs.filter(org => org._id === orgId)

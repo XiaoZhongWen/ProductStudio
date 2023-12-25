@@ -113,19 +113,17 @@ onMounted(async () => {
 	const courseId = props.schedule.courseId ?? ''
 	const teacherId = props.schedule.teacherId ?? ''
 	const orgId = props.schedule.orgId ?? ''
-	
 	if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
 		typeof(teacherId) === 'undefined' || teacherId.length === 0 ||
 		typeof(orgId) === 'undefined' || orgId.length === 0) {
 		return
 	}
 	checked.value = props.schedule.status !== 0
-	const courses = await courseStore.fetchCourses([courseId])
+	const courses = courseStore.courses.filter(c => c._id === courseId)
 	if (courses.length === 1) {
 		course.value = courses[0]
 	}
-	
-	const users = await usersStore.fetchUsers([teacherId]) as User[]
+	const users = usersStore.users.filter(user => user._id === teacherId)
 	if (users.length === 1) {
 		teacher.value = users[0]
 	}
@@ -134,11 +132,10 @@ onMounted(async () => {
 	if (orgs.length === 1) {
 		org.value = orgs[0]
 	}
-	
 	const classId = props.schedule.classId ?? ''
 	if (typeof(classId) !== 'undefined' && 
 		classId.length > 0) {
-		const grades = await gradesStore.fetchGrades([classId])
+		const grades = gradesStore.grades.filter(c => c._id === classId)
 		if (grades.length === 1) {
 			grade.value = grades[0]
 			const studentIds = grade.value.studentIds ?? []
@@ -162,7 +159,6 @@ onMounted(async () => {
 			if (res.length === 1) {
 				student.value = res[0]
 			}
-			
 			const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
 											e.courseId === courseId &&
 											e.teacherId === teacherId &&
@@ -326,7 +322,7 @@ const dateDesc = computed(() => {
 const duration = computed(() => {
 	const cur = new Date()
 	const date = new Date(props.schedule.startTime)
-	const offset = cur.getDate() - date.getDate()
+	const offset = cur.getTime() - date.getTime()
 	if (checked.value) {
 		return 'section done'
 	}

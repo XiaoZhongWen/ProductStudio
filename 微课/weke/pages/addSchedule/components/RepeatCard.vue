@@ -73,14 +73,20 @@ const emits = defineEmits(['onCancel', 'onRepeatConfirm'])
 const props = defineProps(['day'])
 const selectedOption = ref<number>(0)
 const selectedDays = ref<number[]>([props.day])
-const didConfirm = ref(false)
 const weeks = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
 
 const dates = ref<string[]>([])
 
 const global = getApp().globalData!
 
-const initial = (selectedDates: string[]) => {
+const initial = (option:number, repeatDays:number[], selectedDates: string[]) => {
+	if (typeof(option) !== 'undefined') {
+		selectedOption.value = option
+	}
+	if (typeof(repeatDays) !== 'undefined' &&
+		repeatDays.length > 0) {
+		selectedDays.value = repeatDays
+	}
 	if (typeof(selectedDates) !== 'undefined' && 
 		selectedDates.length > 0) {
 		dates.value = selectedDates
@@ -114,21 +120,26 @@ const onSelectedDay = (e:{target:{id:string}}) => {
 	if (index === -1) {
 		selectedDays.value.push(day)
 	} else {
-		if (props.day !== day) {
+		if (selectedDays.value.length > 1) {
 			selectedDays.value.splice(index, 1)
 		}
 	}
 }
 
 const onCancel = () => {
-	if (!didConfirm.value) {
-		selectedOption.value = 0
-		selectedDays.value = [props.day]
-	}
 	emits('onCancel')
 }
 
 const onConfirm = () => {
+	if (selectedOption.value === 3 && 
+		selectedDays.value.length === 0) {
+		uni.showToast({
+			title: "请选择星期",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+		return
+	}
 	if (selectedOption.value === 4) {
 		if (dates.value.length > 50) {
 			uni.showToast({
@@ -147,10 +158,13 @@ const onConfirm = () => {
 			return
 		}
 	}
-	didConfirm.value = true
+	const days:number[] = []
+	selectedDays.value.forEach(day => {
+		days.push(day)
+	})
 	emits('onRepeatConfirm', {
 		option: selectedOption.value,
-		days: selectedDays.value,
+		days,
 		dates: dates.value
 	})
 }

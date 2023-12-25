@@ -109,7 +109,7 @@ const initial = async (data:{
 	} else if (role === 'student') {
 		members.value = usersStore.students.filter(student => memberIds.includes(student._id)) as Student[]
 	} else if (role === 'course') {
-		members.value = courseStore.course.filter(c => memberIds.includes(c._id)) as Course[]
+		members.value = courseStore.courses.filter(c => memberIds.includes(c._id)) as Course[]
 	} else if (role === 'class') {
 		members.value = gradesStore.grades.filter(c => memberIds.includes(c._id)) as Grade[]
 	}

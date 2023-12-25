@@ -76,8 +76,7 @@ module.exports = {
 			daysOfWeek = [0, 1, 2, 3, 4, 5, 6]
 		} else if (repeatType === 2) {
 			// 每周
-			const cur = new Date()
-			daysOfWeek = [cur.getDay()]
+			daysOfWeek = repeatDays
 		} else if (repeatType === 3) {
 			// 自定义
 			daysOfWeek = repeatDays

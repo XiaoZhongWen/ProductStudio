@@ -448,7 +448,7 @@ watch(selectedClassId, (classId) => {
 	if (res.length === 1) {
 		const grade = res[0]
 		students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
-		courses.value = courseStore.course.filter(c => c._id === grade.courseId)
+		courses.value = courseStore.courses.filter(c => c._id === grade.courseId)
 		teachers.value = usersStore.users.filter(u => u._id === grade.teacherId)
 		selectedClassCourseId.value = grade.courseId ?? ''
 		selectedClassTeacherId.value = grade.teacherId ?? ''
@@ -460,7 +460,7 @@ watch([selectedCourseId, selectedClassCourseId], ([id1, id2]) => {
 	if (selectedCourseType.value === 1) {
 		id = id2
 	}
-	const res = courseStore.course.filter(c => c._id === id)
+	const res = courseStore.courses.filter(c => c._id === id)
 	if (res.length === 1) {
 		range.value = []
 		const course = res[0]
@@ -499,7 +499,7 @@ watch([selectedCourseId, selectedClassCourseId], ([id1, id2]) => {
 })
 
 watch([selectedStartTime, selectedEndTime], ([s, e]) => {
-	const res = courseStore.course.filter(c => c._id === selectedCourseId.value)
+	const res = courseStore.courses.filter(c => c._id === selectedCourseId.value)
 	if (res.length === 1) {
 		const course = res[0]
 		if (course.type === 2) {
@@ -689,7 +689,9 @@ const onRepeatTap = () => {
 		} else {
 			selectedDates = [yyyyMMdd(selectedDate.value!)]
 		}
-		instance.initial(selectedDates)
+		const days:number[] = []
+		repeatDays.value.forEach(day => days.push(day))
+		instance.initial(repeatOption.value, days, selectedDates)
 	}
 }
 
@@ -783,7 +785,19 @@ const onDeadlineTap = () => {
 
 const calendarConfirm = (e:{fulldate:string}) => {
 	const { fulldate } = e
-	endRepeatDate.value = fulldate
+	const start = new Date(selectedDate.value as Date)
+	start.setHours(0, 0, 0, 0)
+	const deadline = new Date(fulldate)
+	deadline.setHours(0, 0, 0, 0)
+	if (deadline.getTime() >= start.getTime()) {
+		endRepeatDate.value = fulldate
+	} else {
+		uni.showToast({
+			title: "截止日期不能早于排课日期",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+	}
 }
 
 const validate = () => {
@@ -792,6 +806,22 @@ const validate = () => {
 		if (selectedStudentId.value.length === 0) {
 			uni.showToast({
 				title: "请选择学员",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return false
+		}
+		if (selectedCourseId.value.length === 0) {
+			uni.showToast({
+				title: "请选择课程",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return false
+		}
+		if (selectedTeacherId.value.length === 0) {
+			uni.showToast({
+				title: "请选择老师",
 				duration: global.duration_toast,
 				icon: "none"
 			})
@@ -816,24 +846,22 @@ const validate = () => {
 			})
 			return false
 		}
-	}
-	// 1. 课程
-	if (selectedCourseId.value.length === 0) {
-		uni.showToast({
-			title: "请选择课程",
-			duration: global.duration_toast,
-			icon: "none"
-		})
-		return false
-	}
-	// 2. 老师
-	if (selectedTeacherId.value.length === 0) {
-		uni.showToast({
-			title: "请选择老师",
-			duration: global.duration_toast,
-			icon: "none"
-		})
-		return false
+		if (selectedClassCourseId.value.length === 0) {
+			uni.showToast({
+				title: "请选择课程",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return false
+		}
+		if (selectedClassTeacherId.value.length === 0) {
+			uni.showToast({
+				title: "请选择老师",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return false
+		}
 	}
 	if (repeatOption.value !== 0 && 
 		repeatOption.value !== 4) {
@@ -887,8 +915,8 @@ const onSchedule = async () => {
 		return
 	}
 	const date = Date.now()
-	const courseId = selectedCourseId.value
-	const teacherId = selectedTeacherId.value
+	let courseId = selectedCourseId.value
+	let teacherId = selectedTeacherId.value
 	const gradients = selectedGradient.value
 	
 	let studentId = ''
@@ -899,6 +927,8 @@ const onSchedule = async () => {
 	} else {
 		classId = selectedClassId.value
 		presentIds = students.value.map(s => s._id)
+		courseId = selectedClassCourseId.value
+		teacherId = selectedClassTeacherId.value
 	}
 	
 	let orgId = ''
@@ -909,10 +939,11 @@ const onSchedule = async () => {
 	}
 	
 	if (orgId.length === 0) {
+		debugger
 		uni.showToast({
 			title: "排课失败",
 			duration: global.duration_toast,
-			icon: "fail"
+			icon: "none"
 		})
 		return
 	}
@@ -939,10 +970,20 @@ const onSchedule = async () => {
 
 	const remind = isNotice.value
 	const repeatType = repeatOption.value
-	const days = repeatDays.value
+	let days = repeatDays.value
+	if (repeatType === 0 || repeatType === 4) {
+		days = []
+	}
+	if (repeatType === 1) {
+		days = [0, 1, 2, 3, 4, 5, 6]
+	}
+	if (repeatType === 2) {
+		days = [start.getDay()]
+	}
 	const dates = repeatDates.value
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
+	debugger
 	const result = await scheduleStore.createSchedule({
 		date,
 		orgId,
@@ -967,7 +1008,7 @@ const onSchedule = async () => {
 	uni.showToast({
 		title: result.length > 0?"排课成功":"排课失败",
 		duration: global.duration_toast,
-		icon: result.length > 0?"success":"fail"
+		icon: result.length > 0?"success":"none"
 	})
 	if (result.length > 0) {
 		selectedStudentId.value = ''

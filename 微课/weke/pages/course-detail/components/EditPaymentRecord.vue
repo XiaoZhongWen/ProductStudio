@@ -79,7 +79,7 @@ const initial = (id:string) => {
 		count.value = record.value.count
 		price.value = record.value.price
 		remark.value = record.value.remark ?? ''
-		const courses = courseStore.course.filter(c => c._id === record.value?.courseId)
+		const courses = courseStore.courses.filter(c => c._id === record.value?.courseId)
 		if (courses.length === 1) {
 			course.value = courses[0]
 		}

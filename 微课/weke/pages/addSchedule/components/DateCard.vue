@@ -3,6 +3,7 @@
 		<picker
 			class="picker" 
 			:mode="mode"
+			:value="selectedYYYYMMDD"
 			@change="onPickerChange">
 			<view class="date-card-container">
 				<text class="top">{{title}}</text>
@@ -31,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onBeforeUpdate, onMounted, ref } from 'vue';
-import { md, daysBetweenDates } from '@/utils/wk-date'
+import { watch, onBeforeUpdate, onMounted, ref, computed } from 'vue';
+import { md, daysBetweenDates, yyyyMMdd } from '@/utils/wk-date'
 import timeSlot from "@/components/wanghexu-timeslot/wanghexu-timeslot.vue"
 
 type Time = {
@@ -90,6 +91,14 @@ onMounted(() => {
 		loadDate()
 	} else if (props.type === 'time') {
 		loadTime()
+	}
+})
+
+const selectedYYYYMMDD = computed(() => {
+	if (selectedDate.value) {
+		return yyyyMMdd(selectedDate.value)
+	} else {
+		return yyyyMMdd(new Date())
 	}
 })
 

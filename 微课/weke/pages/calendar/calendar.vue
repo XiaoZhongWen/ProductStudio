@@ -75,7 +75,6 @@ const schedules = computed(() => {
 	  if (a.status !== b.status) {
 	    return a.status - b.status;
 	  }
-	
 	  // 如果status相同，再按startTime递增排序
 	  return a.startTime - b.startTime;
 	})
