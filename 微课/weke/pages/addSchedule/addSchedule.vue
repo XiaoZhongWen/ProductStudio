@@ -89,7 +89,7 @@
 				style="transform:scale(0.7)"
 				@change="onFullDaySwitchChange" />
 		</view>
-		<view class="section duration" v-if="selectedCourseId">
+		<view class="section duration" v-if="isShowCourseDesc">
 			<view class="row">
 				<text>课程类型</text>
 				<text class="type">{{courseType}}</text>
@@ -98,6 +98,10 @@
 				<text>课程时长</text>
 				<text class="type">{{duration + "分钟"}}</text>
 			</view>
+			<view class="row remain" v-if="isShowRemain">
+				<text>剩余{{courseTypeValue === 2?'课次':'课时'}}:</text>
+				<text class="desc">{{remainCount}}{{courseTypeValue === 2?'次课':'课时'}}</text>
+			</view>
 			<view class="row consume">
 				<text>预计消耗</text>
 				<uni-data-select
@@ -105,6 +109,10 @@
 					v-model="consume"
 					:localdata="range">
 				</uni-data-select>
+			</view>
+			<view class="row total" v-if="selectedCourseType === 1">
+				<text>共计:</text>
+				<text class="desc">{{totalConsume}}</text>
 			</view>
 		</view>
 		<view class="section other">
@@ -211,6 +219,8 @@ import { totalClasses, yyyyMMdd } from '@/utils/wk-date'
 import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
+import { Entry } from '../../types/entry'
+import { NOTFOUND } from 'dns'
 
 const isFullDay = ref(false)
 const isNotice = ref(false)
@@ -539,6 +549,15 @@ const selectedStudentDesc = computed(() => {
 	}
 })
 
+const totalConsume = computed(() => {
+	const count = students.value.length
+	if (count === 0) {
+		return consume.value + "课时"
+	} else {
+		return consume.value + "*" + count + "=" + consume.value * count + "课时"
+	}
+})
+
 const selectedGrade = computed(() => {
 	const cId = selectedClassId.value
 	if (cId.length > 0 && grades.value.length > 0) {
@@ -597,6 +616,60 @@ const repeatDesc = computed(() => {
 		}
 	}
 	return str
+})
+
+const isShowCourseDesc = computed(() => {
+	const c1 = selectedCourseType.value === 0 && selectedCourseId.value.length > 0
+	const c2 = selectedCourseType.value === 1 && selectedClassCourseId.value.length > 0
+	return c1 || c2
+})
+
+const isShowRemain = computed(() => {
+	if (selectedCourseType.value === 0) {
+		return selectedStudentId.value.length > 0 &&
+		selectedCourseId.value.length > 0 &&
+		selectedTeacherId.value.length > 0
+	} else {
+		return selectedClassId.value.length > 0 &&
+		selectedClassCourseId.value.length > 0 &&
+		selectedClassTeacherId.value.length > 0
+	}
+})
+
+const remainCount = computed(() => {
+	if (selectedCourseType.value === 0) {
+		const res = usersStore.students.filter(s => s._id === selectedStudentId.value)
+		if (res.length === 1) {
+			const student = res[0]
+			const entries = usersStore.entries.filter(e => e.studentId === student.studentNo &&
+											e.courseId === selectedCourseId.value &&
+											e.teacherId === selectedTeacherId.value)
+			if (entries.length === 1) {
+				const entry:Entry = entries[0]
+				return entry.total - entry.consume
+			}
+		}
+		return ''
+	} else {
+		const classes = gradesStore.grades.filter(c => c._id === selectedClassId.value)
+		if (classes.length === 1) {
+			const c:Grade = classes[0]
+			const res = usersStore.students.filter(s => c.studentIds?.includes(s._id))
+			const studentNos = res.map(s => s.studentNo)
+			let total = 0
+			let consume = 0
+			usersStore.entries.forEach(e => {
+				if (studentNos.includes(e.studentId) &&
+					e.courseId === selectedCourseId.value &&
+					e.teacherId === selectedTeacherId.value) {
+					total += e.total
+					consume + e.consume
+				}
+			})
+			return total - consume
+		}
+		return ''
+	}
 })
 
 const onStudentTap = (type:string) => {
@@ -939,7 +1012,6 @@ const onSchedule = async () => {
 	}
 	
 	if (orgId.length === 0) {
-		debugger
 		uni.showToast({
 			title: "排课失败",
 			duration: global.duration_toast,
@@ -983,7 +1055,6 @@ const onSchedule = async () => {
 	const dates = repeatDates.value
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
-	debugger
 	const result = await scheduleStore.createSchedule({
 		date,
 		orgId,
@@ -1110,6 +1181,16 @@ const onSchedule = async () => {
 			.input {
 				text-align: right;
 			}
+		}
+		.total, .remain {
+			margin-top: $uni-spacing-col-sm;
+			.desc {
+				font-size: $uni-font-size-base;
+				color: $wk-text-color-grey;
+			}
+		}
+		.remain {
+			margin-top: $uni-spacing-col-base;
 		}
 	}
 	.other {

@@ -10,7 +10,10 @@
 			@monthSwitch="onMonthSwitch">
 		</wu-calendar>
 		<template v-for="schedule in schedules" :key="schedule._id">
-			<ScheduleCard class="scheduleCard" :schedule="schedule" />
+			<ScheduleCard 
+				class="scheduleCard" 
+				:schedule="schedule" 
+				@tap="onScheduleCardTap(schedule)" />
 		</template>
 		<view
 			class="add-container" 
@@ -27,6 +30,7 @@ import { useScheduleStore } from "@/store/schedules"
 import { computed, onMounted, ref } from 'vue';
 import ScheduleCard from './components/ScheduleCard.vue'
 import { timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
+import { Schedule } from "../../types/schedule";
 
 type CourseTag = {
 	date: string,
@@ -100,6 +104,10 @@ const onAddTap = () => {
 	uni.navigateTo({
 		url: "/pages/addSchedule/addSchedule?date="+selectedDate.value
 	})
+}
+
+const onScheduleCardTap = (schedule: Schedule) => {
+	console.info(schedule)
 }
 
 </script>

@@ -56,7 +56,10 @@
 					</view>
 				</view>
 				<view class="section row" v-if="course">
-					<text>{{course.type === 1?'课次:':'课时:'}} {{props.schedule.consume}} {{course.type === 1?'次课':'课时'}}</text>
+					<text>{{course.type === 2?'课次:':'课时:'}} {{props.schedule.consume}}{{course.type === 2?'次课':'课时'}}</text>
+				</view>
+				<view class="section row" v-if="course && course.type === 1">
+					<text>共计: {{props.schedule.consume}}*{{props.schedule.presentIds.length}}={{props.schedule.consume*props.schedule.presentIds.length}}课时</text>
 				</view>
 				<view :class="duration">
 					<text>上课时间: {{dateDesc}} {{start}} ~ {{end}} {{props.schedule.remind?'⏰':''}} </text>
@@ -138,18 +141,9 @@ onMounted(async () => {
 		const grades = gradesStore.grades.filter(c => c._id === classId)
 		if (grades.length === 1) {
 			grade.value = grades[0]
-			const studentIds = grade.value.studentIds ?? []
+			const studentIds = props.schedule.presentIds ?? []
 			presents.value = usersStore.students.filter(s => studentIds.includes(s._id))
-			const studentNos = presents.value.map(s => s.studentNo)
-			usersStore.entries.forEach(e => {
-				if (studentNos.includes(e.studentId) && 
-					e.courseId === courseId &&
-					e.teacherId === teacherId &&
-					e.orgId === orgId) {
-					total.value += e.total
-					consume.value += e.consume
-				}
-			})
+			loadProgress()
 		}
 	} else {
 		const studentId = props.schedule.studentId
@@ -159,18 +153,64 @@ onMounted(async () => {
 			if (res.length === 1) {
 				student.value = res[0]
 			}
-			const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
-											e.courseId === courseId &&
-											e.teacherId === teacherId &&
-											e.orgId === orgId)
-			if (entries.length === 1) {
-				const entry = entries[0]
-				total.value = entry.total
-				consume.value = entry.consume
-			}
+			loadProgress()
 		}
 	}
+	uni.$on("CourseConsumeNeedUpdate", (data: 
+		{
+			courseDate:string, 
+			studentId:string,
+			classId:string
+		}) => {
+		const { courseDate, studentId, classId } = data
+		if (courseDate === props.schedule.courseDate) {
+			if (studentId.length > 0 && studentId !== props.schedule.studentId) {
+				return
+			}
+			if (classId.length > 0 && classId !== props.schedule.classId) {
+				return
+			}
+			loadProgress()
+		}
+	})
 })
+
+const loadProgress = () => {
+	const classId = props.schedule.classId ?? ''
+	const courseId = props.schedule.courseId ?? ''
+	const teacherId = props.schedule.teacherId ?? ''
+	const orgId = props.schedule.orgId ?? ''
+	
+	let t = 0
+	let c = 0
+	if (typeof(classId) !== 'undefined' && 
+		classId.length > 0) {
+		const studentIds = grade.value?.studentIds ?? []
+		const datas = usersStore.students.filter(s => studentIds.includes(s._id))
+		const studentNos = datas.map(s => s.studentNo)
+		usersStore.entries.forEach(e => {
+			if (studentNos.includes(e.studentId) && 
+				e.courseId === courseId &&
+				e.teacherId === teacherId &&
+				e.orgId === orgId) {
+				t += e.total
+				c += e.consume
+			}
+		})
+	} else {
+		const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
+										e.courseId === courseId &&
+										e.teacherId === teacherId &&
+										e.orgId === orgId)
+		if (entries.length === 1) {
+			const entry = entries[0]
+			t = entry.total
+			c = entry.consume
+		}
+	}
+	total.value = t
+	consume.value = c
+}
 
 const onCheckedTap = async () => {
 	const isChecked = !checked.value
@@ -193,11 +233,13 @@ const onCheckedTap = async () => {
 		if (status === 2) {
 			return
 		}
-		if (schedule.status === 0) {
-			consume.value -= schedule.consume
-		} else {
-			consume.value += schedule.consume
-		}
+		const studentId = props.schedule.studentId ?? ''
+		const classId = props.schedule.classId ?? ''
+		uni.$emit("CourseConsumeNeedUpdate", {
+			courseDate: props.schedule.courseDate,
+			studentId,
+			classId
+		})
 		if (checked.value && schedule.status === 1) {
 			scheduleStore.playChecked()
 		}
