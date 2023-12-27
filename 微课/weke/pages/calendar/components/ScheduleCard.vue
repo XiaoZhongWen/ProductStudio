@@ -2,7 +2,7 @@
 	<view class="schedule-card-container">
 		<view class="top">
 			<view :class="statusCls">{{statusDesc}}</view>
-			<uni-icons type="more-filled" color="#c0c0c0"></uni-icons>
+			<!-- <uni-icons type="more-filled" color="#c0c0c0"></uni-icons> -->
 		</view>
 		<view class="content">
 			<view class="left">
@@ -71,21 +71,19 @@
 				</view>
 			</view>
 		</view>
-		
-		<uni-collapse>
-			<uni-collapse-item titleBorder="none" :show-arrow="false" :open="false">
-				<template v-slot:title>
-				</template>
-				<textarea value="" placeholder="课程反馈" />
-			</uni-collapse-item>
-		</uni-collapse>
-		
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
-			<view class="right" v-if="!checked">
+			<view class="right offset-sm" v-if="props.schedule.status===0">
+				<view
+					class=".iconfont .icon-round-assignment-p action content">
+				</view>
+				<view
+					class=".iconfont .icon-preview action preview">
+				</view>
 				<view 
 					@tap="onLeaveTap"
-					class=".iconfont .icon-qingjia action leave"></view>
+					class=".iconfont .icon-qingjia action leave">
+				</view>
 				<uni-icons
 					@tap="onDeleteTap"
 					size="24"
@@ -93,6 +91,17 @@
 					class="action delete" 
 					color="#dd524d">
 				</uni-icons>
+			</view>
+			<view class="right offset" v-else-if="props.schedule.status===1">
+				<uni-icons
+					size="24"
+					type="compose" 
+					class="action feedback" 
+					color="#5073D6">
+				</uni-icons>
+				<view
+					class=".iconfont .icon-round-assignment-p action assignment">
+				</view>
 			</view>
 		</view>
 	</view>
@@ -535,10 +544,30 @@ const duration = computed(() => {
 			.action {
 				margin-left: $uni-spacing-row-lg;
 			}
-			.leave {
+			.content, .preview {
+				position: relative;
+				top: 2px;
+				font-size: 22px;
+				color: $wk-theme-color;
+			}
+			.assignment {
+				position: relative;
+				top: 5px;
+				font-size: 22px;
+				color: $wk-theme-color;
+			}
+			.leave, .feedback {
 				font-size: 24px;
 				color: $wk-theme-color;
 			}
+		}
+		.offset-sm {
+			position: relative;
+			top: 2px;
+		}
+		.offset {
+			position: relative;
+			top: 6px;
 		}
 	}
 }
