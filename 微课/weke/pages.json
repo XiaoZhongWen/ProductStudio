@@ -276,6 +276,15 @@
             }
             
         }
+        ,{
+            "path" : "pages/scheduleDetail/scheduleDetail",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

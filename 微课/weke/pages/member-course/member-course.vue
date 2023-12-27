@@ -1,5 +1,26 @@
 <template>
 	<view class="member-course-container">
+		<view class="profile" v-if="teacher">
+			<view class="top">
+				<member-info
+					:url="teacher.avatarUrl"
+					:nickname="teacher.nickName"
+					:mobile="teacher.mobile"
+					:signature="teacher.signature">
+				</member-info>
+				<wk-circle-progress
+					v-if="totalCourses > 0" 
+					class="circle-progress" 
+					:total="totalCourses" 
+					:consume="totalConsumeCourses">
+				</wk-circle-progress>
+			</view>
+			<view class="bottom">
+				<text>{{orgNames}}</text>
+			</view>
+		</view>
+		<uni-section title="课程" type="line">
+		</uni-section>
 		<template v-for="item in ds" :key="item.id">
 			<view class="member-course-card">
 				<view class="top">
@@ -17,8 +38,8 @@
 				<view class="duration" v-if="item.type !== 2">
 					<text>课程时长: {{item.duration}}分钟</text>
 				</view>
-				<view class="teacher">
-					<text>授课老师: Julien</text>
+				<view class="teacher" v-if="teacher">
+					<text>授课老师: {{teacher.nickName}}</text>
 				</view>
 				<view class="students">
 					<text>学员: </text>
@@ -45,8 +66,8 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
-import { Student } from '../../types/user';
-import { ref } from 'vue';
+import { Student, User } from '../../types/user';
+import { computed, ref } from 'vue';
 
 type MemberCourseInfo = {
 	id: string,
@@ -66,6 +87,7 @@ const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
 const ds = ref<MemberCourseInfo[]>([])
+const teacher = ref<User>()
 
 onLoad(async (option) => {
 	const { id } = option as { id: string }
@@ -80,7 +102,17 @@ onLoad(async (option) => {
 		title: "加载中"
 	})
 	const courses = await courseStore.fetchCourses(courseIds)
+	const users = await usersStore.fetchUsers([id]) as User[]
+	if (users.length === 1) {
+		teacher.value = users[0]
+	}
 	uni.hideLoading()
+	
+	if (teacher.value) {
+		uni.setNavigationBarTitle({
+			title: teacher.value.nickName
+		})
+	}
 	
 	courses.forEach(c => {
 		let orgId = ''
@@ -124,6 +156,28 @@ onLoad(async (option) => {
 	})
 })
 
+const totalCourses = computed(() => {
+	return ds.value.reduce((accumulator, current) => {
+		return accumulator + current.total
+	}, 0)
+})
+
+const totalConsumeCourses = computed(() => {
+	return ds.value.reduce((accumulator, current) => {
+		return accumulator + current.consume
+	}, 0)
+})
+
+const orgNames = computed(() => {
+	const names:string[] = []
+	ds.value.forEach(item => {
+		if (!names.includes(item.orgName)) {
+			names.push(item.orgName)
+		}
+	})
+	return names.join(" ")
+})
+
 const onStudentTap = (studentId: string, orgId:string) => {
 	const students = usersStore.students.filter(student => student._id === studentId)
 	if (students.length === 1) {
@@ -150,10 +204,35 @@ const courseDesc = (type: number) => {
 	
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .member-course-container {
 	display: flex;
 	flex-direction: column;
+	.profile {
+		display: flex;
+		flex-direction: column;
+		background-color: white;
+		padding: $uni-padding-normal;
+		box-sizing: border-box;
+		.top {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			height: 60px;
+			.circle-progress {
+				width: 37px;
+				height: 54px;
+			}
+		}
+		.bottom {
+			margin-top: $uni-spacing-col-base;
+			font-size: $uni-font-size-sm;
+			color: $wk-text-color-grey;
+		}
+	}
+	.uni-section {
+		background-color: transparent !important;
+	}
 	.member-course-card {
 		display: flex;
 		flex-direction: column;
@@ -168,10 +247,6 @@ const courseDesc = (type: number) => {
 			flex-direction: row;
 			align-items: center;
 			height: 30px;
-			.text {
-				margin-left: $uni-spacing-row-sm;
-				font-size: $uni-font-size-base;
-			}
 			.circle-progress {
 				width: 37px;
 				height: 54px;

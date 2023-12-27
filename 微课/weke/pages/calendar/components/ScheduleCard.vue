@@ -1,6 +1,9 @@
 <template>
 	<view class="schedule-card-container">
-		<view :class="statusCls">{{statusDesc}}</view>
+		<view class="top">
+			<view :class="statusCls">{{statusDesc}}</view>
+			<uni-icons type="more-filled" color="#c0c0c0"></uni-icons>
+		</view>
 		<view class="content">
 			<view class="left">
 				<view 
@@ -25,6 +28,7 @@
 					<template v-else>
 						<view class="wk-icon" v-if="student">
 							<wk-icon
+								@tap.stop="onStudentTap(student.studentNo)"
 								:text="student.nickName"
 								:url="student.avatarUrl">
 							</wk-icon>
@@ -49,6 +53,7 @@
 					<view class="cell-container">
 						<template v-for="student in presents" :key="student._id">
 							<wk-portrait
+								@tap.stop="onStudentTap(student.studentNo)"
 								:url="student.avatarUrl" 
 								:name="student.nickName">
 							</wk-portrait>
@@ -66,11 +71,28 @@
 				</view>
 			</view>
 		</view>
+		
+		<uni-collapse>
+			<uni-collapse-item titleBorder="none" :show-arrow="false" :open="false">
+				<template v-slot:title>
+				</template>
+				<textarea value="" placeholder="课程反馈" />
+			</uni-collapse-item>
+		</uni-collapse>
+		
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
 			<view class="right" v-if="!checked">
-				<text class="action leave" @tap="onLeaveTap">标记请假</text>
-				<text class="action delete" @tap="onDeleteTap">删除</text>
+				<view 
+					@tap="onLeaveTap"
+					class=".iconfont .icon-qingjia action leave"></view>
+				<uni-icons
+					@tap="onDeleteTap"
+					size="24"
+					type="trash" 
+					class="action delete" 
+					color="#dd524d">
+				</uni-icons>
 			</view>
 		</view>
 	</view>
@@ -247,24 +269,32 @@ const onCheckedTap = async () => {
 }
 
 const onLeaveTap = async () => {
-	const schedule:Schedule = props.schedule
-	const status = 2
-	const result = await scheduleStore.dealSchedule({
-		scheduleId: schedule._id,
-		orgId: schedule.orgId,
-		teacherId: schedule.teacherId,
-		studentId: schedule.studentId ?? '',
-		courseId: schedule.courseId,
-		classId: schedule.classId ?? '',
-		presentIds: schedule.presentIds ?? [],
-		consume: schedule.consume,
-		status
+	uni.showModal({
+		title: global.appName,
+		content: "确定要将此次课程标记为请假吗?",
+		success: async (res) => {
+			if (res.confirm) {
+				const schedule:Schedule = props.schedule
+				const status = 2
+				const result = await scheduleStore.dealSchedule({
+					scheduleId: schedule._id,
+					orgId: schedule.orgId,
+					teacherId: schedule.teacherId,
+					studentId: schedule.studentId ?? '',
+					courseId: schedule.courseId,
+					classId: schedule.classId ?? '',
+					presentIds: schedule.presentIds ?? [],
+					consume: schedule.consume,
+					status
+				})
+				if (result) {
+					props.schedule.status = status
+					checked.value = true
+					scheduleStore.playChecked()
+				}
+			}
+		}
 	})
-	if (result) {
-		props.schedule.status = status
-		checked.value = true
-		scheduleStore.playChecked()
-	}
 }
 
 const onDeleteTap = () => {
@@ -277,6 +307,12 @@ const onDeleteTap = () => {
 				await scheduleStore.deleteSchedule(props.schedule._id)
 			}
 		}
+	})
+}
+
+const onStudentTap = (studentNo:string) => {
+	uni.navigateTo({
+		url:"/pages/course-bind/course-bind?studentNo="+studentNo+"&orgIds="+org.value?._id
 	})
 }
 
@@ -302,18 +338,18 @@ const statusDesc = computed(() => {
 
 const statusCls = computed(() => {
 	const status = props.schedule.status
-	let cls = 'top'
+	let cls = 'row'
 	switch (status) {
 		case 0: {
-			cls = "top status_0"
+			cls = "row status_0"
 			break
 		}
 		case 1: {
-			cls = "top status_1"
+			cls = "row status_1"
 			break
 		}
 		case 2: {
-			cls = "top status_2"
+			cls = "row status_2"
 			break
 		}
 	}
@@ -380,18 +416,24 @@ const duration = computed(() => {
 	background-color: white;
 	padding: $uni-padding-normal;
 	border-radius: $uni-border-radius-lg;
+	position: relative;
 	.top {
-		font-size: $uni-font-size-sm;
-		margin-bottom: $uni-spacing-row-base;;
-	}
-	.status_0 {
-		color: $wk-theme-color;
-	}
-	.status_1 {
-		color: $wk-text-color-grey;
-	}
-	.status_2 {
-		color: $uni-color-warning;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		.row {
+			font-size: $uni-font-size-sm;
+			margin-bottom: $uni-spacing-row-base;;
+		}
+		.status_0 {
+			color: $wk-theme-color;
+		}
+		.status_1 {
+			color: $wk-text-color-grey;
+		}
+		.status_2 {
+			color: $uni-color-warning;
+		}
 	}
 	.content {
 		display: flex;
@@ -483,18 +525,20 @@ const duration = computed(() => {
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
+		align-items: flex-end;
 		font-size: $uni-font-size-sm;
 		color: $wk-text-color-grey;
 		margin-top: $uni-spacing-col-lg;
-		.action {
-			margin-left: $uni-spacing-row-lg;
-			background-color: $wk-theme-color;
-			color: white;
-			padding: $uni-padding-sm $uni-padding-base;
-			border-radius: $uni-border-radius-base;
-		}
-		.delete {
-			background-color: $uni-color-error;
+		.right {
+			display: flex;
+			flex-direction: row;
+			.action {
+				margin-left: $uni-spacing-row-lg;
+			}
+			.leave {
+				font-size: 24px;
+				color: $wk-theme-color;
+			}
 		}
 	}
 }

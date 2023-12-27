@@ -15,9 +15,6 @@
 			</wk-circle-progress>
 			<view v-else-if="actualTotal > 0" class="bind">绑定课程</view>
 		</view>
-		<view class="body">
-			
-		</view>
 		<view class="bottom">
 			<text class="text">{{orgNames}}</text>
 			<view class="icon-container" @tap.stop="onIconTap">

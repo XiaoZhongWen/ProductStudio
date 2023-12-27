@@ -1,4 +1,23 @@
 <template>
+	<view class="profile" v-if="student">
+		<view class="top">
+			<member-info
+				:url="student.avatarUrl"
+				:nickname="student.nickName"
+				:mobile="`学号: ${student.studentNo}`"
+				:signature="student.signature">
+			</member-info>
+			<wk-circle-progress
+				v-if="totalCourses > 0" 
+				class="circle-progress" 
+				:total="totalCourses" 
+				:consume="totalConsumeCourses">
+			</wk-circle-progress>
+		</view>
+		<view class="bottom">
+			<text>{{orgNames}}</text>
+		</view>
+	</view>
 	<uni-section title="课程" type="line" v-if="entries.length > 0">
 	</uni-section>
 	<template v-for="entry in entries" :key="entry._id">
@@ -12,9 +31,9 @@
 			:consume="entry.consume">
 		</wk-course-card>
 	</template>
-	<uni-section title="绑定课程" type="line" v-if="canBindCourse">
+	<uni-section title="绑定课程" type="line" v-if="canBindCourse && courseSelectorData.length > 0">
 	</uni-section>
-	<view class="course-bind-container" v-if="canBindCourse">
+	<view class="course-bind-container" v-if="canBindCourse && courseSelectorData.length > 0">
 		<view class="course-selector">
 			<uni-data-select
 				@change="onChange"
@@ -22,6 +41,7 @@
 				:clear="false"
 				v-model="selectedCourseId"
 				:localdata="courseSelectorData"
+				emptyTips="没有可绑定的课程"
 				placeholder="选择课程">
 			</uni-data-select>
 		</view>
@@ -105,7 +125,7 @@ import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
-import { User } from '../../types/user';
+import { Student, User } from '../../types/user';
 import { Entry } from '../../types/entry';
 
 const global = getApp().globalData!
@@ -127,6 +147,7 @@ const courseDuration = ref('')
 const courseDesc = ref('')
 const selectedCourseId = ref('')
 const selectedTeacherId = ref('')
+const student = ref<Student>()
 const courseSelectorData = ref<{value:string, text:string}[]>([])
 const teacherSelectorData = ref<{value:string, text:string}[]>([])
 
@@ -153,6 +174,15 @@ onMounted(async () => {
 	if (stuNo.length === 0 || oIds.length === 0) {
 		return
 	}
+	
+	const students = usersStore.students.filter(s => s.studentNo === stuNo)
+	if (students.length === 1) {
+		student.value = students[0]
+		uni.setNavigationBarTitle({
+			title: student.value.nickName
+		})
+	}
+	
 	const id = usersStore.owner._id
 	orgs = useOrgs.orgs.filter(org => org.creatorId === id && oIds.includes(org._id))
 	if ((usersStore.owner.roles?.includes(1) ||
@@ -191,16 +221,13 @@ onMounted(async () => {
 		}
 	})
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
-	if (courses.length === 0 && canBindCourse.value === true) {
-		uni.showToast({
-			title: "请先添加课程",
-			duration: global.duration_toast,
-			icon: "error"
-		})
-	}
-	uni.setNavigationBarTitle({
-		title: canBindCourse.value? "绑定课程": "课程"
-	})
+	// if (courses.length === 0 && canBindCourse.value === true) {
+	// 	uni.showToast({
+	// 		title: "请先添加课程",
+	// 		duration: global.duration_toast,
+	// 		icon: "error"
+	// 	})
+	// }
 })
 
 const bindClass = computed(() => {
@@ -212,6 +239,25 @@ const bindClass = computed(() => {
 	}
 	const result = selectedCourseId.value.length > 0 && selectedTeacherId.value.length > 0
 	return result? "bind able": "bind disable"
+})
+
+const totalCourses = computed(() => {
+	return entries.value.reduce((accumulator, current) => {
+		return accumulator + current.total
+	}, 0)
+})
+
+const totalConsumeCourses = computed(() => {
+	return entries.value.reduce((accumulator, current) => {
+		return accumulator + current.consume
+	}, 0)
+})
+
+const orgNames = computed(() => {
+	const orgIds = entries.value.map(entry => entry.orgId)
+	const orgs = useOrgs.orgs.filter(o => orgIds.includes(o._id))
+	const names = orgs.map(o => o.name)
+	return names.join(" ")
 })
 
 const onChange = (e:string) => {
@@ -334,14 +380,12 @@ const onBindCourse = async () => {
 		title:"正在绑定..."
 	})
 	
-	const students = usersStore.students.filter(s => s.studentNo === stuNo)
-	if (students.length === 1) {
-		const student = students[0]
+	if (student.value) {
 		const entryId = await courseStore.bindCourse({
 			orgId: org._id,
 			teacherId: selectedTeacherId.value,
-			studentId: student._id,
-			studentNo: student.studentNo,
+			studentId: student.value._id,
+			studentNo: student.value.studentNo,
 			courseId: selectedCourseId.value,
 			total: parseInt(totle.value),
 			consume: parseInt(consume.value),
@@ -401,6 +445,28 @@ const reset = () => {
 </script>
 
 <style lang="scss">
+.profile {
+	display: flex;
+	flex-direction: column;
+	background-color: white;
+	padding: $uni-padding-normal;
+	box-sizing: border-box;
+	.top {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		height: 60px;
+		.circle-progress {
+			width: 37px;
+			height: 54px;
+		}
+	}
+	.bottom {
+		margin-top: $uni-spacing-col-base;
+		font-size: $uni-font-size-sm;
+		color: $wk-text-color-grey;
+	}
+}
 .uni-section {
 	background-color: transparent !important;
 }

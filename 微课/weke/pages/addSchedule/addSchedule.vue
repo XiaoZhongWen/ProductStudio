@@ -220,7 +220,6 @@ import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
 import { Entry } from '../../types/entry'
-import { NOTFOUND } from 'dns'
 
 const isFullDay = ref(false)
 const isNotice = ref(false)
@@ -660,10 +659,10 @@ const remainCount = computed(() => {
 			let consume = 0
 			usersStore.entries.forEach(e => {
 				if (studentNos.includes(e.studentId) &&
-					e.courseId === selectedCourseId.value &&
-					e.teacherId === selectedTeacherId.value) {
+					e.courseId === selectedClassCourseId.value &&
+					e.teacherId === selectedClassTeacherId.value) {
 					total += e.total
-					consume + e.consume
+					consume += e.consume
 				}
 			})
 			return total - consume
