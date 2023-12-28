@@ -107,7 +107,9 @@ const onAddTap = () => {
 }
 
 const onScheduleCardTap = (schedule: Schedule) => {
-	console.info(schedule)
+	uni.navigateTo({
+		url: "/pages/addSchedule/addSchedule?id="+schedule._id
+	})
 }
 
 </script>

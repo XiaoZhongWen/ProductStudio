@@ -35,6 +35,7 @@
 import { watch, onBeforeUpdate, onMounted, ref, computed } from 'vue';
 import { md, daysBetweenDates, yyyyMMdd } from '@/utils/wk-date'
 import timeSlot from "@/components/wanghexu-timeslot/wanghexu-timeslot.vue"
+import { type } from 'os';
 
 type Time = {
 	hour: number,
@@ -45,7 +46,7 @@ const timeslot = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
-const props = defineProps(['type', 'date', 'isFullDay'])
+const props = defineProps(['type', 'date', 'isFullDay', 'start', 'end'])
 const emits = defineEmits(['onDateChange', 'onTimeChange'])
 const curDate = new Date()
 const title = ref('')
@@ -84,6 +85,14 @@ watch(isFullDay, () => {
 })
 
 onMounted(() => {
+	if (typeof(props.start) !== 'undefined' && 
+		typeof(props.end) !== 'undefined') {
+		start.value.hour = parseInt(props.start.hour)
+		end.value.hour = parseInt(props.end.hour)
+		start.value.min = parseInt(props.start.min)
+		end.value.min = parseInt(props.end.min)
+	}
+	
 	if (!didSelectedDate.value) {
 		selectedDate.value = props.date
 	}

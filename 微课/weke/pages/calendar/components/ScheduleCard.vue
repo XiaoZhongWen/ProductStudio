@@ -42,6 +42,12 @@
 						</wk-circle-progress>
 					</template>
 				</view>
+				<view class="section tag" v-if="isShowTag">
+					<uni-tag class="tag" :circle="true" size="mini" type="primary" text="预习" v-if="isShowPreview"></uni-tag>
+					<uni-tag class="tag" :circle="true" size="mini" type="success" text="课程内容" v-if="isShowCourseContent"></uni-tag>
+					<uni-tag class="tag" :circle="true" size="mini" type="warning" text="作业" v-if="isShowAssignment"></uni-tag>
+					<uni-tag class="tag" :circle="true" size="mini" custom-style="background-color: #5073D6; border-color: #5073D6; color: #fff;" text="反馈" v-if="isShowFeedback"></uni-tag>
+				</view>
 				<view class="section course" v-if="course">
 					<text>课程: {{course.name}}</text>
 				</view>
@@ -75,17 +81,19 @@
 			<text v-if="org">{{org.name}}</text>
 			<view class="right offset-sm" v-if="props.schedule.status===0">
 				<view
-					class=".iconfont .icon-round-assignment-p action content">
-				</view>
-				<view
+					@tap.stop="onEditCoursePreviewTap"
 					class=".iconfont .icon-preview action preview">
 				</view>
+				<view
+					@tap.stop="onEditCourseContentTap"
+					class=".iconfont .icon-round-assignment-p action content">
+				</view>
 				<view 
-					@tap="onLeaveTap"
+					@tap.stop="onLeaveTap"
 					class=".iconfont .icon-qingjia action leave">
 				</view>
 				<uni-icons
-					@tap="onDeleteTap"
+					@tap.stop="onDeleteTap"
 					size="24"
 					type="trash" 
 					class="action delete" 
@@ -94,12 +102,14 @@
 			</view>
 			<view class="right offset" v-else-if="props.schedule.status===1">
 				<uni-icons
+					@tap.stop="onEditCourseFeedbackTap"
 					size="24"
 					type="compose" 
 					class="action feedback" 
 					color="#5073D6">
 				</uni-icons>
 				<view
+					@tap.stop="onEditCourseAssignmentTap"
 					class=".iconfont .icon-round-assignment-p action assignment">
 				</view>
 			</view>
@@ -319,11 +329,66 @@ const onDeleteTap = () => {
 	})
 }
 
+const onEditCourseContentTap = () => {
+	uni.navigateTo({
+		url: "/pages/editSchedule/editSchedule?type=1&scheduleId="+props.schedule._id
+	})
+}
+
+const onEditCoursePreviewTap = () => {
+	uni.navigateTo({
+		url: "/pages/editSchedule/editSchedule?type=0&scheduleId="+props.schedule._id
+	})
+}
+
+const onEditCourseFeedbackTap = () => {
+	uni.navigateTo({
+		url: "/pages/editSchedule/editSchedule?type=3&scheduleId="+props.schedule._id
+	})
+}
+
+const onEditCourseAssignmentTap = () => {
+	uni.navigateTo({
+		url: "/pages/editSchedule/editSchedule?type=2&scheduleId="+props.schedule._id
+	})
+}
+
 const onStudentTap = (studentNo:string) => {
 	uni.navigateTo({
 		url:"/pages/course-bind/course-bind?studentNo="+studentNo+"&orgIds="+org.value?._id
 	})
 }
+
+const isShowTag = computed(() => {
+	const preview = props.schedule.previewContent ?? ''
+	const courseContent = props.schedule.courseContent ?? ''
+	const assignment = props.schedule.assignment ?? ''
+	const feedback = props.schedule.feedback ?? ''
+	return preview.length > 0 || 
+			courseContent.length > 0 || 
+			assignment.length > 0 || 
+			feedback.length > 0
+})
+
+const isShowPreview = computed(() => {
+	const preview = props.schedule.previewContent ?? ''
+	return preview.length > 0
+})
+
+const isShowCourseContent = computed(() => {
+	const courseContent = props.schedule.courseContent ?? ''
+	return courseContent.length > 0
+})
+
+const isShowAssignment = computed(() => {
+	const assignment = props.schedule.assignment ?? ''
+	return assignment.length > 0
+})
+
+const isShowFeedback = computed(() => {
+	const feedback = props.schedule.feedback ?? ''
+	return feedback.length > 0
+})
 
 const statusDesc = computed(() => {
 	const status = props.schedule.status
@@ -493,6 +558,9 @@ const duration = computed(() => {
 			.section {
 				font-size: $uni-font-size-sm;
 				color: $wk-text-color-grey;
+			}
+			.tag {
+				margin: $uni-spacing-col-lg $uni-spacing-col-lg 0 0 ;
 			}
 			.course {
 				margin-top: $uni-spacing-col-lg;

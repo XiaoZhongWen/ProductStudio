@@ -277,11 +277,12 @@
             
         }
         ,{
-            "path" : "pages/scheduleDetail/scheduleDetail",
+            "path" : "pages/editSchedule/editSchedule",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
-                "enablePullDownRefresh": false
+				"navigationBarTitleText": "编辑",
+                "enablePullDownRefresh": false,
+				"backgroundColor": "#F2F4FD"
             }
             
         }

@@ -4,6 +4,7 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
+import { type } from 'os'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -410,6 +411,103 @@ export const useScheduleStore = defineStore('schedules', {
 					index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
 					if (index !== -1) {
 						this.scheduleDates.splice(index, 1)
+					}
+				}
+			}
+			return result
+		},
+		async updateSchedule2(param: {
+			scheduleId: string,
+			date: number,
+			orgId: string,
+			presentIds: string[],
+			courseId: string,
+			teacherId: string,
+			gradients: string[],
+			startTime: number,
+			endTime: number,
+			remind: boolean,
+			courseContent: string,
+			previewContent: string,
+			consume: number
+		}) {
+			const { 
+				date, 
+				startTime, 
+				endTime, 
+				scheduleId, 
+				orgId, 
+				presentIds, 
+				courseId, 
+				teacherId, 
+				gradients, 
+				remind, 
+				courseContent, 
+				previewContent, 
+				consume } = param
+			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0) {
+				return false
+			}
+			const result = await schedules_co.updateSchedule2(param)
+			if (result) {
+				const res = this.schedules.filter(s => s._id === scheduleId)
+				if (res.length === 1) {
+					const cDate = new Date(startTime)
+					const year = cDate.getFullYear()
+					const month = String(cDate.getMonth() + 1).padStart(2, '0')
+					const day = String(cDate.getDate()).padStart(2, '0')
+					const courseDate = year + '-' + month + '-' + day
+					const schedule = res[0]
+					if (schedule.courseDate !== courseDate) {
+						const datas = this.schedules.filter(s => s.courseDate === schedule.courseDate)
+						if (datas.length === 1) {
+							const index = this.scheduleDates.findIndex(item => item === schedule.courseDate)
+							if (index !== -1) {
+								this.scheduleDates.splice(index, 1)
+							}
+						}
+					} else {
+						schedule.courseDate = courseDate
+						const index = this.scheduleDates.findIndex(item => item === courseDate)
+						if (index === -1) {
+							this.scheduleDates.push(courseDate)
+						}
+					}
+					schedule.date = date
+					schedule.orgId = orgId
+					schedule.presentIds = presentIds
+					schedule.courseId = courseId
+					schedule.teacherId = teacherId
+					schedule.gradients = gradients
+					schedule.startTime = startTime
+					schedule.endTime = endTime
+					schedule.remind = remind
+					schedule.courseContent = courseContent
+					schedule.previewContent = previewContent
+					schedule.consume = consume
+				}
+			}
+			return result
+		},
+		async updateSchedule(scheduleId:string, content:string, type:string) {
+			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
+				typeof(content) === 'undefined' || content.length === 0 ||
+				typeof(type) === 'undefined' || type.length === 0) {
+				return false
+			}
+			const result = await schedules_co.updateSchedule(scheduleId, content, type)
+			if (result) {
+				const res = this.schedules.filter(s => s._id === scheduleId)
+				if (res.length === 1) {
+					const schedule = res[0]
+					if (type === '0') {
+						schedule.previewContent = content
+					} else if (type === '1') {
+						schedule.courseContent = content
+					} else if (type === '2') {
+						schedule.assignment = content
+					} else if (type === '3') {
+						schedule.feedback = content
 					}
 				}
 			}

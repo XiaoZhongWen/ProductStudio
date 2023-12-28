@@ -339,5 +339,77 @@ module.exports = {
 			_id: scheduleId
 		}).remove()
 		return result.deleted === 1
-	}
+	},
+	async updateSchedule2(param) {
+		const {
+			scheduleId,
+			date,
+			orgId,
+			presentIds,
+			courseId,
+			teacherId,
+			gradients,
+			startTime,
+			endTime,
+			remind,
+			courseContent,
+			previewContent,
+			consume
+		} = param
+		if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection("wk-schedules").where({
+			_id: scheduleId
+		}).update({
+			date,
+			orgId,
+			presentIds,
+			courseId,
+			teacherId,
+			gradients,
+			startTime,
+			endTime,
+			remind,
+			courseContent,
+			previewContent,
+			consume
+		})
+		return result.updated === 1
+	},
+	async updateSchedule(scheduleId, content, type) {
+		if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0 ||
+			typeof(content) === 'undefined' || content.length === 0 ||
+			typeof(type) === 'undefined' || type.length === 0) {
+			return false
+		}
+		
+		let update = {}
+		if (type === "0") {
+			update = {
+				previewContent: content
+			}
+		} else if (type === "1") {
+			update = {
+				courseContent: content
+			}
+		} else if (type === "2") {
+			update = {
+				assignment: content
+			}
+		} else if (type === "3") {
+			update = {
+				feedback: content
+			}
+		} else {
+			return false
+		}
+		
+		const db = uniCloud.database()
+		const result = await db.collection('wk-schedules').where({
+			_id: scheduleId
+		}).update(update)
+		return result.updated === 1
+	},
 }

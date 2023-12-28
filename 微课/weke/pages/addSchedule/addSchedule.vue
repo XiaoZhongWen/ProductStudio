@@ -1,6 +1,6 @@
 <template>
 	<view class="add-schedule-container">
-		<view class="section type">
+		<view class="section type" v-if="scheduleId.length === 0">
 			<text>类型</text>
 			<radio-group @change="radioChange">
 				<label class="radio">
@@ -24,7 +24,10 @@
 				<view class="left">学员</view>
 				<view class="right">
 					<text>{{selectedStudent}}</text>
-					<uni-icons type="right" color="#c6c8cf"></uni-icons>
+					<uni-icons 
+						type="right" 
+						color="#c6c8cf" 
+						v-if="scheduleId.length === 0"></uni-icons>
 				</view>
 			</view>
 			<template v-else>
@@ -32,10 +35,10 @@
 					<view class="left">班级</view>
 					<view class="right">
 						<text>{{selectedGrade}}</text>
-						<uni-icons type="right" color="#c6c8cf"></uni-icons>
+						<uni-icons v-if="scheduleId.length === 0" type="right" color="#c6c8cf"></uni-icons>
 					</view>
 				</view>
-				<view class="row after" v-if="selectedClassId.length > 0" @tap="onStudentTap('remove')">
+				<view class="row after" v-if="selectedClassId.length > 0" @tap="onStudentTap('multiple-plus')">
 					<view class="left">上课学员</view>
 					<view class="right">
 						<text>{{selectedStudentDesc}}</text>
@@ -77,7 +80,9 @@
 					type="time" 
 					@onTimeChange="onTimeChange"
 					:date="selectedDate" 
-					:isFullDay="isFullDay" />
+					:isFullDay="isFullDay"
+					:start="selectedStartTime"
+					:end="selectedEndTime" />
 			</view>
 		</view>
 		<view class="section full-day">
@@ -135,7 +140,10 @@
 						@change="onNoticeSwitchChange" />
 				</view>
 			</view>
-			<view class="row space" @tap="onRepeatTap">
+			<view 
+				class="row space" 
+				@tap="onRepeatTap" 
+				v-if="scheduleId.length === 0">
 				<view class="left">
 					<view class="top">
 						<uni-icons type="loop" color="#5073D6"></uni-icons>
@@ -150,7 +158,12 @@
 					<uni-icons type="right" color="#c6c8cf"></uni-icons>
 				</view>
 			</view>
-			<view class="row deadline" @tap="onDeadlineTap" v-if="repeatOption !== 0 && repeatOption !== 4">
+			<view 
+				class="row deadline" 
+				@tap="onDeadlineTap" 
+				v-if="repeatOption !== 0 
+						&& repeatOption !== 4 
+						&& scheduleId.length === 0">
 				<text>结束重复</text>
 				<text style="color: #c6c8cf;">{{endRepeatDate.length > 0? endRepeatDate: '请选择截止日期'}}</text>
 			</view>
@@ -160,10 +173,10 @@
 				<textarea 
 					class="textarea" 
 					placeholder="课程内容"
-					maxlength="1000"
+					maxlength="300"
 					v-model="courseInfo"
 				/>
-				<text class="number">{{1000 - courseInfo.length}}</text>
+				<text class="number">{{300 - courseInfo.length}}</text>
 			</view>
 		</view>
 		<view class="section preview-content">
@@ -171,10 +184,10 @@
 				<textarea 
 					class="textarea" 
 					placeholder="预习内容"
-					maxlength="1000"
+					maxlength="300"
 					v-model="previewInfo"
 				/>
-				<text class="number">{{1000 - previewInfo.length}}</text>
+				<text class="number">{{300 - previewInfo.length}}</text>
 			</view>
 		</view>
 		<view class="finish">
@@ -182,7 +195,7 @@
 				@tap="onSchedule"
 				class="btn" 
 				type="default">
-				完成
+				{{scheduleId.length > 0?"更新":"完成"}}
 			</button>
 		</view>
 		<uni-popup ref="popup" type="bottom" id="popup">
@@ -221,17 +234,11 @@ import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
 import { Entry } from '../../types/entry'
 
-const isFullDay = ref(false)
-const isNotice = ref(false)
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 const gradesStore = useGradesStore()
 const scheduleStore = useScheduleStore()
-
-const range = ref<{value:number, text:string}[]>([])
-
-const consume = ref(0)
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -248,10 +255,15 @@ const calendar = ref<{
 	close: () => void
 }>()
 
+const scheduleId = ref('')
+const consume = ref(0)
+const isFullDay = ref(false)
+const isNotice = ref(false)
 const chooseMemberRef = ref(null)
 const repeatCardRef = ref(null)
+const range = ref<{value:number, text:string}[]>([])
 
-const selectedCourseType = ref<number>(0)
+const selectedCourseType = ref<number>()
 const selectedClassId = ref('')
 const selectedStudentId = ref('')
 // 学员课程
@@ -285,18 +297,67 @@ const selectedEndTime = ref<{hour:number, min:number}>()
 const global = getApp().globalData!
 
 onLoad(async (option) => {
-	const { date } = option as {
-		date: string
+	const { id, date } = option as {
+		id?: string,
+		date?: string
 	}
-	selectedDate.value = new Date(date)
-	const hour = (new Date()).getHours()
-	selectedStartTime.value = {
-		hour: hour,
-		min: 0
+	if (date) {
+		selectedDate.value = new Date(date)
+		const hour = (new Date()).getHours()
+		selectedStartTime.value = {
+			hour: hour,
+			min: 0
+		}
+		selectedEndTime.value = {
+			hour: hour + 1,
+			min: 0
+		}
 	}
-	selectedEndTime.value = {
-		hour: hour + 1,
-		min: 0
+	if (id) {
+		uni.setNavigationBarTitle({
+			title: "更新"
+		})
+		scheduleId.value = id
+		const schedules = scheduleStore.schedules.filter(s => s._id === id)
+		if (schedules.length === 1) {
+			const schedule = schedules[0]
+			const type = schedule.classId?.length === 0? 0: 1
+			if (type === 0) {
+				selectedStudentId.value = schedule.studentId ?? ''
+				selectedCourseId.value = schedule.courseId
+				selectedTeacherId.value = schedule.teacherId
+			} else {
+				selectedClassId.value = schedule.classId ?? ''
+				students.value = usersStore.students.filter(s => schedule.presentIds?.includes(s._id))
+				selectedClassCourseId.value = schedule.courseId
+				selectedClassTeacherId.value = schedule.teacherId
+			}
+			selectedCourseType.value = type
+			if (schedule.gradients.length > 0) {
+				selectedGradient.value = schedule.gradients
+			}
+			selectedDate.value = new Date(schedule.courseDate)
+			const start = new Date(schedule.startTime)
+			const sh = start.getHours()
+			const sm = start.getMinutes()
+			selectedStartTime.value = {
+				hour: start.getHours(),
+				min: start.getMinutes()
+			}
+			const end = new Date(schedule.endTime)
+			const eh = end.getHours()
+			const em = end.getMinutes()
+			selectedEndTime.value = {
+				hour: end.getHours(),
+				min: end.getMinutes()
+			}
+			isFullDay.value = sh === 0 && sm === 0 && eh === 23 && em === 59
+			isNotice.value = schedule.remind ?? false
+			courseInfo.value = schedule.courseContent ?? ''
+			previewInfo.value = schedule.previewContent ?? ''
+		}
+	} else {
+		selectedCourseType.value = 0
 	}
 })
 
@@ -409,8 +470,6 @@ watch(selectedCourseType, async (type) => {
 			}
 		}
 	}
-}, {
-	immediate: true
 })
 
 watch(selectedStudentId, async (sId) => {
@@ -675,6 +734,9 @@ const onStudentTap = (type:string) => {
 	if (students.value.length < 2) {
 		return
 	}
+	if (type === 'single' && scheduleId.value.length > 0) {
+		return
+	}
 	if (chooseMemberRef.value) {
 		const studentIds = students.value.map(s => s._id)
 		const instance:InstanceType<typeof wkChooseMemberVue> = chooseMemberRef.value
@@ -686,11 +748,18 @@ const onStudentTap = (type:string) => {
 				role: "student"
 			})
 		} else {
-			instance.initial({
-				memberIds: studentIds,
-				type,
-				role: "student"
-			})
+			const res = grades.value.filter(c => c._id === selectedClassId.value)
+			if (res.length === 1) {
+				const grade = res[0]
+				const members = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+				const memberIds = members.map(member => member._id)
+				instance.initial({
+					memberIds: memberIds,
+					invitedIds: studentIds,
+					type,
+					role: "student"
+				})
+			}
 		}
 		popup.value?.open()
 	}
@@ -718,7 +787,7 @@ const onTeacherTap = () => {
 }
 
 const onClassTap = () => {
-	if (grades.value.length < 2) {
+	if (grades.value.length < 2 || scheduleId.value.length > 0) {
 		return
 	}
 	if (chooseMemberRef.value) {
@@ -1054,42 +1123,79 @@ const onSchedule = async () => {
 	const dates = repeatDates.value
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
-	const result = await scheduleStore.createSchedule({
-		date,
-		orgId,
-		studentId,
-		classId,
-		presentIds,
-		courseId,
-		teacherId,
-		gradients,
-		startTime,
-		endTime,
-		remind,
-		repeatType,
-		repeatDays: days,
-		repeatDates: dates,
-		endRepeatDate: endRepeatDate.value,
-		courseContent,
-		previewContent,
-		consume: consume.value
-	})
-	uni.hideLoading()
-	uni.showToast({
-		title: result.length > 0?"排课成功":"排课失败",
-		duration: global.duration_toast,
-		icon: result.length > 0?"success":"none"
-	})
-	if (result.length > 0) {
-		selectedStudentId.value = ''
-		selectedClassId.value = ''
-		selectedTeacherId.value = ''
-		courseInfo.value = ''
-		previewInfo.value = ''
-		repeatOption.value = 0
-		repeatDays.value = []
-		repeatDates.value = []
-		endRepeatDate.value = ''
+	
+	if (scheduleId.value.length > 0) {
+		// 更新
+		uni.showLoading({
+			title: "正在更新"
+		})
+		const result = await scheduleStore.updateSchedule2({
+			scheduleId: scheduleId.value,
+			date,
+			orgId,
+			presentIds,
+			courseId,
+			teacherId,
+			gradients,
+			startTime,
+			endTime,
+			remind,
+			courseContent,
+			previewContent,
+			consume: consume.value
+		})
+		uni.hideLoading()
+		if (result) {
+			uni.navigateBack()
+		} else {
+			uni.showToast({
+				title: "更新失败",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+		}
+	} else {
+		// 创建
+		uni.showLoading({
+			title: "排课中"
+		})
+		const result = await scheduleStore.createSchedule({
+			date,
+			orgId,
+			studentId,
+			classId,
+			presentIds,
+			courseId,
+			teacherId,
+			gradients,
+			startTime,
+			endTime,
+			remind,
+			repeatType,
+			repeatDays: days,
+			repeatDates: dates,
+			endRepeatDate: endRepeatDate.value,
+			courseContent,
+			previewContent,
+			consume: consume.value
+		})
+		uni.hideLoading()
+		uni.showToast({
+			title: result.length > 0?"排课成功":"排课失败",
+			duration: global.duration_toast,
+			icon: result.length > 0?"success":"none"
+		})
+		if (result.length > 0) {
+			selectedStudentId.value = ''
+			selectedClassId.value = ''
+			selectedTeacherId.value = ''
+			courseInfo.value = ''
+			previewInfo.value = ''
+			repeatOption.value = 0
+			repeatDays.value = []
+			repeatDates.value = []
+			endRepeatDate.value = ''
+		}
 	}
 }
 
