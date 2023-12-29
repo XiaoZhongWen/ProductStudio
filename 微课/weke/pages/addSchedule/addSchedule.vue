@@ -134,7 +134,7 @@
 				<view class="right">
 					<switch 
 						class="switch" 
-						:checked="false" 
+						:checked="isNotice" 
 						color="#5073D6" 
 						style="transform:scale(0.7)" 
 						@change="onNoticeSwitchChange" />
@@ -296,6 +296,9 @@ const selectedEndTime = ref<{hour:number, min:number}>()
 
 const global = getApp().globalData!
 
+// 控制consume初始化的值被异步更新
+let skip = false
+
 onLoad(async (option) => {
 	const { id, date } = option as {
 		id?: string,
@@ -314,6 +317,7 @@ onLoad(async (option) => {
 		}
 	}
 	if (id) {
+		skip = true
 		uni.setNavigationBarTitle({
 			title: "更新"
 		})
@@ -352,6 +356,7 @@ onLoad(async (option) => {
 				min: end.getMinutes()
 			}
 			isFullDay.value = sh === 0 && sm === 0 && eh === 23 && em === 59
+			consume.value = schedule.consume
 			isNotice.value = schedule.remind ?? false
 			courseInfo.value = schedule.courseContent ?? ''
 			previewInfo.value = schedule.previewContent ?? ''
@@ -362,7 +367,9 @@ onLoad(async (option) => {
 })
 
 watch(selectedCourseType, async (type) => {
-	students.value = []
+	if (scheduleId.value.length === 0) {
+		students.value = []
+	}
 	courses.value = []
 	teachers.value = []
 	const userId = usersStore.owner._id
@@ -432,7 +439,9 @@ watch(selectedCourseType, async (type) => {
 			}
 			const courseId = grade.courseId ?? ''
 			const teacherId = grade.teacherId ?? ''
-			students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+			if (scheduleId.value.length === 0) {
+				students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+			}
 			courses.value = await courseStore.fetchCourses([courseId])
 			teachers.value = usersStore.users.filter(u => u._id === teacherId)
 			selectedClassId.value = grade._id
@@ -501,7 +510,9 @@ watch(selectedStudentId, async (sId) => {
 	if (courses.value.length === 1) {
 		selectedCourseId.value = courseIds[0]
 	} else {
-		selectedCourseId.value = ''
+		if (scheduleId.value.length === 0) {
+			selectedCourseId.value = ''
+		}
 	}
 	teachers.value = usersStore.users.filter(u => teacherIds.includes(u._id))
 	if (teachers.value.length === 1) {
@@ -545,17 +556,20 @@ watch([selectedCourseId, selectedClassCourseId], ([id1, id2]) => {
 		} else if (course.type === 3) {
 			courseType.value = "试听课"
 		}
-		
 		let unit = "课时"
 		if (course.type === 2) {
 			unit = "次课"
-			consume.value = 1
+			if (!skip) {
+				consume.value = 1
+			}
 		} else {
 			const hourOffset = (selectedEndTime.value?.hour ?? 0) - (selectedStartTime.value?.hour ?? 0)
 			const minOffset =  (selectedEndTime.value?.min ?? 0) - (selectedStartTime.value?.min ?? 0)
 			const offset = hourOffset * 60 + minOffset
 			const count = Math.floor(offset / course.duration)
-			consume.value = count
+			if (!skip) {
+				consume.value = count
+			}
 		}
 		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(i => {
 			range.value.push({
@@ -567,7 +581,14 @@ watch([selectedCourseId, selectedClassCourseId], ([id1, id2]) => {
 })
 
 watch([selectedStartTime, selectedEndTime], ([s, e]) => {
-	const res = courseStore.courses.filter(c => c._id === selectedCourseId.value)
+	if (skip) {
+		return
+	}
+	let cId = selectedCourseId.value
+	if (selectedCourseType.value === 1) {
+		cId = selectedClassCourseId.value
+	}
+	const res = courseStore.courses.filter(c => c._id === cId)
 	if (res.length === 1) {
 		const course = res[0]
 		if (course.type === 2) {
@@ -731,7 +752,7 @@ const remainCount = computed(() => {
 })
 
 const onStudentTap = (type:string) => {
-	if (students.value.length < 2) {
+	if (students.value.length < 2 && selectedCourseType.value === 0) {
 		return
 	}
 	if (type === 'single' && scheduleId.value.length > 0) {
@@ -878,15 +899,13 @@ const onConfirm = (data: {
 	memberId: string,
 	memberIds: string[]
 }) => {
+	skip = false
 	const { role, type, memberId, memberIds } = data
 	if (role === 'student') {
 		if (type === 'single') {
 			selectedStudentId.value = memberId
-		} else if (type === 'remove') {
-			memberIds.forEach(id => {
-				const index = students.value.findIndex(s => s._id === id)
-				students.value.splice(index, 1)
-			})
+		} else if (type === 'multiple-plus') {
+			students.value = usersStore.students.filter(s => memberIds.includes(s._id))
 		}
 	} else if (role === 'teacher') {
 		if (selectedCourseType.value === 0) {
@@ -915,6 +934,7 @@ const onTimeChange = (data: {
 	start:{hour:number, min:number}, 
 	end: {hour:number, min:number},
 }) => {
+	skip = false
 	const { start, end } = data
 	selectedStartTime.value = start
 	selectedEndTime.value = end

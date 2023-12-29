@@ -5,9 +5,10 @@
 			<view 
 				class="confirm" 
 				v-if="selectedId.length > 0 || 
-					selectedIds.length > 0" 
+					selectedIds.length > 0 ||
+					chooseType === 'multiple-plus'" 
 				@tap="onConfirmTap">
-				{{chooseType === 'single'? '确定': '确定' + '（' + count + ')'}}
+				{{confirmDesc}}
 			</view>
 		</view>
 		<scroll-view class="body" scroll-y="true">
@@ -40,6 +41,15 @@
 						<uni-icons 
 							:type="selectedIds.includes(member._id)?'checkbox-filled':'circle'"
 							:color="selectedIds.includes(member._id)?'#5073D6':'#c8c7cc'"
+							size="24">
+						</uni-icons>
+					</view>
+				</template>
+				<template v-else-if="chooseType === 'multiple-plus'">
+					<view class="right">
+						<uni-icons
+							:type="invitedMemberIds.includes(member._id)?'checkbox-filled':'circle'"
+							:color="invitedMemberIds.includes(member._id)?'#5073D6':'#c8c7cc'"
 							size="24">
 						</uni-icons>
 					</view>
@@ -79,6 +89,8 @@ const chooseType = ref('single')
 const chooseRole = ref('')
 const title = ref('')
 
+const global = getApp().globalData!
+
 const initial = async (data:{
 	selectedMemberId?: string,
 	memberIds: string[],
@@ -95,10 +107,11 @@ const initial = async (data:{
 	}
 	chooseType.value = type
 	chooseRole.value = role
-	if (type === "multiple" && (typeof(invitedIds) !== 'undefined')) {
+	if ((type === "multiple" || type === "multiple-plus") && 
+		(typeof(invitedIds) !== 'undefined')) {
 		invitedMemberIds.value = invitedIds ?? []
 	}
-	if (type === 'single' || type === 'multiple') {
+	if (type === 'single' || type === 'multiple' || type === "multiple-plus") {
 		title.value = "选择"
 	} else if (type === 'remove') {
 		title.value = "移除"
@@ -138,6 +151,13 @@ const onMemberTap = (id:string) => {
 		}
 	} else if (chooseType.value === 'single') {
 		selectedId.value = id
+	} else if (chooseType.value === 'multiple-plus') {
+		const index = invitedMemberIds.value.indexOf(id)
+		if (index === -1) {
+			invitedMemberIds.value.push(id)
+		} else {
+			invitedMemberIds.value.splice(index, 1)
+		}
 	}
 }
 
@@ -154,6 +174,20 @@ const onConfirmTap = () => {
 			type: chooseType.value,
 			memberIds: [...selectedIds.value]
 		})
+	} else if (chooseType.value === 'multiple-plus') {
+		if (invitedMemberIds.value.length === 0) {
+			uni.showToast({
+				title: "选择成员不能为空",
+				duration: global.duration_toast,
+				icon: "none"
+			})
+			return
+		}
+		emit('onConfirm', {
+			role: chooseRole.value,
+			type: chooseType.value,
+			memberIds: [...invitedMemberIds.value]
+		})
 	}
 }
 
@@ -163,6 +197,15 @@ const count = computed(() => {
 	} else {
 		return selectedIds.value.length
 	}
+})
+
+const confirmDesc = computed(() => {
+	if (chooseType.value === "multiple-plus") {
+		return "确定"
+	} else if (selectedId.value.length > 0 || selectedIds.value.length > 0) {
+		return chooseType.value === 'single'? '确定': '确定' + '（' + count + ')'				
+	}
+	return ""
 })
 
 const isUserOrStudent = (member:User|Student|Course|Grade) => {

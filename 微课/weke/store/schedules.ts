@@ -4,7 +4,6 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
-import { type } from 'os'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true

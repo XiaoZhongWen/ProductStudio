@@ -66,14 +66,18 @@ export const useCourseStore = defineStore('course', {
 				return []
 			}
 			const g1 = this.courses.filter(course => ids.includes(course._id))
-			const ids1 = g1.map(course => course._id)
-			const ids2 = ids.filter(id => !ids1.includes(id))
+			const courseIds = this.courses.map(c => c._id)
+			const ids1 = ids.filter(id => !courseIds.includes(id))
 			let other = [] as Course[]
-			if (ids2.length > 0) {
-				other = await course_co.fetchCourses(ids2) as Course[]
-				this.courses.push(...other)
+			if (ids1.length > 0) {
+				other = await course_co.fetchCourses(ids1) as Course[]
+				other.forEach(o => {
+					if (!courseIds.includes(o._id)) {
+						this.courses.push(o)
+					}
+				})
 			}
-			return [...g1, ...other]
+			return this.courses.filter(course => ids.includes(course._id))
 		},
 		async updateCourse(
 			param:{

@@ -144,9 +144,7 @@ const total = ref(0)
 const consume = ref(0)
 const course = ref<Course>()
 const teacher = ref<User>()
-const start = ref(hhmm(new Date(props.schedule.startTime)))
-const end = ref(hhmm(new Date(props.schedule.endTime)))
-const presents = ref<Student[]>([])
+// const presents = ref<Student[]>([])
 const org = ref<Org>()
 const grade = ref<Grade>()
 const checked = ref(false)
@@ -182,8 +180,8 @@ onMounted(async () => {
 		const grades = gradesStore.grades.filter(c => c._id === classId)
 		if (grades.length === 1) {
 			grade.value = grades[0]
-			const studentIds = props.schedule.presentIds ?? []
-			presents.value = usersStore.students.filter(s => studentIds.includes(s._id))
+			// const studentIds = props.schedule.presentIds ?? []
+			// presents.value = usersStore.students.filter(s => studentIds.includes(s._id))
 			loadProgress()
 		}
 	} else {
@@ -370,6 +368,11 @@ const isShowTag = computed(() => {
 			feedback.length > 0
 })
 
+const presents = computed(() => {
+	const studentIds = props.schedule.presentIds ?? []
+	return usersStore.students.filter(s => studentIds.includes(s._id))
+})
+
 const isShowPreview = computed(() => {
 	const preview = props.schedule.previewContent ?? ''
 	return preview.length > 0
@@ -436,6 +439,14 @@ const cBoxCls = computed(() => {
 	} else {
 		return 'iconfont icon-checkbox-blank-outline checkbox'
 	}
+})
+
+const start = computed(() => {
+	return hhmm(new Date(props.schedule.startTime))
+})
+
+const end = computed(() => {
+	return hhmm(new Date(props.schedule.endTime))
 })
 
 const dateDesc = computed(() => {
