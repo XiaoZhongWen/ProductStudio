@@ -35,7 +35,6 @@
 import { watch, onBeforeUpdate, onMounted, ref, computed } from 'vue';
 import { md, daysBetweenDates, yyyyMMdd } from '@/utils/wk-date'
 import timeSlot from "@/components/wanghexu-timeslot/wanghexu-timeslot.vue"
-import { type } from 'os';
 
 type Time = {
 	hour: number,

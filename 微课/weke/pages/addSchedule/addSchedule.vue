@@ -68,7 +68,7 @@
 			</view>
 		</view>
 		<view class="section datePicker">
-			<view class="picker-container">
+			<view class="picker-container" v-if="selectedDate">
 				<DateCard 
 					class="date-card" 
 					type="date" 
@@ -304,6 +304,30 @@ onLoad(async (option) => {
 		id?: string,
 		date?: string
 	}
+	const userId = usersStore.owner._id
+	const orgIds = useOrgs.orgs.filter(o => o.creatorId === userId).map(org => org._id)
+	const cIds:string[] = []
+	const tIds:string[] = []
+	usersStore.entries.forEach(e => {
+		if (e.status === 0 && 
+			orgIds.includes(e.orgId)) {
+			if (!cIds.includes(e.courseId)) {
+				cIds.push(e.courseId)
+			}
+			if (!tIds.includes(e.teacherId)) {
+				tIds.push(e.teacherId)
+			}
+		}
+	})
+	uni.showLoading({
+		title: "加载中..."
+	})
+	if (cIds.length > 0) {
+		await courseStore.fetchCourses(cIds)
+	}
+	if (tIds.length > 0) {
+		await usersStore.fetchUsers(tIds)
+	}
 	if (date) {
 		selectedDate.value = new Date(date)
 		const hour = (new Date()).getHours()
@@ -360,10 +384,12 @@ onLoad(async (option) => {
 			isNotice.value = schedule.remind ?? false
 			courseInfo.value = schedule.courseContent ?? ''
 			previewInfo.value = schedule.previewContent ?? ''
+			uni.$emit(global.event_name.onGradientChanged, {gradient:schedule.gradients})
 		}
 	} else {
 		selectedCourseType.value = 0
 	}
+	uni.hideLoading()
 })
 
 watch(selectedCourseType, async (type) => {
@@ -385,9 +411,9 @@ watch(selectedCourseType, async (type) => {
 				studentNo = res[0].studentNo
 			}
 		}
-		for (let e of usersStore.entries) {
+		usersStore.entries.forEach(e => {
 			if (e.status === 0 && orgIds.includes(e.orgId)) {
-				const res = await courseStore.fetchCourses([e.courseId])
+				const res = courseStore.courses.filter(c => c._id === e.courseId)
 				if (res.length === 1) {
 					const c = res[0]
 					if (c.type !== 1) {
@@ -407,17 +433,17 @@ watch(selectedCourseType, async (type) => {
 					}
 				}
 			}
-		}
+		})
 		students.value = usersStore.students.filter(s => studentIds.includes(s.studentNo))
 		if (students.value.length === 1) {
 			const student = students.value[0]
 			selectedStudentId.value = student._id
 		}
-		courses.value = await courseStore.fetchCourses(courseIds)
+		courses.value = courseStore.courses.filter(c => courseIds.includes(c._id))
 		if (courses.value.length === 1) {
 			selectedCourseId.value = courseIds[0]
 		}
-		teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
+		teachers.value = usersStore.users.filter(user => teacherIds.includes(user._id))
 		if (teachers.value.length === 1) {
 			selectedTeacherId.value = teacherIds[0]
 		}
@@ -442,7 +468,7 @@ watch(selectedCourseType, async (type) => {
 			if (scheduleId.value.length === 0) {
 				students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
 			}
-			courses.value = await courseStore.fetchCourses([courseId])
+			courses.value = courseStore.courses.filter(c => c._id === courseId)
 			teachers.value = usersStore.users.filter(u => u._id === teacherId)
 			selectedClassId.value = grade._id
 			selectedClassCourseId.value = courseId
@@ -469,11 +495,11 @@ watch(selectedCourseType, async (type) => {
 				const student = students.value[0]
 				selectedStudentId.value = student._id
 			}
-			courses.value = await courseStore.fetchCourses(courseIds)
+			courses.value = courseStore.courses.filter(c => courseIds.includes(c._id))
 			if (courses.value.length === 1) {
 				selectedClassCourseId.value = courseIds[0]
 			}
-			teachers.value = await usersStore.fetchUsers(teacherIds) as User[]
+			teachers.value = usersStore.users.filter(user => teacherIds.includes(user._id))
 			if (teachers.value.length === 1) {
 				selectedClassTeacherId.value = teacherIds[0]
 			}
@@ -489,12 +515,14 @@ watch(selectedStudentId, async (sId) => {
 	const res = usersStore.students.filter(s => s._id === sId)
 	if (res.length === 1) {
 		const student = res[0]
-		for (let e of usersStore.entries) {
+		usersStore.entries.forEach(e => {
 			if (e.status === 0) {
-				const res = await courseStore.fetchCourses([e.courseId])
+				const res = courseStore.courses.filter(c => c._id === e.courseId)
 				if (res.length === 1) {
 					const c = res[0]
-					if (orgIds.includes(e.orgId) && c.type !== 1 && e.studentId === student.studentNo) {
+					if (orgIds.includes(e.orgId) && 
+						c.type !== 1 && 
+						e.studentId === student.studentNo) {
 						if (!courseIds.includes(e.courseId)) {
 							courseIds.push(e.courseId)
 						}
@@ -504,9 +532,9 @@ watch(selectedStudentId, async (sId) => {
 					}
 				}
 			}
-		}
+		})
 	}
-	courses.value = await courseStore.fetchCourses(courseIds)
+	courses.value = courseStore.courses.filter(c => courseIds.includes(c._id))
 	if (courses.value.length === 1) {
 		selectedCourseId.value = courseIds[0]
 	} else {
@@ -1149,31 +1177,39 @@ const onSchedule = async () => {
 		uni.showLoading({
 			title: "正在更新"
 		})
-		const result = await scheduleStore.updateSchedule2({
-			scheduleId: scheduleId.value,
-			date,
-			orgId,
-			presentIds,
-			courseId,
-			teacherId,
-			gradients,
-			startTime,
-			endTime,
-			remind,
-			courseContent,
-			previewContent,
-			consume: consume.value
-		})
-		uni.hideLoading()
-		if (result) {
-			uni.navigateBack()
-		} else {
-			uni.showToast({
-				title: "更新失败",
-				duration: global.duration_toast,
-				icon: "none"
+		const schedules = scheduleStore.schedules.filter(s => s._id === scheduleId.value)
+		if (schedules.length === 1) {
+			const schedule = schedules[0]
+			const result = await scheduleStore.updateSchedule2({
+				scheduleId: scheduleId.value,
+				studentId: schedule.studentId ?? '',
+				classId: schedule.classId ?? '',
+				status: schedule.status,
+				date,
+				orgId,
+				presentIds,
+				courseId,
+				teacherId,
+				gradients,
+				startTime,
+				endTime,
+				remind,
+				courseContent,
+				previewContent,
+				consume: consume.value,
+				preConsume: schedule.consume
 			})
-		}
+			uni.hideLoading()
+			if (result) {
+				uni.navigateBack()
+			} else {
+				uni.showToast({
+					title: "更新失败",
+					duration: global.duration_toast,
+					icon: "none"
+				})
+			}
+		} 
 	} else {
 		// 创建
 		uni.showLoading({

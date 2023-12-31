@@ -2,12 +2,11 @@
 	<view class="schedule-card-container">
 		<view class="top">
 			<view :class="statusCls">{{statusDesc}}</view>
-			<!-- <uni-icons type="more-filled" color="#c0c0c0"></uni-icons> -->
 		</view>
 		<view class="content">
 			<view class="left">
 				<view 
-					@tap="onCheckedTap"
+					@tap.stop="onCheckedTap"
 					:checked="checked" 
 					:class="cBoxCls"
 					:style="{color: checked?'#c6c8cf':`${props.schedule.gradients[0]}`}">
@@ -140,11 +139,6 @@ const gradesStore = useGradesStore()
 const scheduleStore = useScheduleStore()
 
 const student = ref<Student>()
-const total = ref(0)
-const consume = ref(0)
-const course = ref<Course>()
-const teacher = ref<User>()
-// const presents = ref<Student[]>([])
 const org = ref<Org>()
 const grade = ref<Grade>()
 const checked = ref(false)
@@ -161,14 +155,6 @@ onMounted(async () => {
 		return
 	}
 	checked.value = props.schedule.status !== 0
-	const courses = courseStore.courses.filter(c => c._id === courseId)
-	if (courses.length === 1) {
-		course.value = courses[0]
-	}
-	const users = usersStore.users.filter(user => user._id === teacherId)
-	if (users.length === 1) {
-		teacher.value = users[0]
-	}
 	
 	const orgs = useOrgs.orgs.filter(org => org._id === orgId)
 	if (orgs.length === 1) {
@@ -180,9 +166,6 @@ onMounted(async () => {
 		const grades = gradesStore.grades.filter(c => c._id === classId)
 		if (grades.length === 1) {
 			grade.value = grades[0]
-			// const studentIds = props.schedule.presentIds ?? []
-			// presents.value = usersStore.students.filter(s => studentIds.includes(s._id))
-			loadProgress()
 		}
 	} else {
 		const studentId = props.schedule.studentId
@@ -192,64 +175,9 @@ onMounted(async () => {
 			if (res.length === 1) {
 				student.value = res[0]
 			}
-			loadProgress()
 		}
 	}
-	uni.$on("CourseConsumeNeedUpdate", (data: 
-		{
-			courseDate:string, 
-			studentId:string,
-			classId:string
-		}) => {
-		const { courseDate, studentId, classId } = data
-		if (courseDate === props.schedule.courseDate) {
-			if (studentId.length > 0 && studentId !== props.schedule.studentId) {
-				return
-			}
-			if (classId.length > 0 && classId !== props.schedule.classId) {
-				return
-			}
-			loadProgress()
-		}
-	})
 })
-
-const loadProgress = () => {
-	const classId = props.schedule.classId ?? ''
-	const courseId = props.schedule.courseId ?? ''
-	const teacherId = props.schedule.teacherId ?? ''
-	const orgId = props.schedule.orgId ?? ''
-	
-	let t = 0
-	let c = 0
-	if (typeof(classId) !== 'undefined' && 
-		classId.length > 0) {
-		const studentIds = grade.value?.studentIds ?? []
-		const datas = usersStore.students.filter(s => studentIds.includes(s._id))
-		const studentNos = datas.map(s => s.studentNo)
-		usersStore.entries.forEach(e => {
-			if (studentNos.includes(e.studentId) && 
-				e.courseId === courseId &&
-				e.teacherId === teacherId &&
-				e.orgId === orgId) {
-				t += e.total
-				c += e.consume
-			}
-		})
-	} else {
-		const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
-										e.courseId === courseId &&
-										e.teacherId === teacherId &&
-										e.orgId === orgId)
-		if (entries.length === 1) {
-			const entry = entries[0]
-			t = entry.total
-			c = entry.consume
-		}
-	}
-	total.value = t
-	consume.value = c
-}
 
 const onCheckedTap = async () => {
 	const isChecked = !checked.value
@@ -366,6 +294,16 @@ const isShowTag = computed(() => {
 			courseContent.length > 0 || 
 			assignment.length > 0 || 
 			feedback.length > 0
+})
+
+const course = computed(() => {
+	const courses:Course[] = courseStore.courses.filter(c => c._id === props.schedule.courseId)
+	return courses[0]
+})
+
+const teacher = computed(() => {
+	const users = usersStore.users.filter(user => user._id === props.schedule.teacherId)
+	return users[0]
 })
 
 const presents = computed(() => {
@@ -490,6 +428,72 @@ const duration = computed(() => {
 		return 'section done'
 	}
 	return offset > 0? "section expired": "section duration"
+})
+
+const total = computed(() => {
+	const classId = props.schedule.classId ?? ''
+	const courseId = props.schedule.courseId ?? ''
+	const teacherId = props.schedule.teacherId ?? ''
+	const orgId = props.schedule.orgId ?? ''
+	
+	let t = 0
+	if (typeof(classId) !== 'undefined' && 
+		classId.length > 0) {
+		const studentIds = grade.value?.studentIds ?? []
+		const datas = usersStore.students.filter(s => studentIds.includes(s._id))
+		const studentNos = datas.map(s => s.studentNo)
+		usersStore.entries.forEach(e => {
+			if (studentNos.includes(e.studentId) && 
+				e.courseId === courseId &&
+				e.teacherId === teacherId &&
+				e.orgId === orgId) {
+				t += e.total
+			}
+		})
+	} else {
+		const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
+										e.courseId === courseId &&
+										e.teacherId === teacherId &&
+										e.orgId === orgId)
+		if (entries.length === 1) {
+			const entry = entries[0]
+			t = entry.total
+		}
+	}
+	return t
+})
+
+const consume = computed(() => {
+	const classId = props.schedule.classId ?? ''
+	const courseId = props.schedule.courseId ?? ''
+	const teacherId = props.schedule.teacherId ?? ''
+	const orgId = props.schedule.orgId ?? ''
+	
+	let c = 0
+	if (typeof(classId) !== 'undefined' && 
+		classId.length > 0) {
+		const studentIds = grade.value?.studentIds ?? []
+		const datas = usersStore.students.filter(s => studentIds.includes(s._id))
+		const studentNos = datas.map(s => s.studentNo)
+		usersStore.entries.forEach(e => {
+			if (studentNos.includes(e.studentId) && 
+				e.courseId === courseId &&
+				e.teacherId === teacherId &&
+				e.orgId === orgId) {
+				c += e.consume
+			}
+		})
+	} else {
+		const entries = usersStore.entries.filter(e => e.studentId === student.value?.studentNo &&
+										e.courseId === courseId &&
+										e.teacherId === teacherId &&
+										e.orgId === orgId)
+		if (entries.length === 1) {
+			const entry = entries[0]
+			c = entry.consume
+		}
+	}
+	return c
 })
 
 </script>

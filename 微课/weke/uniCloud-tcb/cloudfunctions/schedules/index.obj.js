@@ -343,9 +343,13 @@ module.exports = {
 	async updateSchedule2(param) {
 		const {
 			scheduleId,
+			studentId,
+			classId,
+			status,
 			date,
 			orgId,
 			presentIds,
+			studentNos,
 			courseId,
 			teacherId,
 			gradients,
@@ -354,9 +358,13 @@ module.exports = {
 			remind,
 			courseContent,
 			previewContent,
-			consume
+			consume,
+			preConsume
 		} = param
-		if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0) {
+		if (typeof(scheduleId) === 'undefined' || 
+			scheduleId.length === 0 ||
+			typeof(status) === 'undefined' ||
+			typeof(preConsume) === 'undefined') {
 			return false
 		}
 		const db = uniCloud.database()
@@ -376,6 +384,36 @@ module.exports = {
 			previewContent,
 			consume
 		})
+		const offset = consume - preConsume
+		if (result.updated === 1 && status === 1 && offset !== 0) {
+			const dbCmd = db.command
+			if (studentId.length > 0) {
+				const res = await db.collection("wk-mapping").where({
+					studentId,
+					courseId,
+					teacherId,
+					orgId
+				}).update({
+					consume: dbCmd.inc(offset),
+					modifyDate: (new Date()).getTime()
+				})
+				const { updated } = res
+				return updated === 1
+			} else if (classId.length > 0 && studentNos.length > 0) {
+				const res = await db.collection("wk-mapping").where({
+					studentId: dbCmd.in(studentNos),
+					courseId,
+					teacherId,
+					orgId
+				}).update({
+					consume: dbCmd.inc(offset),
+					modifyDate: (new Date()).getTime()
+				})
+				const { updated } = res
+				return updated === studentNos.length
+			}
+			return false
+		}
 		return result.updated === 1
 	},
 	async updateSchedule(scheduleId, content, type) {

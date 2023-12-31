@@ -65,7 +65,6 @@ export const useCourseStore = defineStore('course', {
 			if (typeof(ids) === 'undefined' || ids.length === 0) {
 				return []
 			}
-			const g1 = this.courses.filter(course => ids.includes(course._id))
 			const courseIds = this.courses.map(c => c._id)
 			const ids1 = ids.filter(id => !courseIds.includes(id))
 			let other = [] as Course[]

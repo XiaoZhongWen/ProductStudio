@@ -417,6 +417,9 @@ export const useScheduleStore = defineStore('schedules', {
 		},
 		async updateSchedule2(param: {
 			scheduleId: string,
+			studentId: string,
+			classId: string,
+			status: number,
 			date: number,
 			orgId: string,
 			presentIds: string[],
@@ -428,26 +431,70 @@ export const useScheduleStore = defineStore('schedules', {
 			remind: boolean,
 			courseContent: string,
 			previewContent: string,
-			consume: number
+			consume: number,
+			preConsume: number
 		}) {
 			const { 
+				scheduleId,
+				studentId,
+				classId,
+				status,
 				date, 
-				startTime, 
-				endTime, 
-				scheduleId, 
 				orgId, 
 				presentIds, 
-				courseId, 
+				courseId,
 				teacherId, 
 				gradients, 
+				startTime, 
+				endTime, 
 				remind, 
 				courseContent, 
 				previewContent, 
-				consume } = param
-			if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0) {
+				consume,
+				preConsume } = param
+			if (typeof(scheduleId) === 'undefined' || 
+				scheduleId.length === 0 || 
+				typeof(status) === 'undefined' ||
+				typeof(preConsume) === 'undefined') {
 				return false
 			}
-			const result = await schedules_co.updateSchedule2(param)
+			
+			const userStore = useUsersStore()
+			let studentNo = ''
+			if (studentId.length > 0) {
+				const students = userStore.students.filter(s => s._id === studentId)
+				if (students.length === 1) {
+					const student = students[0]
+					studentNo = student.studentNo
+				}
+			}
+			
+			let studentNos:string[] = []
+			if (classId.length > 0 && presentIds.length > 0) {
+				const students = userStore.students.filter(s => presentIds.includes(s._id))
+				studentNos = students.map(s => s.studentNo)
+			}
+			
+			const result = await schedules_co.updateSchedule2({
+				scheduleId,
+				studentId: studentNo,
+				classId,
+				status,
+				date,
+				orgId,
+				presentIds,
+				studentNos,
+				courseId,
+				teacherId,
+				gradients,
+				startTime,
+				endTime,
+				remind,
+				courseContent,
+				previewContent,
+				consume,
+				preConsume
+			})
 			if (result) {
 				const res = this.schedules.filter(s => s._id === scheduleId)
 				if (res.length === 1) {
@@ -484,6 +531,28 @@ export const useScheduleStore = defineStore('schedules', {
 					schedule.courseContent = courseContent
 					schedule.previewContent = previewContent
 					schedule.consume = consume
+					const offset = consume - preConsume
+					if (status === 1 && offset !== 0) {
+						if (studentId.length > 0) {
+							userStore.entries.forEach(e => {
+								if (e.studentId === studentNo &&
+									e.courseId === courseId &&
+									e.teacherId === teacherId &&
+									e.orgId === orgId) {
+									e.consume += offset
+								}
+							})
+						} else if (classId.length > 0 && presentIds.length > 0) {
+							userStore.entries.forEach(e => {
+								if (studentNos.includes(e.studentId) &&
+									e.courseId === courseId &&
+									e.teacherId === teacherId &&
+									e.orgId === orgId) {
+									e.consume += offset		
+								}
+							})
+						}
+					}
 				}
 			}
 			return result
