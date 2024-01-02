@@ -54,7 +54,9 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 		})
 	}
 	if (id === 'schedule') {
-		
+		uni.navigateTo({
+			url: "/pages/calendar2/calendar2?id="+props.id+"&role=4"
+		})
 	}
 }
 

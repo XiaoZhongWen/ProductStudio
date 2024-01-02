@@ -169,14 +169,6 @@
             }
         }
         ,{
-            "path" : "pages/member-calendar/member-calendar",
-            "style" :                                                                                    
-            {
-                "navigationBarTitleText": "",
-                "enablePullDownRefresh": false
-            }
-        }
-        ,{
             "path" : "pages/teacher-detail/teacher-detail",
             "style" :                                                                                    
             {
@@ -283,6 +275,15 @@
 				"navigationBarTitleText": "编辑",
                 "enablePullDownRefresh": false,
 				"backgroundColor": "#F2F4FD"
+            }
+            
+        }
+        ,{
+            "path" : "pages/calendar2/calendar2",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
             }
             
         }

@@ -32,12 +32,7 @@ import { computed, onMounted, ref } from 'vue';
 import ScheduleCard from './components/ScheduleCard.vue'
 import { timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 import { Schedule } from "../../types/schedule";
-
-type CourseTag = {
-	date: string,
-	info: string,
-	infoColor: string
-}
+import { CourseTag } from "../../types/course";
 
 const selectedDate = ref(yyyyMMdd(new Date()))
 const usersStore = useUsersStore()

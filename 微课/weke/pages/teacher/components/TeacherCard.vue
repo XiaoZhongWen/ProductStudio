@@ -69,7 +69,7 @@ const onIconTap = (e) => {
 	}
 	if (id === "schedule") {
 		uni.navigateTo({
-			url: "/pages/member-calendar/member-calendar"
+			url: "/pages/calendar2/calendar2?id="+props.teacherId+"&role=2"
 		})
 	}
 }

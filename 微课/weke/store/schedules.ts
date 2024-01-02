@@ -20,6 +20,8 @@ export const useScheduleStore = defineStore('schedules', {
 			didLoadRanges: [] as Range[],
 			scheduleDates: [] as {date: string, status: number}[],
 			schedules: [] as Schedule[],
+			scheduleDatesMap: new Map<string, {date: string, status: number}[]>(),
+			schedulesMap: new Map<string, Schedule[]>(),
 			checkedAudioFileId: "cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/audio/jingle.aac",
 			checkedAudioUrl: ''
 		}
@@ -246,7 +248,7 @@ export const useScheduleStore = defineStore('schedules', {
 				const roles = userStore.owner.roles
 				const type = userStore.owner.from
 				
-				const result = []
+				const result:{date: string, status: number}[] = []
 				if (type === 'stuNo') {
 					// 学生
 					const res = await schedules_co.fetchSchedulesDate({
@@ -277,14 +279,90 @@ export const useScheduleStore = defineStore('schedules', {
 						result.push(...res)
 					}
 				}
-				this.scheduleDates.push(...result)
+				
+				const datas = result.filter(r => {
+					if (r.status === 0) {
+						return true
+					} else {
+						const index = result.findIndex(item => item.date === r.date && item.status === 0)
+						return index === -1
+					}
+				})
+				
+				this.scheduleDates.push(...datas)
 				if (result.length > 0) {
 					this.didLoadRanges.push({
 						from, to
 					})
 				}
-				return result
+				return datas
 			}
+		},
+		async fetchSpecialSchedules(
+			id:string, 
+			role:string,
+			date: string) {
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(role) === 'undefined' || role.length === 0 ||
+				typeof(date) === 'undefined' || date.length === 0) {
+				return []
+			}
+			const key = id + "-" + role + "-" + date
+			let schedules = this.schedulesMap.get(key)
+			if (!schedules) {
+				schedules = await schedules_co.fetchSpecialSchedules(id, role, date)
+			} else {
+				return schedules
+			}
+			const courseIds:string[] = []
+			const userIds:string[] = []
+			const classIds:string[] = []
+			if (schedules) {
+				schedules.forEach(s => {
+					// 课程
+					if (!courseIds.includes(s.courseId)) {
+						courseIds.push(s.courseId)
+					}
+					// 老师
+					if (!userIds.includes(s.teacherId)) {
+						userIds.push(s.teacherId)
+					}
+					// 班级
+					if (typeof(s.classId) !== 'undefined' && 
+						s.classId.length > 0 &&
+						!classIds.includes(s.classId)) {
+						classIds.push(s.classId)
+					}
+				})
+				const userStore = useUsersStore()
+				const courseStore = useCourseStore()
+				const gradesStore = useGradesStore()
+				await courseStore.fetchCourses(courseIds)
+				await userStore.fetchUsers(userIds)
+				await gradesStore.fetchGrades(classIds)
+				this.schedulesMap.set(key, schedules)
+			}
+			return schedules ?? []
+		},
+		async fetchSpecialSchedulesDate(
+			id:string, 
+			role:string, 
+			from: number, 
+			to:number) {
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(role) === 'undefined' || role.length === 0 ||
+				typeof(from) === 'undefined' || typeof(to) === 'undefined') {
+				return []
+			}
+			const key = id + "-" + role + "-" + from + "-" + to
+			const s = this.scheduleDatesMap.get(key)
+			if (!s) {
+				const scheduleDates = await schedules_co.fetchSpecialSchedulesDate(id, role, from, to)
+				if (scheduleDates.length > 0) {
+					this.scheduleDatesMap.set(key, scheduleDates)
+				}
+			}
+			return this.scheduleDatesMap.get(key) ?? []
 		},
 		async dealSchedule(param: {
 			scheduleId: string,
