@@ -18,7 +18,7 @@ export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
 			didLoadRanges: [] as Range[],
-			scheduleDates: [] as string[],
+			scheduleDates: [] as {date: string, status: number}[],
 			schedules: [] as Schedule[],
 			checkedAudioFileId: "cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/audio/jingle.aac",
 			checkedAudioUrl: ''
@@ -146,8 +146,12 @@ export const useScheduleStore = defineStore('schedules', {
 						status: 0
 					}
 					this.schedules.push(schedule)
-					if (!this.scheduleDates.includes(item.courseDate)) {
-						this.scheduleDates.push(item.courseDate)
+					const index = this.scheduleDates.findIndex(s => s.date === item.courseDate)
+					if (index === -1) {
+						this.scheduleDates.push({
+							date: item.courseDate,
+							status: 0
+						})
 					}
 				})
 			}
@@ -232,7 +236,7 @@ export const useScheduleStore = defineStore('schedules', {
 			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
 			if (index !== -1) {
 				return this.scheduleDates.filter(s => {
-					const date = new Date(s).getTime()
+					const date = new Date(s.date).getTime()
 					return date >= from && date <= to
 				})
 			} else {
@@ -249,7 +253,7 @@ export const useScheduleStore = defineStore('schedules', {
 						from, to, 
 						roles: [],
 						ids: [userId]
-					}) as string[]
+					}) as {date: string, status: number}[]
 					result.push(...res)
 				} else if (type === 'wx') {
 					if (roles?.includes(3) && roles.length === 1) {
@@ -259,7 +263,7 @@ export const useScheduleStore = defineStore('schedules', {
 							const res = await schedules_co.fetchSchedulesDate({
 								from, to, roles,
 								ids: children.map(s => s._id)
-							}) as string[]
+							}) as {date: string, status: number}[]
 							result.push(...res)
 						}
 					} else {
@@ -269,7 +273,7 @@ export const useScheduleStore = defineStore('schedules', {
 							from, to, roles,
 							orgIds: orgs.map(o => o._id),
 							ids: [userId]
-						}) as string[]
+						}) as {date: string, status: number}[]
 						result.push(...res)
 					}
 				}
@@ -348,19 +352,10 @@ export const useScheduleStore = defineStore('schedules', {
 				if (res.length === 1) {
 					const schedule = res[0]
 					schedule.status = status
-					if (status === 0) {
-						if (!this.scheduleDates.includes(schedule.courseDate)) {
-							this.scheduleDates.push(schedule.courseDate)
-						}
-					}
-					if (status === 1 || status === 2) {
-						let index = this.schedules.findIndex(s => s.status === 0 && s.courseDate === schedule.courseDate)
-						if (index === -1) {
-							index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
-							if (index !== -1) {
-								this.scheduleDates.splice(index, 1)
-							}
-						}
+					const index = this.scheduleDates.findIndex(s => s.date === schedule.courseDate)
+					if (index !== -1) {
+						const item = this.scheduleDates[index]
+						item.status = status
 					}
 					if (status === 2 || consume === 0) {
 						return true
@@ -407,7 +402,7 @@ export const useScheduleStore = defineStore('schedules', {
 				if (index !== -1) {
 					const schedule = this.schedules[index]
 					this.schedules.splice(index, 1)
-					index = this.scheduleDates.findIndex(date => date === schedule.courseDate)
+					index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate)
 					if (index !== -1) {
 						this.scheduleDates.splice(index, 1)
 					}
@@ -507,16 +502,21 @@ export const useScheduleStore = defineStore('schedules', {
 					if (schedule.courseDate !== courseDate) {
 						const datas = this.schedules.filter(s => s.courseDate === schedule.courseDate)
 						if (datas.length === 1) {
-							const index = this.scheduleDates.findIndex(item => item === schedule.courseDate)
+							const index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate)
 							if (index !== -1) {
-								this.scheduleDates.splice(index, 1)
+								const item = this.scheduleDates[index]
+								item.date = courseDate
+								item.status = status
 							}
 						}
 					} else {
 						schedule.courseDate = courseDate
-						const index = this.scheduleDates.findIndex(item => item === courseDate)
+						const index = this.scheduleDates.findIndex(item => item.date === courseDate)
 						if (index === -1) {
-							this.scheduleDates.push(courseDate)
+							this.scheduleDates.push({
+								date: courseDate,
+								status
+							})
 						}
 					}
 					schedule.date = date

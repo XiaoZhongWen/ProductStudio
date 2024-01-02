@@ -228,11 +228,12 @@ module.exports = {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
 				orgId: dbCmd.in(orgIds),
-				status: 0
-			}).field({ 'courseDate': true }).get()
+				status: dbCmd.in([0, 1])
+			}).field({ 'courseDate': true, 'status': true }).get()
 			r1.data.forEach(r => {
-				if (!scheduleDates.includes(r.courseDate)) {
-					scheduleDates.push(r.courseDate)
+				const item = r.courseDate + "|" + r.status
+				if (!scheduleDates.includes(item)) {
+					scheduleDates.push(item)
 				}
 			})
 			if (roles.includes(2) && ids.length > 0) {
@@ -240,11 +241,12 @@ module.exports = {
 					startTime: dbCmd.gte(from),
 					endTime: dbCmd.lte(to),
 					teacherId: dbCmd.in(ids),
-					status: 0
-				}).field({ 'courseDate': true }).get()
+					status: dbCmd.in([0, 1])
+				}).field({ 'courseDate': true, 'status': true }).get()
 				r2.data.forEach(r => {
-					if (!scheduleDates.includes(r.courseDate)) {
-						scheduleDates.push(r.courseDate)
+					const item = r.courseDate + "|" + r.status
+					if (!scheduleDates.includes(item)) {
+						scheduleDates.push(item)
 					}
 				})
 			}
@@ -253,11 +255,19 @@ module.exports = {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
 				studentId: dbCmd.in(ids),
-				status: 0
-			}).field({ 'courseDate': true }).get()
-			scheduleDates = result.data.map(item => item.courseDate)
+				status: dbCmd.in([0, 1])
+			}).field({ 'courseDate': true, 'status': true }).get()
+			scheduleDates = result.data.map(item => item.courseDate + "|" + r.status)
 		}
-		return scheduleDates
+		const datas = []
+		scheduleDates.forEach(s => {
+			const items = s.split("|")
+			datas.push({
+				"date": items[0],
+				"status": parseInt(items[1])
+			})
+		})
+		return datas
 	},
 	async dealSchedule(param) {
 		const {

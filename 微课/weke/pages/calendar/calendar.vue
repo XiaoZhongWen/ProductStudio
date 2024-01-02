@@ -9,6 +9,7 @@
 			@change="calendarChange"
 			@monthSwitch="onMonthSwitch">
 		</wu-calendar>
+		<uni-load-more v-if="isShowLoading" status="loading" />
 		<template v-for="schedule in schedules" :key="schedule._id">
 			<ScheduleCard 
 				class="scheduleCard" 
@@ -63,9 +64,9 @@ const selected = computed(() => {
 	const result:CourseTag[] = []
 	scheduleStore.scheduleDates.forEach(s => {
 		const tag:CourseTag = {
-			date: s,
+			date: s.date,
 			info: '课',
-			infoColor: '#5073D6'
+			infoColor: s.status === 0?'#5073D6':'#808080'
 		}
 		result.push(tag)
 	})
@@ -85,6 +86,11 @@ const schedules = computed(() => {
 	return result
 })
 
+const isShowLoading = computed(() => {
+	const index = scheduleStore.scheduleDates.findIndex(item => item.date === selectedDate.value)
+	return index !== -1 && schedules.value.length === 0
+})
+
 const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
 	selectedDate.value = fulldate
@@ -97,7 +103,11 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 	const date = new Date(str)
 	const from = timestampForBeginOfMonth(date)
 	const to = timestampForEndOfMonth(date)
+	uni.showLoading({
+		title: "加载中"
+	})
 	await scheduleStore.fetchSchedulesDate(from, to)
+	uni.hideLoading()
 }
 
 const onAddTap = () => {
