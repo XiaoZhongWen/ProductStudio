@@ -60,19 +60,37 @@ const onIconTap = (e:UniHelper.EventTarget) => {
 	}
 }
 
+/*
+* 1. 课程进度	
+*	1.1 管理员
+*		学生在管理员所创建机构中的课程总进度
+*		如: 管理员所创建的机构有o1、o2、o3...
+*			机构对应的课程有o1: c11、c12、c13、o2: c21、c22、c23、o3: c31、c32、c33
+*			该学生所在的机构为o1、o2、o9
+*			该学生所报课程有c11、c13、c22、c32、c91
+*			则管理员所看到的课程进度为: (c11、c13、c22、c32)的总课消 / (c11、c13、c22、c32)的总课量
+*	1.2 老师
+*		学生在老师所教授课程中的课程总进度
+*		如: 老师教授的课程有c1、c2、c3、c4、c5、c6...
+*			该学生所报课程有c1、c3、c5
+*			则老师所看到的课程进度为: (c1、c3、c5)的总课消 / (c1、c3、c5)的总课量
+*	1.3 家长
+*		实际课程进度
+*   1.4 学生
+* 		实际课程进度
+**/
 const loaddata = () => {
 	const userId = usersStore.owner._id
-	const studentNo = usersStore.owner.studentNo
 	const from = usersStore.owner.from
 	const roles = usersStore.owner.roles ?? []
+	// 学生所在的机构
 	const orgs = useOrgs.orgs.filter(org => org.studentIds?.includes(props.id))
+	// 对于管理员, 其创建的所有机构
 	const createOrgIds = useOrgs.orgs.filter(org => org.creatorId === userId).map(org => org._id)
-	const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
-	const childNos = children.map(child => child.studentNo)
-	const childIds = children.map(child => child._id)
 	const anonymousOrgId = useOrgs.anonymousOrg._id
 	const oIds:string[] = []
 	const s = orgs.map(org => org._id)
+	// 学生的课程实体集合
 	const entries = usersStore.fetchEntriesWithStudentNo(props.studentNo, s)
 	let totalCourse = 0
 	let consumeCourse = 0
@@ -83,8 +101,7 @@ const loaddata = () => {
 		// 2. 角色-老师, 课程属于自己所教授的课程以及自己匿名机构的课程
 		const isTeacherCourse = roles.includes(2) && (entry.teacherId === userId || entry.orgId === anonymousOrgId)
 		// 3. 角色-家长, 课程属于学员绑定的课程
-		const isStudentCourse = (roles.includes(3) && childNos.includes(entry.studentId)) || 
-								(from === 'stuNo' && studentNo === entry.studentId)
+		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
 		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
 			totalCourse += entry.total
 			consumeCourse += entry.consume
@@ -97,13 +114,7 @@ const loaddata = () => {
 		// 2. 角色-老师, 学员属于自己所任教的机构
 		const isTeacherCourse = roles.includes(2) && (org.teacherIds?.includes(userId) || org._id === anonymousOrgId)
 		// 3. 角色-家长, 学员属于自己加入的机构
-		let isInclude = false
-		childIds.forEach(id => {
-			if (!isInclude) {
-				isInclude = org.studentIds?.includes(id) ?? false
-			}
-		})
-		const isStudentCourse = (roles.includes(3) || from === 'stuNo') && isInclude
+		const isStudentCourse = (roles.includes(3) && roles.length === 1) || from === 'stuNo'
 		if (isOrgCourse || isTeacherCourse || isStudentCourse) {
 			const index = oIds.findIndex(id => id === org._id)
 			if (index === -1) {

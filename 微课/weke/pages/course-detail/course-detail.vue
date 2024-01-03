@@ -10,7 +10,7 @@
 					:consume="entry.consume">
 				</wk-circle-progress>
 			</view>
-			<view class="duration" v-if="course">
+			<view class="duration" v-if="course && course.type !== 2">
 				<text>课程时长: {{course.duration}}分钟</text>
 			</view>
 			<view class="duration" v-if="student">
@@ -225,12 +225,12 @@ const onRevokeAction = async (param:{id:string}) => {
 	if (res.length > 0) {
 		const r = res[0]
 		const entryId = entry.value?._id ?? ''
-		const result = await courseStore.revokeCourseConsumeRecord(id, entryId, r.count)
+		const result = await courseStore.revokeCourseConsumeRecord(id, entryId, r.consume)
 		if (result) {
 			flag = true
 			if (entry.value) {
 				let consume = entry.value.consume
-				consume -= r.count
+				consume -= r.consume
 				entry.value.consume = consume
 				uni.$emit(global.event_name.didUpdateCourseData, {
 					studentNo:entry.value.studentId,
@@ -306,12 +306,12 @@ const onChange = async (
 		const r = res[0]
 		if (r.startTime !== startTime ||
 			r.endTime !== endTime ||
-			r.count !== count ||
-			r.content !== content ||
+			r.consume !== count ||
+			r.courseContent !== content ||
 			r.assignment !== assignment ||
 			r.feedback !== feedback) {
 			const entryId = entry.value?._id ?? ''
-			const delta = r.count - count
+			const delta = r.consume - count
 			const result = await courseStore.modifyCourseConsumeRecord({...param, entryId, delta})
 			if (result) {
 				flag = true

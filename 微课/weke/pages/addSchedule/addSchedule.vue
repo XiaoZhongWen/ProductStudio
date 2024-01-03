@@ -305,7 +305,9 @@ onLoad(async (option) => {
 		date?: string
 	}
 	const userId = usersStore.owner._id
-	const orgIds = useOrgs.orgs.filter(o => o.creatorId === userId).map(org => org._id)
+	const orgIds = useOrgs.orgs.filter(
+		o => o.creatorId === userId || 
+			 o.teacherIds?.includes(userId)).map(org => org._id)
 	const cIds:string[] = []
 	const tIds:string[] = []
 	usersStore.entries.forEach(e => {

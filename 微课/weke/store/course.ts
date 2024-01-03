@@ -181,8 +181,8 @@ export const useCourseStore = defineStore('course', {
 					studentId,
 					startTime: date,
 					endTime: date,
-					count: consume,
-					status: 0,
+					consume,
+					status: 1,
 					operatorId,
 					modifyDate: Date.now()
 				}
@@ -453,13 +453,13 @@ export const useCourseStore = defineStore('course', {
 					const r = records[0]
 					r.startTime = startTime
 					r.endTime = endTime
-					r.count = count
-					r.content = content
+					r.consume = count
+					r.courseContent = content
 					r.assignment = assignment
 					r.feedback = feedback
 					r.operatorId = usersStore.owner._id
 					r.modifyDate = Date.now()
-					r.status = 1
+					r.status = 4
 				}
 			}
 			return result
@@ -478,7 +478,7 @@ export const useCourseStore = defineStore('course', {
 					const r = records[0]
 					r.operatorId = usersStore.owner._id
 					r.modifyDate = Date.now()
-					r.status = 2
+					r.status = 3
 				}
 			}
 			return result

@@ -11,34 +11,38 @@
 				key: 'wk-login',
 				success: async (res) => {
 					const data = res.data
+					uni.showLoading({
+						title: "正在登录",
+						mask: true
+					})
+					const usersStore = useUsersStore()
+					const orgsStore = useOrgsStore()
+					let result = false
 					if (data.from === 'wx') {
+						result = await usersStore.login()
+					} else {
+						const { stuNo, pwd } = data
+						result = await usersStore.login('stuNo', stuNo, pwd)
+					}
+					uni.hideLoading()
+					uni.showToast({
+						title: result? "登录成功": "登录失败",
+						duration: this.globalData.duration_toast,
+						icon: result? "success": "error"
+					})
+					if (result) {
 						uni.showLoading({
-							title: "正在登录",
+							title: "加载初始数据",
 							mask: true
 						})
-						const usersStore = useUsersStore()
-						const orgsStore = useOrgsStore()
-						const result = await usersStore.login()
-						uni.hideLoading()
-						uni.showToast({
-							title: result? "登录成功": "登录失败",
-							duration: this.globalData.duration_toast,
-							icon: result? "success": "error"
-						})
-						if (result) {
-							uni.showLoading({
-								title: "加载初始数据",
-								mask: true
-							})
-							await usersStore.fetchStudents()
-							await usersStore.loadAllEntries()
-							await orgsStore.loadOrgData()
-							if (usersStore.owner.from === 'wx') {
-								await orgsStore.fetchAnonymousOrg()
-							}
-							uni.hideLoading()
-							uni.$emit(this.globalData.didFinishedInitialData)
+						await usersStore.fetchStudents()
+						await usersStore.loadAllEntries()
+						await orgsStore.loadOrgData()
+						if (usersStore.owner.from === 'wx') {
+							await orgsStore.fetchAnonymousOrg()
 						}
+						uni.hideLoading()
+						uni.$emit(this.globalData.didFinishedInitialData)
 					}
 				}
 			})

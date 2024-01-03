@@ -4,7 +4,7 @@
 			<view :class="statusCls">{{statusDesc}}</view>
 		</view>
 		<view class="content">
-			<view class="left">
+			<view class="left" v-if="!isStudentOrParents">
 				<view 
 					@tap.stop="onCheckedTap"
 					:checked="checked" 
@@ -41,11 +41,43 @@
 						</wk-circle-progress>
 					</template>
 				</view>
-				<view class="section tag" v-if="isShowTag">
-					<uni-tag class="tag" :circle="true" size="mini" type="primary" text="预习" v-if="isShowPreview"></uni-tag>
-					<uni-tag class="tag" :circle="true" size="mini" type="success" text="课程内容" v-if="isShowCourseContent"></uni-tag>
-					<uni-tag class="tag" :circle="true" size="mini" type="warning" text="作业" v-if="isShowAssignment"></uni-tag>
-					<uni-tag class="tag" :circle="true" size="mini" custom-style="background-color: #5073D6; border-color: #5073D6; color: #fff;" text="反馈" v-if="isShowFeedback"></uni-tag>
+				<view class="section tag" v-if="isShowTag" @tap.stop="onTagTap">
+					<uni-tag
+						id="preview"
+						class="tag" 
+						:circle="true" 
+						size="mini" 
+						type="primary" 
+						text="预习" 
+						v-if="isShowPreview">
+					</uni-tag>
+					<uni-tag
+						id="course-content"
+						class="tag" 
+						:circle="true" 
+						size="mini" 
+						type="success" 
+						text="课程内容" 
+						v-if="isShowCourseContent">
+					</uni-tag>
+					<uni-tag
+						id="assignment"
+						class="tag" 
+						:circle="true" 
+						size="mini" 
+						type="warning" 
+						text="作业" 
+						v-if="isShowAssignment">
+					</uni-tag>
+					<uni-tag 
+						id="feedback"
+						class="tag" 
+						:circle="true" 
+						size="mini" 
+						custom-style="background-color: #5073D6; border-color: #5073D6; color: #fff;" 
+						text="反馈" 
+						v-if="isShowFeedback">
+					</uni-tag>
 				</view>
 				<view class="section course" v-if="course">
 					<text>课程: {{course.name}}</text>
@@ -78,47 +110,49 @@
 		</view>
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
-			<view class="right offset-sm" v-if="props.schedule.status===0">
-				<view
-					@tap.stop="onEditCoursePreviewTap"
-					class=".iconfont .icon-preview action preview">
+			<template v-if="!isStudentOrParents">
+				<view class="right offset-sm" v-if="props.schedule.status===0">
+					<view
+						@tap.stop="onEditCoursePreviewTap"
+						class=".iconfont .icon-preview action preview">
+					</view>
+					<view
+						@tap.stop="onEditCourseContentTap"
+						class=".iconfont .icon-round-assignment-p action content">
+					</view>
+					<view 
+						@tap.stop="onLeaveTap"
+						class=".iconfont .icon-qingjia action leave">
+					</view>
+					<uni-icons
+						@tap.stop="onDeleteTap"
+						size="24"
+						type="trash" 
+						class="action delete" 
+						color="#dd524d">
+					</uni-icons>
 				</view>
-				<view
-					@tap.stop="onEditCourseContentTap"
-					class=".iconfont .icon-round-assignment-p action content">
+				<view class="right offset" v-else-if="props.schedule.status===1">
+					<uni-icons
+						@tap.stop="onEditCourseFeedbackTap"
+						size="24"
+						type="compose" 
+						class="action feedback" 
+						color="#5073D6">
+					</uni-icons>
+					<view
+						@tap.stop="onEditCourseAssignmentTap"
+						class=".iconfont .icon-round-assignment-p action assignment">
+					</view>
 				</view>
-				<view 
-					@tap.stop="onLeaveTap"
-					class=".iconfont .icon-qingjia action leave">
-				</view>
-				<uni-icons
-					@tap.stop="onDeleteTap"
-					size="24"
-					type="trash" 
-					class="action delete" 
-					color="#dd524d">
-				</uni-icons>
-			</view>
-			<view class="right offset" v-else-if="props.schedule.status===1">
-				<uni-icons
-					@tap.stop="onEditCourseFeedbackTap"
-					size="24"
-					type="compose" 
-					class="action feedback" 
-					color="#5073D6">
-				</uni-icons>
-				<view
-					@tap.stop="onEditCourseAssignmentTap"
-					class=".iconfont .icon-round-assignment-p action assignment">
-				</view>
-			</view>
+			</template>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { Student, User } from '../../../types/user';
+import { Student } from '../../../types/user';
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
@@ -285,6 +319,21 @@ const onStudentTap = (studentNo:string) => {
 	})
 }
 
+const onTagTap = (e:{target:{id:string}}) => {
+	const { id } = e.target
+	let url = ''
+	if (id === 'preview') {
+		url = "/pages/editSchedule/editSchedule?type=0&scheduleId="+props.schedule._id
+	} else if (id === 'course-content') {
+		url = "/pages/editSchedule/editSchedule?type=1&scheduleId="+props.schedule._id
+	} else if (id === 'assignment') {
+		url = "/pages/editSchedule/editSchedule?type=2&scheduleId="+props.schedule._id
+	} else if (id === 'feedback') {
+		url = "/pages/editSchedule/editSchedule?type=3&scheduleId="+props.schedule._id
+	}
+	uni.navigateTo({url})
+}
+
 const isShowTag = computed(() => {
 	const preview = props.schedule.previewContent ?? ''
 	const courseContent = props.schedule.courseContent ?? ''
@@ -329,6 +378,12 @@ const isShowAssignment = computed(() => {
 const isShowFeedback = computed(() => {
 	const feedback = props.schedule.feedback ?? ''
 	return feedback.length > 0
+})
+
+const isStudentOrParents = computed(() => {
+	const roles = usersStore.roles ?? []
+	return usersStore.owner.from === 'stuNo' || 
+		(roles.includes(3) && roles.length === 1)
 })
 
 const statusDesc = computed(() => {

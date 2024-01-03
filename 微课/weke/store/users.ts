@@ -185,7 +185,8 @@ export const useUsersStore = defineStore('users', {
 								key: "wk-login",
 								data: {
 									from: 'stuNo',
-									stuNo: stuNo
+									stuNo: stuNo,
+									pwd
 								}
 							})
 						}

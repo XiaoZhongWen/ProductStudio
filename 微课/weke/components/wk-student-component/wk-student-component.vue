@@ -1,12 +1,12 @@
 <template>
 	<view class="student-component-container" v-if="usersStore.isLogin && useOrgs.orgs.length > 0">
 		<wk-student-card v-for="(student, index) in students" :key="student._id"
-		ref="refs"
-		:id="student._id"
-		:url="student.avatarUrl"
-		:name="student.nickName"
-		:studentNo="student.studentNo"
-		:signature="student.signature">
+			ref="refs"
+			:id="student._id"
+			:url="student.avatarUrl"
+			:name="student.nickName"
+			:studentNo="student.studentNo"
+			:signature="student.signature">
 		</wk-student-card>
 	</view>
 </template>

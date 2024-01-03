@@ -2,7 +2,9 @@
 	<view class="edit-schedule-container">
 		<view class="top">
 			<uni-easyinput
+				:disabled="isStudentOrParents"
 				class="input"
+				:styles="styles"
 				type="textarea" 
 				v-model="content" 
 				:placeholder="placeholder"
@@ -13,9 +15,9 @@
 				trim
 				@confirm="onConfirm">
 			</uni-easyinput>
-			<text class="number">{{number}}</text>
+			<text class="number" v-if="!isStudentOrParents">{{number}}</text>
 		</view>
-		<view class="bottom">
+		<view class="bottom" v-if="!isStudentOrParents">
 			<button class="btn" type="default" @tap="onConfirm">确定</button>
 		</view>
 	</view>
@@ -25,6 +27,7 @@
 import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app'
 import { Schedule } from '../../types/schedule';
+import { useUsersStore } from "@/store/users";
 import { useScheduleStore } from "@/store/schedules"
 
 const global = getApp().globalData!
@@ -32,8 +35,12 @@ const global = getApp().globalData!
 const placeholder = ref('')
 const content = ref('')
 const schedule = ref<Schedule>()
+const usersStore = useUsersStore()
 const scheduleStore = useScheduleStore()
 const editType = ref('')
+const styles = {
+	disableColor: '#ffffff'
+}
 
 onLoad((option) => {
 	const { type, scheduleId } = option as {type:string, scheduleId:string}
@@ -124,6 +131,12 @@ const onConfirm = async () => {
 		}
 	}
 }
+
+const isStudentOrParents = computed(() => {
+	const roles = usersStore.roles ?? []
+	return usersStore.owner.from === 'stuNo' || 
+		(roles.includes(3) && roles.length === 1)
+})
 
 </script>
 

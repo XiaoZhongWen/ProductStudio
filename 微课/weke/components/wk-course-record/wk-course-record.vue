@@ -4,11 +4,11 @@
 			<text class="title">状态:</text>
 			<text :class="statusCls">{{statusDesc}}</text>
 		</view>
-		<view class="section" v-if="operator && r.status !== 0">
+		<view class="section" v-if="operator && r.status !== 1">
 			<text class="title">操作人:</text>
 			<text class="desc">{{operator.nickName}}</text>
 		</view>
-		<view class="section" v-if="r.status !== 0">
+		<view class="section" v-if="r.status !== 1">
 			<text class="title">操作时间:</text>
 			<text class="desc">{{format(new Date(r.modifyDate))}}</text>
 		</view>
@@ -22,11 +22,11 @@
 		</view>
 		<view class="section" v-if="courseType">
 			<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
-			<text class="desc">{{r.count}}</text>
+			<text class="desc">{{r.consume}}</text>
 		</view>
-		<view class="section area" v-if="r.content">
+		<view class="section area" v-if="r.coursecontent">
 			<text class="title">课程内容:</text>
-			<text class="content">{{r.content}}</text>
+			<text class="content">{{r.coursecontent}}</text>
 		</view>
 		<view class="section area" v-if="r.assignment">
 			<text class="title">课后作业:</text>
@@ -36,7 +36,7 @@
 			<text class="title">课程反馈:</text>
 			<text class="content">{{r.feedback}}</text>
 		</view>
-		<view class="bottom" v-if="isValidate && r.status !== 2">
+		<view class="bottom" v-if="isValidate && r.status !== 3">
 			<text class="action" @tap="onEditTap">编辑</text>
 			<text class="action revoke" @tap="onRevokeTap">撤销</text>
 		</view>
@@ -92,12 +92,12 @@ onMounted(async () => {
 
 const statusCls = computed(() => {
 	let cls = "desc"
-	const status = r.value?.status ?? 0
-	if (status === 0) {
+	const status = r.value?.status ?? 1
+	if (status === 1) {
 		cls = "consume"
-	} else if (status === 1) {
+	} else if (status === 4) {
 		cls = "modify"
-	} else if (status === 2) {
+	} else if (status === 3) {
 		cls = "revoke"
 	}
 	return cls
@@ -105,12 +105,12 @@ const statusCls = computed(() => {
 
 const statusDesc = computed(() => {
 	let desc = ''
-	const status = r.value?.status ?? 0
-	if (status === 0) {
+	const status = r.value?.status ?? 1
+	if (status === 1) {
 		desc = "课消"
-	} else if (status === 1) {
+	} else if (status === 4) {
 		desc = "已变更"
-	} else if (status === 2) {
+	} else if (status === 3) {
 		desc = "已撤销"
 	}
 	return desc
@@ -121,7 +121,7 @@ const onEditTap = () => {
 }
 
 const onRevokeTap = () => {
-	const count = r.value?.count ?? 0
+	const count = r.value?.consume ?? 0
 	const content = "该记录保存了课消" + count + "课时, 撤销将返还课时, 确定撤销吗?"
 	uni.showModal({
 		title: global.appName,

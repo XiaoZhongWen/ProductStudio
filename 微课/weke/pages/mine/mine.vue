@@ -394,7 +394,6 @@ uni.$on(global.event_name.login, async (data) => {
 		})
 		return
 	}
-	console.info("验证头像通过")
 	// 2. 验证昵称
 	let nickname = data.inputValue ?? ""
 	if (nickname.length === 0) {
@@ -408,7 +407,6 @@ uni.$on(global.event_name.login, async (data) => {
 		})
 		return
 	}
-	console.info("验证昵称通过")
 	try {
 		// 3. 登录
 		if (usersStore.owner.from !== 'stuNo') {

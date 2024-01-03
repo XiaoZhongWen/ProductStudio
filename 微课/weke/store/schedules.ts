@@ -341,6 +341,12 @@ export const useScheduleStore = defineStore('schedules', {
 				await userStore.fetchUsers(userIds)
 				await gradesStore.fetchGrades(classIds)
 				this.schedulesMap.set(key, schedules)
+				schedules.forEach(r => {
+					const index = this.schedules.findIndex(s => s._id === r._id)
+					if (index === -1) {
+						this.schedules.push(r)
+					}
+				})
 			}
 			return schedules ?? []
 		},

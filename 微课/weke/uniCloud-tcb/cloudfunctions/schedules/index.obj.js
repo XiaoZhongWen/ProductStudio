@@ -201,7 +201,7 @@ module.exports = {
 				studentId: dbCmd.in(ids)
 			}, {
 				courseDate: date,
-				presentIds: ids
+				presentIds: dbCmd.all(ids)
 			})).get()
 			schedules = result.data
 		}
@@ -266,10 +266,10 @@ module.exports = {
 			}, {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				presentIds: ids,
+				presentIds: dbCmd.all(ids),
 				status: dbCmd.in([0, 1])
 			})).field({ 'courseDate': true, 'status': true }).get()
-			scheduleDates = result.data.map(item => item.courseDate + "|" + r.status)
+			scheduleDates = result.data.map(item => item.courseDate + "|" + item.status)
 		}
 		const datas = []
 		scheduleDates.forEach(s => {

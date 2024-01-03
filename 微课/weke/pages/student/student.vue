@@ -12,9 +12,20 @@
 
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 
 const usersStore = useUsersStore()
+
+onMounted(() => {
+	const roles = usersStore.roles ?? []
+	const res = usersStore.owner.from === 'stuNo' || 
+		(roles.includes(3) && roles.length === 1)
+	if (res) {
+		uni.setNavigationBarTitle({
+			title: "同学"
+		})
+	}
+})
 
 // @ts-ignore
 const isShowAddBtn = computed({

@@ -112,6 +112,12 @@ const onAddTap = () => {
 }
 
 const onScheduleCardTap = (schedule: Schedule) => {
+	const roles = usersStore.roles ?? []
+	const res = usersStore.owner.from === 'stuNo' || 
+		(roles.includes(3) && roles.length === 1)
+	if (res) {
+		return
+	}
 	uni.navigateTo({
 		url: "/pages/addSchedule/addSchedule?id="+schedule._id
 	})

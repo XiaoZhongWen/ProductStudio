@@ -143,12 +143,12 @@ module.exports = {
 			const paymentId = result_payment.id
 			let courseRecordId = ''
 			if (consume > 0) {
-				const result_course = await db.collection('wk-course-records').add({
+				const result_course = await db.collection('wk-schedules').add({
 					courseId, teacherId, studentId, 
 					startTime: date,
 					endTime: date,
-					count: consume,
-					status: 0,
+					consume,
+					status: 1,
 					modifyDate: Date.now(),
 					operatorId
 				})
@@ -455,17 +455,29 @@ module.exports = {
 		}
 		const db = uniCloud.database()
 		const dbCmd = db.command
-		const result = await db.collection('wk-course-records').where(dbCmd.or({
+		const result = await db.collection('wk-schedules').where(dbCmd.or({
+			status: dbCmd.in([1, 3, 4]),
 			courseId,
 			studentId
 		}, {
+			status: dbCmd.in([1, 3, 4]),
 			courseId,
-			studentIds: studentId
+			presentIds: studentId
 		})).get()
 		return result.data
 	},
 	async modifyCourseConsumeRecord(param) {
-		const { _id, startTime, endTime, count, content, assignment, feedback, operatorId, entryId, delta } = param
+		const { 
+			_id, 
+			startTime, 
+			endTime, 
+			count, 
+			content, 
+			assignment, 
+			feedback, 
+			operatorId, 
+			entryId, 
+			delta } = param
 		if (typeof(_id) === 'undefined' ||
 			_id.length === 0 ||
 			typeof(operatorId) === 'undefined' ||
@@ -479,18 +491,18 @@ module.exports = {
 			return false
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-course-records').where({
+		const result = await db.collection('wk-schedules').where({
 			_id
 		}).update({
 			startTime,
 			endTime,
-			count,
-			content,
+			consume: count,
+			courseContent: content,
 			assignment,
 			feedback,
 			operatorId,
 			modifyDate: Date.now(),
-			status: 1
+			status: 3
 		})
 		if (result.updated === 1 && delta !== 0) {
 			const dbCmd = db.command
@@ -510,7 +522,7 @@ module.exports = {
 			return false
 		}
 		const db = uniCloud.database()
-		const result = await db.collection('wk-course-records').where({
+		const result = await db.collection('wk-schedules').where({
 			_id
 		}).update({
 			operatorId,
