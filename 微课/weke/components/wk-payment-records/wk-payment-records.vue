@@ -135,7 +135,7 @@ const courseDesc = computed(() => {
 const canOperate = computed(() => {
 	const isFrozen = r.value?.isFrozen ?? false
 	const status = r.value?.status ?? 0
-	return isValidate && status !== 2 && status !== 3 && !isFrozen
+	return isValidate.value && status !== 2 && status !== 3 && !isFrozen
 })
 
 </script>

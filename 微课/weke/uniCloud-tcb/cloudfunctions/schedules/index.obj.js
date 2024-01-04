@@ -148,8 +148,17 @@ module.exports = {
 					consume,
 					status: 0
 				})
+				const dbCmd = db.command
+				const count = await db.collection('wk-schedules').where(dbCmd.or({
+					studentId,
+					courseId
+				}, {
+					presentIds: studentId,
+					courseId
+				})).orderBy("startTime", "desc").count()
+				const pageIndex = count / 10 + (count % 10 === 0?0:1)
 				const { id, inserted } = res
-				items.push({id, startTime: r.startTime, endTime: r.endTime, courseDate})
+				items.push({id, startTime: r.startTime, endTime: r.endTime, courseDate, pageIndex})
 			}
 			return items
 		} catch(e) {

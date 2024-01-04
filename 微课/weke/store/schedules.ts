@@ -14,14 +14,33 @@ type Range = {
 	to: number
 }
 
+/*
+*	缓存策略 - 避免接口数据重复获取
+*	1. 排课日期
+*		- calendar tab页面
+*		1.1 scheduleDates -> 排课日期集合
+*		1.2. didLoadRanges -> 记录各排课日期集合对应的时间戳范围
+*		- calendar2 页面
+*		1.3 scheduleDatesMap -> 学生|老师 的排课日期集合
+*	2. 日程
+*		- calendar tab页面
+*		2.1 schedules -> 日程集合
+*		2.2 didLoadDates -> 记录日程集合对应的日期
+*		- calendar2 页面
+*		2.3 schedulesMap -> 学生|老师 的日程集合
+*		- 课程详情页的课程记录
+*		2.4 scheduleRecordsMap -> key(学生id、课程id、页序数、页大小) 对应的 日程集合
+*/
 export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
-			didLoadRanges: [] as Range[],
 			scheduleDates: [] as {date: string, status: number}[],
-			schedules: [] as Schedule[],
+			didLoadRanges: [] as Range[],
 			scheduleDatesMap: new Map<string, {date: string, status: number}[]>(),
+			schedules: [] as Schedule[],
+			didLoadDates: [] as string[],
 			schedulesMap: new Map<string, Schedule[]>(),
+			scheduleRecordsMap: new Map<string, Schedule[]>(),
 			checkedAudioFileId: "cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/audio/jingle.aac",
 			checkedAudioUrl: ''
 		}
@@ -124,7 +143,7 @@ export const useScheduleStore = defineStore('schedules', {
 				courseContent,
 				previewContent,
 				consume
-			}) as {id:string, startTime: number, endTime: number, courseDate: string}[]
+			}) as {id:string, startTime: number, endTime: number, courseDate: string, pageIndex:number}[]
 			if (typeof(items) !== 'undefined' &&
 				items.length > 0) {
 				items.forEach(item => {
@@ -147,8 +166,37 @@ export const useScheduleStore = defineStore('schedules', {
 						consume,
 						status: 0
 					}
+					
+					let key = ''
+					if (studentId.length > 0) {
+						key = studentId + "-" + "4" + "-" + item.courseDate
+						const s_cached = this.schedulesMap.get(key) ?? []
+						s_cached.push(schedule)
+						this.schedulesMap.set(key, s_cached)
+						key = studentId + "-" + courseId + "-" + item.pageIndex
+						const r_cached = this.scheduleRecordsMap.get(key) ?? []
+						r_cached.push(schedule)
+						this.scheduleRecordsMap.set(key, r_cached)
+					} else if (classId.length > 0 && presentIds.length > 0) {
+						presentIds.forEach(sId => {
+							key = sId + "-" + "4" + "-" + item.courseDate
+							const s_cached = this.schedulesMap.get(key) ?? []
+							s_cached.push(schedule)
+							this.schedulesMap.set(key, s_cached)
+							key = sId + "-" + courseId + "-" + item.pageIndex
+							const r_cached = this.scheduleRecordsMap.get(key) ?? []
+							r_cached.push(schedule)
+							this.scheduleRecordsMap.set(key, r_cached)
+						})
+					}
+					key = teacherId + "-" + "2" + "-" + item.courseDate
+					const t_cached = this.schedulesMap.get(key) ?? []
+					t_cached.push(schedule)
+					this.schedulesMap.set(key, t_cached)
+					
 					this.schedules.push(schedule)
-					const index = this.scheduleDates.findIndex(s => s.date === item.courseDate)
+					
+					const index = this.scheduleDates.findIndex(s => s.date === item.courseDate && s.status === 0)
 					if (index === -1) {
 						this.scheduleDates.push({
 							date: item.courseDate,
@@ -163,10 +211,13 @@ export const useScheduleStore = defineStore('schedules', {
 			if (typeof(date) === 'undefined' || date.length === 0) {
 				return []
 			}
-			let result = []
+			let result:Schedule[] = []
+			let noCached:Schedule[] = []
 			const userStore = useUsersStore()
-			result = this.schedules.filter(s => s.courseDate === date)
-			if (result.length === 0) {
+			// 检查是否已经缓存过
+			const index = this.didLoadDates.findIndex(item => item === date)
+			if (index === -1) {
+				// 没有缓存过
 				const orgStore = useOrgsStore()
 				const userId = userStore.owner._id
 				const roles = userStore.owner.roles
@@ -201,11 +252,24 @@ export const useScheduleStore = defineStore('schedules', {
 						result.push(...res)
 					}
 				}
+				// 添加缓存记录
+				this.didLoadDates.push(date)
+				// 添加result中没有被缓存的日程集合
+				result.forEach(r => {
+					const index = this.schedules.findIndex(s => s._id === r._id)
+					if (index === -1) {
+						this.schedules.push(r)
+						noCached.push(r)
+					}
+				})
+			} else {
+				// 已经缓存过
+				result = this.schedules.filter(s => s.courseDate === date)
 			}
 			const courseIds:string[] = []
 			const userIds:string[] = []
 			const classIds:string[] = []
-			result.forEach(s => {
+			noCached.forEach(s => {
 				// 课程
 				if (!courseIds.includes(s.courseId)) {
 					courseIds.push(s.courseId)
@@ -223,15 +287,15 @@ export const useScheduleStore = defineStore('schedules', {
 			})
 			const courseStore = useCourseStore()
 			const gradesStore = useGradesStore()
-			await courseStore.fetchCourses(courseIds)
-			await userStore.fetchUsers(userIds)
-			await gradesStore.fetchGrades(classIds)
-			result.forEach(r => {
-				const index = this.schedules.findIndex(s => s._id === r._id)
-				if (index === -1) {
-					this.schedules.push(r)
-				}
-			})
+			if (courseIds.length > 0) {
+				await courseStore.fetchCourses(courseIds)
+			}
+			if (userIds.length > 0) {
+				await userStore.fetchUsers(userIds)
+			}
+			if (classIds.length > 0) {
+				await gradesStore.fetchGrades(classIds)
+			}
 			return result
 		},
 		async fetchSchedulesDate(from: number, to:number) {
@@ -279,23 +343,19 @@ export const useScheduleStore = defineStore('schedules', {
 						result.push(...res)
 					}
 				}
-				
-				const datas = result.filter(r => {
-					if (r.status === 0) {
-						return true
-					} else {
-						const index = result.findIndex(item => item.date === r.date && item.status === 0)
-						return index === -1
+				result.forEach(r => {
+					const index = this.scheduleDates.findIndex(s => s.date === r.date && 
+																s.status === r.status)
+					if (index === -1) {
+						this.scheduleDates.push(r)
 					}
 				})
-				
-				this.scheduleDates.push(...datas)
 				if (result.length > 0) {
 					this.didLoadRanges.push({
 						from, to
 					})
 				}
-				return datas
+				return result
 			}
 		},
 		async fetchSpecialSchedules(
@@ -317,7 +377,8 @@ export const useScheduleStore = defineStore('schedules', {
 			const courseIds:string[] = []
 			const userIds:string[] = []
 			const classIds:string[] = []
-			if (schedules) {
+			const count = schedules?.length ?? 0
+			if (count > 0 && schedules) {
 				schedules.forEach(s => {
 					// 课程
 					if (!courseIds.includes(s.courseId)) {
@@ -337,16 +398,16 @@ export const useScheduleStore = defineStore('schedules', {
 				const userStore = useUsersStore()
 				const courseStore = useCourseStore()
 				const gradesStore = useGradesStore()
-				await courseStore.fetchCourses(courseIds)
-				await userStore.fetchUsers(userIds)
-				await gradesStore.fetchGrades(classIds)
+				if (courseIds.length > 0) {
+					await courseStore.fetchCourses(courseIds)
+				}
+				if (userIds.length > 0) {
+					await userStore.fetchUsers(userIds)
+				}
+				if (classIds.length > 0) {
+					await gradesStore.fetchGrades(classIds)
+				}
 				this.schedulesMap.set(key, schedules)
-				schedules.forEach(r => {
-					const index = this.schedules.findIndex(s => s._id === r._id)
-					if (index === -1) {
-						this.schedules.push(r)
-					}
-				})
 			}
 			return schedules ?? []
 		},
@@ -441,6 +502,25 @@ export const useScheduleStore = defineStore('schedules', {
 						const item = this.scheduleDates[index]
 						item.status = status
 					}
+					
+					this.schedulesMap.forEach((v, k) => {
+						const items = v.filter(s => s._id === scheduleId)
+						if (items.length === 1) {
+							const item = items[0]
+							item.status = status
+							this.schedulesMap.set(k, items)
+						}
+					})
+					
+					this.scheduleRecordsMap.forEach((v, k) => {
+						const items = v.filter(s => s._id === scheduleId)
+						if (items.length === 1) {
+							const item = items[0]
+							item.status = status
+							this.schedulesMap.set(k, items)
+						}
+					})
+					
 					if (status === 2 || consume === 0) {
 						return true
 					}
@@ -486,9 +566,14 @@ export const useScheduleStore = defineStore('schedules', {
 				if (index !== -1) {
 					const schedule = this.schedules[index]
 					this.schedules.splice(index, 1)
-					index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate)
-					if (index !== -1) {
-						this.scheduleDates.splice(index, 1)
+					// 检查schedules中与带删除的schedule具有同样courseDate和status的日程是否存在
+					index = this.schedules.findIndex(s => s.courseDate === schedule.courseDate && s.status === schedule.status)
+					if (index === -1) {
+						// 如果不存在, 则删除scheduleDates中相应的具有同样courseDate和status的元素
+						index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate && item.status === schedule.status)
+						if (index !== -1) {
+							this.scheduleDates.splice(index, 1)
+						}
 					}
 				}
 			}

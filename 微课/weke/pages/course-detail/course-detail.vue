@@ -187,8 +187,12 @@ onLoad(async (option) => {
 	}
 	org.value = orgs[0]
 	orgName.value = org.value.name
+	uni.showLoading({
+		title: "加载中"
+	})
 	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
 	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
+	uni.hideLoading()
 })
 
 const onClickItem = (e: { currentIndex:number }) => {

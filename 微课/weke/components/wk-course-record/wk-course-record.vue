@@ -20,13 +20,13 @@
 			<text class="title">结束时间:</text>
 			<text class="desc">{{format(new Date(r.endTime))}}</text>
 		</view>
-		<view class="section" v-if="courseType">
+		<view class="section" v-if="courseType !== -1">
 			<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
 			<text class="desc">{{r.consume}}</text>
 		</view>
-		<view class="section area" v-if="r.coursecontent">
+		<view class="section area" v-if="r.courseContent">
 			<text class="title">课程内容:</text>
-			<text class="content">{{r.coursecontent}}</text>
+			<text class="content">{{r.courseContent}}</text>
 		</view>
 		<view class="section area" v-if="r.assignment">
 			<text class="title">课后作业:</text>
@@ -60,7 +60,7 @@ const r = ref<CourseConsumeRecord>()
 const courseStore = useCourseStore()
 const operator = ref<User>()
 const isValidate = ref(false)
-const courseType = ref()
+const courseType = ref(-1)
 
 onMounted(async () => {
 	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
@@ -72,20 +72,20 @@ onMounted(async () => {
 	if (users.length > 0) {
 		operator.value = users[0]
 	}
+	const courseId = r.value?.courseId ?? ''
 	if (usersStore.owner.from === 'wx' && usersStore.owner.roles?.includes(1)) {
 		const orgsStore = useOrgsStore()
 		const orgs = orgsStore.orgs.filter(org => org.creatorId === usersStore.owner._id)
-		const courseId = r.value?.courseId ?? ''
 		if (courseId.length > 0) {
 			const index = orgs.findIndex(org => org.courseIds?.includes(courseId))
 			isValidate.value = index !== -1
-			if (index !== -1) {
-				const courses = await courseStore.fetchCourses([courseId])
-				if (courses.length === 1) {
-					const course = courses[0]
-					courseType.value = course.type
-				}
-			}
+		}
+	}
+	if (courseId.length > 0) {
+		const courses = await courseStore.fetchCourses([courseId])
+		if (courses.length === 1) {
+			const course = courses[0]
+			courseType.value = course.type
 		}
 	}
 })
