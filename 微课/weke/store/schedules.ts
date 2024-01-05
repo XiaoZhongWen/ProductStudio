@@ -4,6 +4,7 @@ import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
+import { timestampForBeginOfMonth, timestampForEndOfMonth } from '@/utils/wk-date'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -143,7 +144,7 @@ export const useScheduleStore = defineStore('schedules', {
 				courseContent,
 				previewContent,
 				consume
-			}) as {id:string, startTime: number, endTime: number, courseDate: string, pageIndex:number}[]
+			}) as {id:string, startTime: number, endTime: number, courseDate: string}[]
 			if (typeof(items) !== 'undefined' &&
 				items.length > 0) {
 				items.forEach(item => {
@@ -167,41 +168,74 @@ export const useScheduleStore = defineStore('schedules', {
 						status: 0
 					}
 					
-					let key = ''
+					const ids:string[] = [teacherId]
 					if (studentId.length > 0) {
-						key = studentId + "-" + "4" + "-" + item.courseDate
-						const s_cached = this.schedulesMap.get(key) ?? []
-						s_cached.push(schedule)
-						this.schedulesMap.set(key, s_cached)
-						key = studentId + "-" + courseId + "-" + item.pageIndex
-						const r_cached = this.scheduleRecordsMap.get(key) ?? []
-						r_cached.push(schedule)
-						this.scheduleRecordsMap.set(key, r_cached)
+						ids.push(studentId)
 					} else if (classId.length > 0 && presentIds.length > 0) {
-						presentIds.forEach(sId => {
-							key = sId + "-" + "4" + "-" + item.courseDate
-							const s_cached = this.schedulesMap.get(key) ?? []
-							s_cached.push(schedule)
-							this.schedulesMap.set(key, s_cached)
-							key = sId + "-" + courseId + "-" + item.pageIndex
-							const r_cached = this.scheduleRecordsMap.get(key) ?? []
-							r_cached.push(schedule)
-							this.scheduleRecordsMap.set(key, r_cached)
-						})
+						ids.push(...presentIds)
 					}
-					key = teacherId + "-" + "2" + "-" + item.courseDate
-					const t_cached = this.schedulesMap.get(key) ?? []
-					t_cached.push(schedule)
-					this.schedulesMap.set(key, t_cached)
 					
+					let key = ''
+					const _date = new Date(item.courseDate)
+					const from = timestampForBeginOfMonth(_date)
+					const to = timestampForEndOfMonth(_date)
+					ids.forEach(id => {
+						// 更新schedulesMap缓存
+						if (id === teacherId) {
+							key = id + "-" + "2" + "-" + item.courseDate
+						} else {
+							key = id + "-" + "4" + "-" + item.courseDate
+						}
+						this.schedulesMap.forEach((v, k) => {
+							if (k === key) {
+								v.push(schedule)
+							}
+						})
+						
+						// 更新scheduleDatesMap缓存
+						if (id === teacherId) {
+							key = id + "-" + "2" + "-" + from + "-" + to
+						} else {
+							key = id + "-" + "4" + "-" + from + "-" + to
+						}
+						this.scheduleDatesMap.forEach((v, k) => {
+							if (k === key) {
+								const index = v.findIndex(s => s.date === item.courseDate)
+								if (index === -1) {
+									v.push({
+										date: item.courseDate,
+										status: 0
+									})
+								} else {
+									const scheduleDate = v[index]
+									scheduleDate.status = 0
+								}
+							}
+						})
+						
+						// 更新scheduleRecordsMap缓存
+						// 创建的schedule无法确定最终的pageIndex, 所以需要删除scheduleRecordsMap中相关的schedule
+						key = id + "-" + courseId
+						this.scheduleRecordsMap.forEach((v, k) => {
+							if (k.includes(key)) {
+								this.scheduleRecordsMap.delete(k)
+							}
+						})
+					})
+					
+					// 更新schedules缓存
 					this.schedules.push(schedule)
 					
-					const index = this.scheduleDates.findIndex(s => s.date === item.courseDate && s.status === 0)
+					// 更新scheduleDates缓存
+					const index = this.scheduleDates.findIndex(s => s.date === item.courseDate)
 					if (index === -1) {
 						this.scheduleDates.push({
 							date: item.courseDate,
 							status: 0
 						})
+					} else {
+						const scheduleDate = this.scheduleDates[index]
+						scheduleDate.status = 0
 					}
 				})
 			}
@@ -298,6 +332,11 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			return result
 		},
+		/*
+		*	获取from、to期间的排课日期, 排课日期不重复
+		* 	某日期的排课既有排课课程又有消课课程的, 则返回的排课日期中的status记为0
+		* 	自由该日期的所有课程状态不是排课状态, 则返回的排课日期中的status不记为0
+		*/
 		async fetchSchedulesDate(from: number, to:number) {
 			const index = this.didLoadRanges.findIndex(r => r.from === from && r.to === to)
 			if (index !== -1) {
@@ -344,10 +383,12 @@ export const useScheduleStore = defineStore('schedules', {
 					}
 				}
 				result.forEach(r => {
-					const index = this.scheduleDates.findIndex(s => s.date === r.date && 
-																s.status === r.status)
+					const index = this.scheduleDates.findIndex(s => s.date === r.date)
 					if (index === -1) {
 						this.scheduleDates.push(r)
+					} else {
+						const scheduleDate = this.scheduleDates[index]
+						scheduleDate.status = r.status
 					}
 				})
 				if (result.length > 0) {
@@ -496,13 +537,54 @@ export const useScheduleStore = defineStore('schedules', {
 				const res = this.schedules.filter(s => s._id === scheduleId)
 				if (res.length === 1) {
 					const schedule = res[0]
+					// 更新schedules缓存
 					schedule.status = status
-					const index = this.scheduleDates.findIndex(s => s.date === schedule.courseDate)
+					
+					// 更新scheduleDates缓存
+					// 获取scheduleDates中排课日期与schedule相同的排课日期记录
+					let index = this.scheduleDates.findIndex(s => s.date === schedule.courseDate)
 					if (index !== -1) {
-						const item = this.scheduleDates[index]
-						item.status = status
+						const scheduleDate = this.scheduleDates[index]
+						if (status === 0) {
+							// 排课状态
+							if (scheduleDate.status !== 0) {
+								// 将排课日期记录的状态改为0
+								scheduleDate.status = 0
+							}
+						} else {
+							// 非排课状态
+							// 检查该日期的日程中是否还存在排课状态的日程
+							index = this.schedules.findIndex(s => s.courseDate === schedule.courseDate && s.status === 0)
+							if (index === -1) {
+								// 不存在, 则变更scheduleDates中相应日期的排课日期记录的status
+								scheduleDate.status = status
+							}
+						}
 					}
 					
+					// 更新scheduleDatesMap缓存
+					const date = new Date(schedule.courseDate)
+					const from = timestampForBeginOfMonth(date)
+					const to = timestampForEndOfMonth(date)
+					const key1 = teacherId + "-" + "2" + "-" + from + "-" + to
+					const key2 = studentId + "-" + "4" + "-" + from + "-" + to
+					this.scheduleDatesMap.forEach((v, k) => {
+						if (k === key1 || k === key2) {
+							const index = v.findIndex(s => s.date === schedule.courseDate)
+							if (index === -1) {
+								v.push({
+									date: schedule.courseDate,
+									status: 0
+								})
+							} else {
+								const scheduleDate = v[index]
+								scheduleDate.status = 0
+							}
+						}
+					})
+					
+					
+					// 更新schedulesMap缓存
 					this.schedulesMap.forEach((v, k) => {
 						const items = v.filter(s => s._id === scheduleId)
 						if (items.length === 1) {
@@ -512,6 +594,7 @@ export const useScheduleStore = defineStore('schedules', {
 						}
 					})
 					
+					// 更新scheduleRecordsMap缓存
 					this.scheduleRecordsMap.forEach((v, k) => {
 						const items = v.filter(s => s._id === scheduleId)
 						if (items.length === 1) {
@@ -566,14 +649,26 @@ export const useScheduleStore = defineStore('schedules', {
 				if (index !== -1) {
 					const schedule = this.schedules[index]
 					this.schedules.splice(index, 1)
-					// 检查schedules中与带删除的schedule具有同样courseDate和status的日程是否存在
-					index = this.schedules.findIndex(s => s.courseDate === schedule.courseDate && s.status === schedule.status)
-					if (index === -1) {
-						// 如果不存在, 则删除scheduleDates中相应的具有同样courseDate和status的元素
-						index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate && item.status === schedule.status)
-						if (index !== -1) {
-							this.scheduleDates.splice(index, 1)
+					
+					if (schedule.status === 0) {
+						// 删除的日程的状态为排课状态
+						// 检查日程中是否还存在与之课程日期相同的状态为排课状态的日程
+						index = this.schedules.findIndex(s => s.courseDate === schedule.courseDate && s.status === 0)
+						if (index === -1) {
+							// 不存在, 则变更scheduleDates中相应日期的排课日期记录的状态
+							index = this.scheduleDates.findIndex(s => s.date === schedule.courseContent)
+							if (index !== -1) {
+								const scheduleDate = this.scheduleDates[index]
+								scheduleDate.status = 1
+							}
 						}
+					}
+					// 检查该日期是否还有其他日程
+					index = this.schedules.findIndex(s => s.courseDate === schedule.courseDate)
+					if (index === -1) {
+						// 删除scheduleDates中相应日期的排课日期记录
+						index = this.scheduleDates.findIndex(s => s.date === schedule.courseContent)
+						this.scheduleDates.splice(index, 1)
 					}
 				}
 			}
@@ -668,27 +763,9 @@ export const useScheduleStore = defineStore('schedules', {
 					const day = String(cDate.getDate()).padStart(2, '0')
 					const courseDate = year + '-' + month + '-' + day
 					const schedule = res[0]
-					if (schedule.courseDate !== courseDate) {
-						const datas = this.schedules.filter(s => s.courseDate === schedule.courseDate)
-						if (datas.length === 1) {
-							const index = this.scheduleDates.findIndex(item => item.date === schedule.courseDate)
-							if (index !== -1) {
-								const item = this.scheduleDates[index]
-								item.date = courseDate
-								item.status = status
-							}
-						}
-					} else {
-						schedule.courseDate = courseDate
-						const index = this.scheduleDates.findIndex(item => item.date === courseDate)
-						if (index === -1) {
-							this.scheduleDates.push({
-								date: courseDate,
-								status
-							})
-						}
-					}
+					const preCourseDate = schedule.courseDate
 					schedule.date = date
+					schedule.courseDate = courseDate
 					schedule.orgId = orgId
 					schedule.presentIds = presentIds
 					schedule.courseId = courseId
@@ -720,6 +797,51 @@ export const useScheduleStore = defineStore('schedules', {
 									e.consume += offset		
 								}
 							})
+						}
+					}
+					
+					// 更新日程日期
+					if (preCourseDate !== courseDate) {
+						// 检查旧课程日期中是否还有相应课程状态的日程
+						let index = this.schedules.findIndex(s => s.courseDate === preCourseDate && s.status === 0)
+						if (schedule.status === 0) {
+							if (index === -1) {
+								// 将scheduleDates中相应日期的排课日期记录的status改为1
+								index = this.scheduleDates.findIndex(s => s.date === preCourseDate)
+								if (index !== -1) {
+									const scheduleDate = this.scheduleDates[index]
+									scheduleDate.status = 1
+								}
+							}
+							// 检查scheduleDates中是否存在新课程日期的排课日期记录
+							index = this.scheduleDates.findIndex(s => s.date === courseDate)
+							if (index === -1) {
+								// 不存在, 则添加
+								this.scheduleDates.push({
+									date: courseDate,
+									status: 0
+								})
+							} else {
+								// 存在, 则将状态设置为0
+								const scheduleDate = this.scheduleDates[index]
+								scheduleDate.status = 0
+							}
+						} else {
+							// 检查scheduleDates中是否存在新课程日期的排课日期记录
+							index = this.scheduleDates.findIndex(s => s.date === courseDate)
+							if (index === -1) {
+								// 不存在, 则添加
+								this.scheduleDates.push({
+									date: courseDate,
+									status: schedule.status
+								})
+							}
+						}
+						// 检查旧课程日期中是否还有日程
+						index = this.schedules.findIndex(s => s.courseDate === preCourseDate)
+						if (index === -1) {
+							index = this.scheduleDates.findIndex(s => s.date === preCourseDate)
+							this.scheduleDates.splice(index, 1)
 						}
 					}
 				}

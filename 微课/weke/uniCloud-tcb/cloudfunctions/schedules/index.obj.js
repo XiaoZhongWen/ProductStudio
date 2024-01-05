@@ -148,17 +148,8 @@ module.exports = {
 					consume,
 					status: 0
 				})
-				const dbCmd = db.command
-				const count = await db.collection('wk-schedules').where(dbCmd.or({
-					studentId,
-					courseId
-				}, {
-					presentIds: studentId,
-					courseId
-				})).orderBy("startTime", "desc").count()
-				const pageIndex = count / 10 + (count % 10 === 0?0:1)
 				const { id, inserted } = res
-				items.push({id, startTime: r.startTime, endTime: r.endTime, courseDate, pageIndex})
+				items.push({id, startTime: r.startTime, endTime: r.endTime, courseDate})
 			}
 			return items
 		} catch(e) {
@@ -242,8 +233,7 @@ module.exports = {
 				const r1 = await db.collection('wk-schedules').where({
 					startTime: dbCmd.gte(from),
 					endTime: dbCmd.lte(to),
-					orgId: dbCmd.in(orgIds),
-					status: dbCmd.in([0, 1])
+					orgId: dbCmd.in(orgIds)
 				}).field({ 'courseDate': true, 'status': true }).get()
 				r1.data.forEach(r => {
 					const item = r.courseDate + "|" + r.status
@@ -256,8 +246,7 @@ module.exports = {
 				const r2 = await db.collection('wk-schedules').where({
 					startTime: dbCmd.gte(from),
 					endTime: dbCmd.lte(to),
-					teacherId: dbCmd.in(ids),
-					status: dbCmd.in([0, 1])
+					teacherId: dbCmd.in(ids)
 				}).field({ 'courseDate': true, 'status': true }).get()
 				r2.data.forEach(r => {
 					const item = r.courseDate + "|" + r.status
@@ -270,23 +259,28 @@ module.exports = {
 			const result = await db.collection('wk-schedules').where(dbCmd.or({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				studentId: dbCmd.in(ids),
-				status: dbCmd.in([0, 1])
+				studentId: dbCmd.in(ids)
 			}, {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				presentIds: dbCmd.all(ids),
-				status: dbCmd.in([0, 1])
+				presentIds: dbCmd.all(ids)
 			})).field({ 'courseDate': true, 'status': true }).get()
 			scheduleDates = result.data.map(item => item.courseDate + "|" + item.status)
 		}
 		const datas = []
 		scheduleDates.forEach(s => {
 			const items = s.split("|")
-			datas.push({
-				"date": items[0],
-				"status": parseInt(items[1])
-			})
+			const date = items[0]
+			const status = parseInt(items[1])
+			const index = datas.findIndex(data => data.date === date)
+			if (index === -1) {
+				datas.push({date, status})
+			} else if (s.status === 0) {
+				const item = datas[index]
+				if (item.status !== 0) {
+					item.status = 0
+				}
+			}
 		})
 		return datas
 	},
@@ -330,31 +324,36 @@ module.exports = {
 			const result = await db.collection('wk-schedules').where({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				teacherId: id,
-				status: dbCmd.in([0, 1])
+				teacherId: id
 			}).field({ 'courseDate': true, 'status': true }).get()
 			scheduleDates = result.data.map(r => r.courseDate + "|" + r.status)
 		} else if (role === "4") {
 			const result = await db.collection('wk-schedules').where(dbCmd.or({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				studentId: id,
-				status: dbCmd.in([0, 1])
+				studentId: id
 			}, {
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
-				presentIds: id,
-				status: dbCmd.in([0, 1])
+				presentIds: id
 			})).field({ 'courseDate': true, 'status': true }).get()
 			scheduleDates = result.data.map(r => r.courseDate + "|" + r.status)
 		}
+		
 		const datas = []
 		scheduleDates.forEach(s => {
 			const items = s.split("|")
-			datas.push({
-				"date": items[0],
-				"status": parseInt(items[1])
-			})
+			const date = items[0]
+			const status = parseInt(items[1])
+			const index = datas.findIndex(data => data.date === date)
+			if (index === -1) {
+				datas.push({date, status})
+			} else if (s.status === 0) {
+				const item = datas[index]
+				if (item.status !== 0) {
+					item.status = 0
+				}
+			}
 		})
 		return datas
 	},
