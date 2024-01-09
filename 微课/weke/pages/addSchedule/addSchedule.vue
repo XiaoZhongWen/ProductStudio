@@ -1182,6 +1182,7 @@ const onSchedule = async () => {
 		const schedules = scheduleStore.schedules.filter(s => s._id === scheduleId.value)
 		if (schedules.length === 1) {
 			const schedule = schedules[0]
+			const preCourseDate = schedule.courseDate
 			const result = await scheduleStore.updateSchedule2({
 				scheduleId: scheduleId.value,
 				studentId: schedule.studentId ?? '',
@@ -1204,6 +1205,18 @@ const onSchedule = async () => {
 			uni.hideLoading()
 			if (result) {
 				uni.navigateBack()
+				const cDate = new Date(startTime)
+				const year = cDate.getFullYear()
+				const month = String(cDate.getMonth() + 1).padStart(2, '0')
+				const day = String(cDate.getDate()).padStart(2, '0')
+				const courseDate = year + '-' + month + '-' + day
+				if (courseDate !== preCourseDate) {
+					scheduleStore.modifyCachedScheduleDates(
+						preCourseDate, 
+						courseDate, 
+						schedule.status
+					)
+				}
 			} else {
 				uni.showToast({
 					title: "更新失败",

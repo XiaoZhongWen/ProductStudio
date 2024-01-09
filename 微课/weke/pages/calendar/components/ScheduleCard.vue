@@ -164,7 +164,7 @@ import { Org } from '../../../types/org';
 import { Grade } from '../../../types/grade';
 import { Schedule } from '../../../types/schedule';
 
-const props = defineProps(['schedule'])
+const props = defineProps(['schedule', 'ownId'])
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
@@ -229,6 +229,7 @@ const onCheckedTap = async () => {
 		status: isChecked?1:0
 	})
 	if (result) {
+		scheduleStore.updateCachedScheduleDate(schedule.courseDate)
 		props.schedule.status = schedule.status
 		checked.value = !checked.value
 		if (status === 2) {
@@ -267,6 +268,7 @@ const onLeaveTap = async () => {
 					status
 				})
 				if (result) {
+					scheduleStore.updateCachedScheduleDate(schedule.courseDate)
 					props.schedule.status = status
 					checked.value = true
 					scheduleStore.playChecked()
@@ -283,7 +285,10 @@ const onDeleteTap = () => {
 		content: content,
 		success: async (res) => {
 			if (res.confirm) {
-				await scheduleStore.deleteSchedule(props.schedule._id)
+				const result = await scheduleStore.deleteSchedule(props.schedule._id)
+				if (result) {
+					scheduleStore.updateCachedScheduleDate(props.schedule.courseDate)
+				}
 			}
 		}
 	})

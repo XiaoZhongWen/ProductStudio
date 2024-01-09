@@ -13,6 +13,7 @@
 		<template v-for="schedule in schedules" :key="schedule._id">
 			<ScheduleCard 
 				class="scheduleCard" 
+				:ownId="usersStore.owner._id"
 				:schedule="schedule" 
 				@tap="onScheduleCardTap(schedule)" />
 		</template>
@@ -50,14 +51,17 @@ onMounted(() => {
 		const date = new Date()
 		const from = timestampForBeginOfMonth(date)
 		const to = timestampForEndOfMonth(date)
-		await scheduleStore.fetchSchedulesDate(from, to)
-		await scheduleStore.fetchSchedules(yyyyMMdd(date))
+		const userId = usersStore.owner._id
+		await scheduleStore.fetchSchedulesDate(userId, from, to)
+		await scheduleStore.fetchSchedules(userId, yyyyMMdd(date))
 	})
 })
 
 const selected = computed(() => {
 	const result:CourseTag[] = []
-	scheduleStore.scheduleDates.forEach(s => {
+	const userId = usersStore.owner._id
+	const scheduleDates = scheduleStore.scheduleDatesMap.get(userId) ?? []
+	scheduleDates.forEach(s => {
 		const tag:CourseTag = {
 			date: s.date,
 			info: '课',
@@ -69,7 +73,9 @@ const selected = computed(() => {
 })
 
 const schedules = computed(() => {
-	const result = scheduleStore.schedules.filter(s => s.courseDate === selectedDate.value)
+	const userId = usersStore.owner._id
+	const schedules = scheduleStore.schedulesMap.get(userId) ?? []
+	const result = schedules.filter(s => s.courseDate === selectedDate.value)
 	result.sort((a, b) => {
 	  // 先按status递增排序
 	  if (a.status !== b.status) {
@@ -82,14 +88,17 @@ const schedules = computed(() => {
 })
 
 const isShowLoading = computed(() => {
-	const index = scheduleStore.scheduleDates.findIndex(item => item.date === selectedDate.value)
+	const userId = usersStore.owner._id
+	const scheduleDates = scheduleStore.scheduleDatesMap.get(userId) ?? []
+	const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
 	return index !== -1 && schedules.value.length === 0
 })
 
 const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
+	const userId = usersStore.owner._id
 	selectedDate.value = fulldate
-	await scheduleStore.fetchSchedules(fulldate)
+	await scheduleStore.fetchSchedules(userId, fulldate)
 }
 
 const onMonthSwitch = async (e:{year:number, month:number}) => {
@@ -101,7 +110,8 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 	uni.showLoading({
 		title: "加载中"
 	})
-	await scheduleStore.fetchSchedulesDate(from, to)
+	const userId = usersStore.owner._id
+	await scheduleStore.fetchSchedulesDate(userId, from, to)
 	uni.hideLoading()
 }
 

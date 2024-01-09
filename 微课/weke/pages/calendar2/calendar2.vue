@@ -13,6 +13,7 @@
 		<template v-for="schedule in schedules" :key="schedule._id">
 			<ScheduleCard 
 				class="scheduleCard" 
+				:ownId="_id"
 				:schedule="schedule" 
 				@tap="onScheduleCardTap(schedule)" />
 		</template>
@@ -48,13 +49,16 @@ onLoad(async (option) => {
 })
 
 onMounted(async () => {
+	uni.showLoading({
+		title: "加载中..."
+	})
 	const date = new Date()
 	const from = timestampForBeginOfMonth(date)
 	const to = timestampForEndOfMonth(date)
 	_from.value = from
 	_to.value = to
-	await scheduleStore.fetchSpecialSchedulesDate(_id.value, _role.value, from, to)
-	await scheduleStore.fetchSpecialSchedules(_id.value, _role.value, yyyyMMdd(date))
+	await scheduleStore.fetchSchedulesDate(_id.value, from, to)
+	await scheduleStore.fetchSchedules(_id.value, yyyyMMdd(date))
 	let title = ''
 	if (_role.value === "2") {
 		const users = usersStore.users.filter(u => u._id === _id.value)
@@ -72,6 +76,7 @@ onMounted(async () => {
 	uni.setNavigationBarTitle({
 		title
 	})
+	uni.hideLoading()
 })
 
 const selected = computed(() => {
@@ -124,7 +129,7 @@ const schedules = computed(() => {
 const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
 	selectedDate.value = fulldate
-	await scheduleStore.fetchSpecialSchedules(_id.value, _role.value, fulldate)
+	await scheduleStore.fetchSchedules(_id.value, fulldate)
 }
 
 const onMonthSwitch = async (e:{year:number, month:number}) => {
@@ -138,7 +143,7 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 	uni.showLoading({
 		title: "加载中"
 	})
-	await scheduleStore.fetchSpecialSchedulesDate(_id.value, _role.value, from, to)
+	await scheduleStore.fetchSchedulesDate(_id.value, from, to)
 	uni.hideLoading()
 }
 
