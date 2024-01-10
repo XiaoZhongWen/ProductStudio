@@ -29,7 +29,8 @@
 <script setup lang="ts">
 import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
-import { computed, onMounted, ref } from 'vue';
+import { useOrgsStore } from '@/store/orgs'
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import ScheduleCard from './components/ScheduleCard.vue'
 import { timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 import { Schedule } from "../../types/schedule";
@@ -38,8 +39,15 @@ import { CourseTag } from "../../types/course";
 const selectedDate = ref(yyyyMMdd(new Date()))
 const usersStore = useUsersStore()
 const scheduleStore = useScheduleStore()
+const useOrgs = useOrgsStore()
 
 const global = getApp().globalData!
+
+const from = ref<number>()
+const to = ref<number>()
+const isShowLoading = ref(false)
+const selected = ref<CourseTag[]>([])
+const schedules = ref<Schedule[]>([])
 
 const isShowAddBtn = computed(() => {
 	return usersStore.owner.roles?.includes(1) ||
@@ -49,18 +57,19 @@ const isShowAddBtn = computed(() => {
 onMounted(() => {
 	uni.$on(global.didFinishedInitialData, async () => {
 		const date = new Date()
-		const from = timestampForBeginOfMonth(date)
-		const to = timestampForEndOfMonth(date)
+		from.value = timestampForBeginOfMonth(date)
+		to.value = timestampForEndOfMonth(date)
 		const userId = usersStore.owner._id
-		await scheduleStore.fetchSchedulesDate(userId, from, to)
+		await scheduleStore.fetchSchedulesDate(userId, from.value, to.value)
 		await scheduleStore.fetchSchedules(userId, yyyyMMdd(date))
 	})
 })
 
-const selected = computed(() => {
+watchEffect(() => {
 	const result:CourseTag[] = []
 	const userId = usersStore.owner._id
-	const scheduleDates = scheduleStore.scheduleDatesMap.get(userId) ?? []
+	const key1 = userId + "-" + from.value + "-" + to.value
+	const scheduleDates = scheduleStore.scheduleDatesMap.get(key1) ?? []
 	scheduleDates.forEach(s => {
 		const tag:CourseTag = {
 			date: s.date,
@@ -69,14 +78,12 @@ const selected = computed(() => {
 		}
 		result.push(tag)
 	})
-	return result
-})
-
-const schedules = computed(() => {
-	const userId = usersStore.owner._id
-	const schedules = scheduleStore.schedulesMap.get(userId) ?? []
-	const result = schedules.filter(s => s.courseDate === selectedDate.value)
-	result.sort((a, b) => {
+	selected.value = result
+	
+	const key2 = userId + "-" + selectedDate.value
+	const values = scheduleStore.schedulesMap.get(key2) ?? []
+	const res = values.filter(s => s.courseDate === selectedDate.value)
+	res.sort((a, b) => {
 	  // 先按status递增排序
 	  if (a.status !== b.status) {
 	    return a.status - b.status;
@@ -84,14 +91,10 @@ const schedules = computed(() => {
 	  // 如果status相同，再按startTime递增排序
 	  return a.startTime - b.startTime;
 	})
-	return result
-})
-
-const isShowLoading = computed(() => {
-	const userId = usersStore.owner._id
-	const scheduleDates = scheduleStore.scheduleDatesMap.get(userId) ?? []
+	schedules.value = res
+	
 	const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
-	return index !== -1 && schedules.value.length === 0
+	isShowLoading.value = index !== -1 && schedules.value.length === 0
 })
 
 const calendarChange = async (e:{fulldate:string}) => {
@@ -105,13 +108,13 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 	const { year, month } = e
 	const str = year + '-' + month + '-' + '1'
 	const date = new Date(str)
-	const from = timestampForBeginOfMonth(date)
-	const to = timestampForEndOfMonth(date)
+	from.value = timestampForBeginOfMonth(date)
+	to.value = timestampForEndOfMonth(date)
 	uni.showLoading({
 		title: "加载中"
 	})
 	const userId = usersStore.owner._id
-	await scheduleStore.fetchSchedulesDate(userId, from, to)
+	await scheduleStore.fetchSchedulesDate(userId, from.value, to.value)
 	uni.hideLoading()
 }
 
@@ -122,14 +125,26 @@ const onAddTap = () => {
 }
 
 const onScheduleCardTap = (schedule: Schedule) => {
+	// 家长和学生不能进入详情
+	const userId = usersStore.owner._id
 	const roles = usersStore.roles ?? []
 	const res = usersStore.owner.from === 'stuNo' || 
 		(roles.includes(3) && roles.length === 1)
 	if (res) {
 		return
+	} else {
+		// 非该课程老师并且非该课程所在机构的管理员不能进入详情
+		const isTeacher = schedule.teacherId === userId
+		if (!isTeacher) {
+			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+			const index = orgs.findIndex(org => org.courseIds?.includes(schedule.courseId))
+			if (index === -1) {
+				return
+			}
+		}
 	}
 	uni.navigateTo({
-		url: "/pages/addSchedule/addSchedule?id="+schedule._id
+		url: "/pages/addSchedule/addSchedule?id="+schedule._id + "&ownId=" + userId
 	})
 }
 

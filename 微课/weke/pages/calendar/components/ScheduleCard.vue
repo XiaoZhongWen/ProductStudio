@@ -229,7 +229,7 @@ const onCheckedTap = async () => {
 		status: isChecked?1:0
 	})
 	if (result) {
-		scheduleStore.updateCachedScheduleDate(schedule.courseDate)
+		scheduleStore.updateCachedScheduleDate(props.ownId, schedule.courseDate)
 		props.schedule.status = schedule.status
 		checked.value = !checked.value
 		if (status === 2) {
@@ -268,7 +268,7 @@ const onLeaveTap = async () => {
 					status
 				})
 				if (result) {
-					scheduleStore.updateCachedScheduleDate(schedule.courseDate)
+					scheduleStore.updateCachedScheduleDate(props.ownId, schedule.courseDate)
 					props.schedule.status = status
 					checked.value = true
 					scheduleStore.playChecked()
@@ -287,7 +287,7 @@ const onDeleteTap = () => {
 			if (res.confirm) {
 				const result = await scheduleStore.deleteSchedule(props.schedule._id)
 				if (result) {
-					scheduleStore.updateCachedScheduleDate(props.schedule.courseDate)
+					scheduleStore.updateCachedScheduleDate(props.ownId, props.schedule.courseDate)
 				}
 			}
 		}

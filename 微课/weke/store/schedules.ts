@@ -10,11 +10,6 @@ const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
 })
 
-type Range = {
-	from: number,
-	to: number
-}
-
 export const useScheduleStore = defineStore('schedules', {
 	state: () => {
 		return {
@@ -280,7 +275,7 @@ export const useScheduleStore = defineStore('schedules', {
 			// 获取指定日期的日程时能够确定该日期的日程日期记录的准确信息
 			// 此时更新日程日期记录能够处理不同用户日程日历的日期记录不同步的问题
 			const count = result.length
-			let index = result.findIndex(s => s.status === 0)
+			const index1 = result.findIndex(s => s.status === 0)
 			
 			const _date = new Date(date)
 			const from = timestampForBeginOfMonth(_date)
@@ -288,24 +283,23 @@ export const useScheduleStore = defineStore('schedules', {
 			const _key = id + "-" + from + "-" + to
 			const scheduleDates = this.scheduleDatesMap.get(_key)
 			if (typeof(scheduleDates) !== 'undefined') {
-				index = scheduleDates.findIndex(item => item.date === date)
-				if (index === -1) {
+				const index2 = scheduleDates.findIndex(item => item.date === date)
+				if (index2 === -1) {
 					if (count !== 0) {
 						scheduleDates.push({
 							date,
-							status: index === -1? 1:0
+							status: index1 === -1? 1:0
 						})
 					}
 				} else {
 					if (count !== 0) {
-						const scheduleDate = scheduleDates[0]
-						scheduleDate.status = index === -1? 1:0
+						const scheduleDate = scheduleDates[index2]
+						scheduleDate.status = index1 === -1? 1:0
 					} else {
-						scheduleDates.splice(index, 1)
+						scheduleDates.splice(index2, 1)
 					}
 				}
 			}
-			
 			return result
 		},
 		/*
@@ -345,7 +339,6 @@ export const useScheduleStore = defineStore('schedules', {
 							from, to, roles,
 							ids: [id]
 						}) as {date: string, status: number}[]
-						debugger
 						result.push(...res)
 					}
 				} else {
@@ -357,6 +350,7 @@ export const useScheduleStore = defineStore('schedules', {
 					}) as {date: string, status: number}[]
 					result.push(...res)
 				}
+				
 				this.scheduleDatesMap.set(key, result)
 				return result
 			}
@@ -481,6 +475,7 @@ export const useScheduleStore = defineStore('schedules', {
 			return result
 		},
 		async updateSchedule2(param: {
+			ownId: string, 
 			scheduleId: string,
 			studentId: string,
 			classId: string,
@@ -500,6 +495,7 @@ export const useScheduleStore = defineStore('schedules', {
 			preConsume: number
 		}) {
 			const { 
+				ownId,
 				scheduleId,
 				studentId,
 				classId,
@@ -517,7 +513,9 @@ export const useScheduleStore = defineStore('schedules', {
 				previewContent, 
 				consume,
 				preConsume } = param
-			if (typeof(scheduleId) === 'undefined' || 
+			if (typeof(ownId) === 'undefined' || 
+				ownId.length === 0 || 
+				typeof(scheduleId) === 'undefined' || 
 				scheduleId.length === 0 || 
 				typeof(status) === 'undefined' ||
 				typeof(preConsume) === 'undefined') {
@@ -577,6 +575,19 @@ export const useScheduleStore = defineStore('schedules', {
 				})
 				
 				schedules.forEach(schedule => {
+					if (schedule.courseDate !== courseDate) {
+						const key1 = ownId + "-" + schedule.courseDate
+						const v1 = this.schedulesMap.get(key1)
+						const index1 = v1?.findIndex(s => s._id === scheduleId)
+						if (index1 !== undefined && index1 !== -1) {
+							v1?.splice(index1, 1)
+						}
+						const key2 = ownId + "-" + courseDate
+						const v2 = this.schedulesMap.get(key2)
+						if (typeof(v2) !== 'undefined') {
+							v2.push(schedule)
+						}
+					}
 					schedule.date = date
 					schedule.courseDate = courseDate
 					schedule.orgId = orgId
@@ -591,7 +602,6 @@ export const useScheduleStore = defineStore('schedules', {
 					schedule.previewContent = previewContent
 					schedule.consume = consume
 				})
-				
 				const offset = consume - preConsume
 				if (status === 1 && offset !== 0) {
 					if (studentId.length > 0) {
@@ -657,7 +667,6 @@ export const useScheduleStore = defineStore('schedules', {
 			const schedules = this.schedulesMap.get(key)
 			if (typeof(schedules) !== 'undefined') {
 				const index = schedules.findIndex(s => s.courseDate === date && s.status === 0)
-				
 				const _date = new Date(date)
 				const from = timestampForBeginOfMonth(_date)
 				const to = timestampForEndOfMonth(_date)
@@ -685,7 +694,10 @@ export const useScheduleStore = defineStore('schedules', {
 				return
 			}
 			this.updateCachedScheduleDate(ownId, from)
-			const key = ownId + "-" + from + "-" + to
+			const date = new Date(to)
+			const s = timestampForBeginOfMonth(date)
+			const e = timestampForEndOfMonth(date)
+			const key = ownId + "-" + s + "-" + e
 			const scheduleDates = this.scheduleDatesMap.get(key)
 			if (typeof(scheduleDates) !== 'undefined') {
 				const index = scheduleDates.findIndex(sd => sd.date === to)

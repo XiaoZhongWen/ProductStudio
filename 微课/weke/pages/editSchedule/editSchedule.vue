@@ -50,10 +50,14 @@ onLoad((option) => {
 	}
 	editType.value = type
 	if (scheduleId.length > 0) {
-		const res = scheduleStore.schedules.filter(s => s._id === scheduleId)
-		if (res.length === 1) {
-			schedule.value = res[0]
-		}
+		Array.from(scheduleStore.schedulesMap).find(([k, v]) => {
+			const index = v.findIndex(s => s._id === scheduleId)
+			const result = index !== -1
+			if (result) {
+				schedule.value = v[index]
+			}
+			return result
+		})
 	}
 	if (schedule.value) {
 		// type, 0: 预习、1: 课程内容、2: 课后作业、3: 反馈

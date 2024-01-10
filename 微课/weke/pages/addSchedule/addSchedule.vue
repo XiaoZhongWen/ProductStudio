@@ -233,6 +233,7 @@ import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
 import { Entry } from '../../types/entry'
+import { Schedule } from '../../types/schedule'
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
@@ -298,12 +299,14 @@ const global = getApp().globalData!
 
 // 控制consume初始化的值被异步更新
 let skip = false
-
+let _ownId = ''
 onLoad(async (option) => {
-	const { id, date } = option as {
+	const { id, date, ownId } = option as {
 		id?: string,
-		date?: string
+		date?: string,
+		ownId?: string
 	}
+	_ownId = ownId ?? ''
 	const userId = usersStore.owner._id
 	const orgIds = useOrgs.orgs.filter(
 		o => o.creatorId === userId || 
@@ -348,9 +351,17 @@ onLoad(async (option) => {
 			title: "更新"
 		})
 		scheduleId.value = id
-		const schedules = scheduleStore.schedules.filter(s => s._id === id)
-		if (schedules.length === 1) {
-			const schedule = schedules[0]
+		let schedule = {} as Schedule
+		Array.from(scheduleStore.schedulesMap).find(([k, v]) => {
+			const index = v.findIndex(s => s._id === scheduleId.value)
+			const result = index !== -1
+			if (result) {
+				schedule = v[index]
+			}
+			return result
+		})
+		
+		if (JSON.stringify(schedule) !== '{}') {
 			const type = schedule.classId?.length === 0? 0: 1
 			if (type === 0) {
 				selectedStudentId.value = schedule.studentId ?? ''
@@ -1174,16 +1185,24 @@ const onSchedule = async () => {
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
 	
-	if (scheduleId.value.length > 0) {
+	if (_ownId.length > 0 && scheduleId.value.length > 0) {
 		// 更新
 		uni.showLoading({
 			title: "正在更新"
 		})
-		const schedules = scheduleStore.schedules.filter(s => s._id === scheduleId.value)
-		if (schedules.length === 1) {
-			const schedule = schedules[0]
+		let schedule = {} as Schedule
+		Array.from(scheduleStore.schedulesMap).find(([k, v]) => {
+			const index = v.findIndex(s => s._id === scheduleId.value)
+			const result = index !== -1
+			if (result) {
+				schedule = v[index]
+			}
+			return result
+		})
+		if (JSON.stringify(schedule) !== '{}') {
 			const preCourseDate = schedule.courseDate
 			const result = await scheduleStore.updateSchedule2({
+				ownId: _ownId,
 				scheduleId: scheduleId.value,
 				studentId: schedule.studentId ?? '',
 				classId: schedule.classId ?? '',
@@ -1210,8 +1229,9 @@ const onSchedule = async () => {
 				const month = String(cDate.getMonth() + 1).padStart(2, '0')
 				const day = String(cDate.getDate()).padStart(2, '0')
 				const courseDate = year + '-' + month + '-' + day
-				if (courseDate !== preCourseDate) {
+				if (courseDate !== preCourseDate && _ownId.length > 0) {
 					scheduleStore.modifyCachedScheduleDates(
+						_ownId,
 						preCourseDate, 
 						courseDate, 
 						schedule.status
@@ -1224,7 +1244,7 @@ const onSchedule = async () => {
 					icon: "none"
 				})
 			}
-		} 
+		}
 	} else {
 		// 创建
 		uni.showLoading({

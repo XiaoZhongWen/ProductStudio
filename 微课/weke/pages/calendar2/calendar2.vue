@@ -21,9 +21,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted, watchEffect } from 'vue';
 import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
+import { useOrgsStore } from '@/store/orgs'
 import { useScheduleStore } from "@/store/schedules"
 import ScheduleCard from '../calendar/components/ScheduleCard.vue';
 import { CourseTag } from '../../types/course';
@@ -33,11 +34,15 @@ import { Schedule } from '../../types/schedule';
 const selectedDate = ref(yyyyMMdd(new Date()))
 const usersStore = useUsersStore()
 const scheduleStore = useScheduleStore()
+const useOrgs = useOrgsStore()
 
 const _id = ref('')
 const _role = ref('')
 const _from = ref(0)
 const _to = ref(0)
+const selected = ref<CourseTag[]>([])
+const schedules = ref<Schedule[]>([])
+const isShowLoading = ref(false)
 
 onLoad(async (option) => {
 	const { id, role } = option as {
@@ -79,10 +84,10 @@ onMounted(async () => {
 	uni.hideLoading()
 })
 
-const selected = computed(() => {
+watchEffect(() => {
 	const result:CourseTag[] = []
-	const key = _id.value + "-" + _role.value + "-" + _from.value + "-" + _to.value
-	const scheduleDates = scheduleStore.scheduleDatesMap.get(key)
+	const key1 = _id.value + "-" + _from.value + "-" + _to.value
+	const scheduleDates = scheduleStore.scheduleDatesMap.get(key1) ?? []
 	if (scheduleDates) {
 		scheduleDates.forEach(s => {
 			const tag:CourseTag = {
@@ -93,26 +98,12 @@ const selected = computed(() => {
 			result.push(tag)
 		})
 	}
-	return result
-})
-
-const isShowLoading = computed(() => {
-	const key = _id.value + "-" + _role.value + "-" + _from.value + "-" + _to.value
-	const scheduleDates = scheduleStore.scheduleDatesMap.get(key)
-	if (scheduleDates) {
-		const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
-		return index !== -1 && schedules.value.length === 0
-	} else {
-		return false
-	}
-})
-
-const schedules = computed(() => {
-	const key = _id.value + "-" + _role.value + "-" + selectedDate.value
-	const schedules = scheduleStore.schedulesMap.get(key)
-	if (schedules) {
-		const result = schedules.filter(s => s.courseDate === selectedDate.value)
-		result.sort((a, b) => {
+	selected.value = result
+	
+	const key2 = _id.value + "-" + selectedDate.value
+	const values = scheduleStore.schedulesMap.get(key2)
+	if (values) {
+		values.sort((a, b) => {
 		  // 先按status递增排序
 		  if (a.status !== b.status) {
 		    return a.status - b.status;
@@ -120,10 +111,11 @@ const schedules = computed(() => {
 		  // 如果status相同，再按startTime递增排序
 		  return a.startTime - b.startTime;
 		})
-		return result
-	} else {
-		return []
+		schedules.value = values
 	}
+	
+	const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
+	isShowLoading.value = index !== -1 && schedules.value.length === 0
 })
 
 const calendarChange = async (e:{fulldate:string}) => {
@@ -148,14 +140,26 @@ const onMonthSwitch = async (e:{year:number, month:number}) => {
 }
 
 const onScheduleCardTap = (schedule: Schedule) => {
+	// 家长和学生不能进入详情
 	const roles = usersStore.roles ?? []
 	const res = usersStore.owner.from === 'stuNo' || 
 		(roles.includes(3) && roles.length === 1)
 	if (res) {
 		return
+	} else {
+		// 非该课程老师并且非该课程所在机构的管理员不能进入详情
+		const userId = usersStore.owner._id
+		const isTeacher = schedule.teacherId === userId
+		if (!isTeacher) {
+			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+			const index = orgs.findIndex(org => org.courseIds?.includes(schedule.courseId))
+			if (index === -1) {
+				return
+			}
+		}
 	}
 	uni.navigateTo({
-		url: "/pages/addSchedule/addSchedule?id="+schedule._id
+		url: "/pages/addSchedule/addSchedule?id="+schedule._id + "&ownId=" + _id.value
 	})
 }
 
