@@ -1185,7 +1185,7 @@ const onSchedule = async () => {
 	const courseContent = courseInfo.value
 	const previewContent = previewInfo.value
 	
-	if (_ownId.length > 0 && scheduleId.value.length > 0) {
+	if (scheduleId.value.length > 0) {
 		// 更新
 		uni.showLoading({
 			title: "正在更新"
@@ -1202,7 +1202,6 @@ const onSchedule = async () => {
 		if (JSON.stringify(schedule) !== '{}') {
 			const preCourseDate = schedule.courseDate
 			const result = await scheduleStore.updateSchedule2({
-				ownId: _ownId,
 				scheduleId: scheduleId.value,
 				studentId: schedule.studentId ?? '',
 				classId: schedule.classId ?? '',

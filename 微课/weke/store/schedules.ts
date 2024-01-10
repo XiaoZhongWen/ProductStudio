@@ -206,7 +206,7 @@ export const useScheduleStore = defineStore('schedules', {
 			const key = id + "-" + date
 			const schedules = this.schedulesMap.get(key)
 			if (typeof(schedules) !== 'undefined' && schedules.length > 0) {
-				return schedules
+				result = schedules
 			} else {
 				const users = await userStore.fetchUsers([id]) as User[]
 				if (users.length === 1) {
@@ -239,37 +239,37 @@ export const useScheduleStore = defineStore('schedules', {
 					}) as Schedule[]
 					result.push(...res)
 				}
-			}
-			this.schedulesMap.set(key, result)
-			const courseIds:string[] = []
-			const userIds:string[] = []
-			const classIds:string[] = []
-			result.forEach(s => {
-				// 课程
-				if (!courseIds.includes(s.courseId)) {
-					courseIds.push(s.courseId)
+				this.schedulesMap.set(key, result)
+				const courseIds:string[] = []
+				const userIds:string[] = []
+				const classIds:string[] = []
+				result.forEach(s => {
+					// 课程
+					if (!courseIds.includes(s.courseId)) {
+						courseIds.push(s.courseId)
+					}
+					// 老师
+					if (!userIds.includes(s.teacherId)) {
+						userIds.push(s.teacherId)
+					}
+					// 班级
+					if (typeof(s.classId) !== 'undefined' && 
+						s.classId.length > 0 &&
+						!classIds.includes(s.classId)) {
+						classIds.push(s.classId)
+					}
+				})
+				const courseStore = useCourseStore()
+				const gradesStore = useGradesStore()
+				if (courseIds.length > 0) {
+					await courseStore.fetchCourses(courseIds)
 				}
-				// 老师
-				if (!userIds.includes(s.teacherId)) {
-					userIds.push(s.teacherId)
+				if (userIds.length > 0) {
+					await userStore.fetchUsers(userIds)
 				}
-				// 班级
-				if (typeof(s.classId) !== 'undefined' && 
-					s.classId.length > 0 &&
-					!classIds.includes(s.classId)) {
-					classIds.push(s.classId)
+				if (classIds.length > 0) {
+					await gradesStore.fetchGrades(classIds)
 				}
-			})
-			const courseStore = useCourseStore()
-			const gradesStore = useGradesStore()
-			if (courseIds.length > 0) {
-				await courseStore.fetchCourses(courseIds)
-			}
-			if (userIds.length > 0) {
-				await userStore.fetchUsers(userIds)
-			}
-			if (classIds.length > 0) {
-				await gradesStore.fetchGrades(classIds)
 			}
 			
 			// 获取指定日期的日程时能够确定该日期的日程日期记录的准确信息
@@ -475,7 +475,6 @@ export const useScheduleStore = defineStore('schedules', {
 			return result
 		},
 		async updateSchedule2(param: {
-			ownId: string, 
 			scheduleId: string,
 			studentId: string,
 			classId: string,
@@ -494,8 +493,7 @@ export const useScheduleStore = defineStore('schedules', {
 			consume: number,
 			preConsume: number
 		}) {
-			const { 
-				ownId,
+			const {
 				scheduleId,
 				studentId,
 				classId,
@@ -513,9 +511,7 @@ export const useScheduleStore = defineStore('schedules', {
 				previewContent, 
 				consume,
 				preConsume } = param
-			if (typeof(ownId) === 'undefined' || 
-				ownId.length === 0 || 
-				typeof(scheduleId) === 'undefined' || 
+			if (typeof(scheduleId) === 'undefined' || 
 				scheduleId.length === 0 || 
 				typeof(status) === 'undefined' ||
 				typeof(preConsume) === 'undefined') {
@@ -565,43 +561,41 @@ export const useScheduleStore = defineStore('schedules', {
 				const day = String(cDate.getDate()).padStart(2, '0')
 				const courseDate = year + '-' + month + '-' + day
 				
-				const schedules:Schedule[] = []
 				this.schedulesMap.forEach((v, k) => {
 					const items = v.filter(s => s._id === scheduleId)
 					if (items.length === 1) {
-						const item = items[0]
-						schedules.push(item)
+						const schedule = items[0]
+						if (schedule.courseDate !== courseDate) {
+							const sections = k.split("-")
+							const ownId = sections[0]
+							const key1 = ownId + "-" + schedule.courseDate
+							const v1 = this.schedulesMap.get(key1)
+							const index1 = v1?.findIndex(s => s._id === scheduleId)
+							if (index1 !== undefined && index1 !== -1) {
+								v1?.splice(index1, 1)
+							}
+							const key2 = ownId + "-" + courseDate
+							const v2 = this.schedulesMap.get(key2)
+							if (typeof(v2) !== 'undefined') {
+								v2.push(schedule)
+							}
+						}
+						schedule.date = date
+						schedule.courseDate = courseDate
+						schedule.orgId = orgId
+						schedule.presentIds = presentIds
+						schedule.courseId = courseId
+						schedule.teacherId = teacherId
+						schedule.gradients = gradients
+						schedule.startTime = startTime
+						schedule.endTime = endTime
+						schedule.remind = remind
+						schedule.courseContent = courseContent
+						schedule.previewContent = previewContent
+						schedule.consume = consume
 					}
 				})
 				
-				schedules.forEach(schedule => {
-					if (schedule.courseDate !== courseDate) {
-						const key1 = ownId + "-" + schedule.courseDate
-						const v1 = this.schedulesMap.get(key1)
-						const index1 = v1?.findIndex(s => s._id === scheduleId)
-						if (index1 !== undefined && index1 !== -1) {
-							v1?.splice(index1, 1)
-						}
-						const key2 = ownId + "-" + courseDate
-						const v2 = this.schedulesMap.get(key2)
-						if (typeof(v2) !== 'undefined') {
-							v2.push(schedule)
-						}
-					}
-					schedule.date = date
-					schedule.courseDate = courseDate
-					schedule.orgId = orgId
-					schedule.presentIds = presentIds
-					schedule.courseId = courseId
-					schedule.teacherId = teacherId
-					schedule.gradients = gradients
-					schedule.startTime = startTime
-					schedule.endTime = endTime
-					schedule.remind = remind
-					schedule.courseContent = courseContent
-					schedule.previewContent = previewContent
-					schedule.consume = consume
-				})
 				const offset = consume - preConsume
 				if (status === 1 && offset !== 0) {
 					if (studentId.length > 0) {
