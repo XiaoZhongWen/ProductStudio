@@ -66,14 +66,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useCourseStore } from "@/store/course"
-import { CourseConsumeRecord } from '../../../types/course';
+import { Schedule } from '../../../types/schedule';
 
 const global = getApp().globalData!
 
 const emit = defineEmits(['change'])
 const courseStore = useCourseStore()
 
-const record = ref<CourseConsumeRecord>()
+const record = ref<Schedule>()
 const border = false
 
 const start = ref<number>(Date.now())
@@ -85,22 +85,17 @@ const feedback = ref('')
 
 const courseType = ref()
 
-let rId = ''
-const initial = async (id:string) => {
-	if (typeof(id) === 'undefined' || id.length === 0) {
+const initial = async (schedule:Schedule) => {
+	if (typeof(schedule) === 'undefined') {
 		return
 	}
-	rId = id
-	const res = courseStore.courseConsumeRecords.filter(r => r._id === rId)
-	if (res.length > 0) {
-		record.value = res[0]
-		start.value = record.value.startTime
-		end.value = record.value.endTime
-		count.value = record.value.count
-		content.value = record.value.content ?? ''
-		assignment.value = record.value.assignment ?? ''
-		feedback.value = record.value.feedback ?? ''
-	}
+	record.value = schedule
+	start.value = record.value.startTime
+	end.value = record.value.endTime
+	count.value = record.value.consume
+	content.value = record.value.courseContent ?? ''
+	assignment.value = record.value.assignment ?? ''
+	feedback.value = record.value.feedback ?? ''
 	
 	const courseId = record.value?.courseId ?? ''
 	if (courseId.length > 0) {
@@ -117,8 +112,8 @@ defineExpose({
 })
 
 const onTap = () => {
-	const record = {
-		_id: rId,
+	const _record = {
+		_id: record.value?._id ?? '',
 		startTime: start.value,
 		endTime: end.value,
 		count: count.value,
@@ -150,7 +145,7 @@ const onTap = () => {
 		})
 		return
 	}
-	emit('change', { ...record })
+	emit('change', { ..._record })
 }
 
 </script>

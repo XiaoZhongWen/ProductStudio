@@ -57,7 +57,7 @@
 						<template v-slot:body>
 							<wk-course-record 
 								class="course-record" 
-								:rId="r._id"
+								:record="r"
 								@editAction="onEditAction"
 								@revokeAction="onRevokeAction">
 							</wk-course-record>
@@ -102,14 +102,16 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
+import { useScheduleStore } from "@/store/schedules"
 import { computed, ref } from 'vue';
-import { Course, CourseConsumeRecord } from '../../types/course';
+import { Course } from '../../types/course';
 import { Student, User } from '../../types/user';
 import { Org } from '../../types/org';
 import { Entry } from '../../types/entry';
 import EditCourseRecord from './components/EditCourseRecord.vue'
 import EditPaymentRecord from './components/EditPaymentRecord.vue'
 import { PaymentRecord } from '../../types/PaymentRecord';
+import { Schedule } from '../../types/schedule'
 
 const global = getApp().globalData!
 
@@ -123,13 +125,14 @@ const orgName = ref('')
 const current = ref(0)
 const options = ["课程记录", "续课记录", "请假记录"]
 
-const courseConsumeRecords = ref<CourseConsumeRecord[]>([])
+const courseConsumeRecords = ref<Schedule[]>([])
 const paymentRecords = ref<PaymentRecord[]>([])
 const recordRef = ref(null)
 const paymentRecordRef = ref(null)
 
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
+const scheduleStore = useScheduleStore()
 const useOrgs = useOrgsStore()
 
 const editCourseRecordPopup = ref<{
@@ -190,7 +193,7 @@ onLoad(async (option) => {
 	uni.showLoading({
 		title: "加载中"
 	})
-	courseConsumeRecords.value = await courseStore.fetchCourseConsumeRecords(courseId, student.value._id)
+	courseConsumeRecords.value = await scheduleStore.fetchCourseConsumeRecords(courseId, student.value._id)
 	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
 	uni.hideLoading()
 })
@@ -213,8 +216,12 @@ const onEditAction = (param:{id:string}) => {
 		return
 	}
 	if (recordRef.value) {
-		const instance:InstanceType<typeof EditCourseRecord> = recordRef.value
-		instance.initial(id)
+		const schedules = courseConsumeRecords.value.filter(s => s._id === id)
+		if (schedules.length === 1) {
+			const schedule = schedules[0]
+			const instance:InstanceType<typeof EditCourseRecord> = recordRef.value
+			instance.initial(schedule)
+		}
 	}
 	editCourseRecordPopup.value?.open()
 }
@@ -229,9 +236,12 @@ const onRevokeAction = async (param:{id:string}) => {
 	if (res.length > 0) {
 		const r = res[0]
 		const entryId = entry.value?._id ?? ''
-		const result = await courseStore.revokeCourseConsumeRecord(id, entryId, r.consume)
+		const result = await scheduleStore.revokeCourseConsumeRecord(id, entryId, r.consume)
 		if (result) {
 			flag = true
+			r.operatorId = usersStore.owner._id
+			r.modifyDate = Date.now()
+			r.status = 3
 			if (entry.value) {
 				let consume = entry.value.consume
 				consume -= r.consume
@@ -316,9 +326,18 @@ const onChange = async (
 			r.feedback !== feedback) {
 			const entryId = entry.value?._id ?? ''
 			const delta = r.consume - count
-			const result = await courseStore.modifyCourseConsumeRecord({...param, entryId, delta})
+			const result = await scheduleStore.modifyCourseConsumeRecord({...param, entryId, delta})
 			if (result) {
 				flag = true
+				r.startTime = startTime
+				r.endTime = endTime
+				r.consume = count
+				r.courseContent = content
+				r.assignment = assignment
+				r.feedback = feedback
+				r.operatorId = usersStore.owner._id
+				r.modifyDate = Date.now()
+				r.status = 4
 				if (entry.value && delta !== 0) {
 					let consume = entry.value.consume
 					consume -= delta

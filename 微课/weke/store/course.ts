@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
-import { Course, CourseConsumeRecord } from '@/types/course'
+import { Course } from '@/types/course'
 import { PaymentRecord } from '../types/PaymentRecord'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
+import { Schedule } from '../types/schedule'
+import { yyyyMMdd } from '@/utils/wk-date'
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true
@@ -13,7 +15,7 @@ export const useCourseStore = defineStore('course', {
 		return {
 			courses:[] as Course[],
 			paymentRecords:[] as PaymentRecord[],
-			courseConsumeRecords: [] as CourseConsumeRecord[]
+			courseConsumeRecords: [] as Schedule[]
 		}
 	},
 	getters: {
@@ -172,21 +174,6 @@ export const useCourseStore = defineStore('course', {
 					isFrozen: false
 				}
 				this.paymentRecords.push(payment)
-			}
-			if (courseRecordId.length > 0) {
-				const courseRecord: CourseConsumeRecord = {
-					_id: courseRecordId,
-					courseId,
-					teacherId,
-					studentId,
-					startTime: date,
-					endTime: date,
-					consume,
-					status: 1,
-					operatorId,
-					modifyDate: Date.now()
-				}
-				this.courseConsumeRecords.push(courseRecord)
 			}
 			return entryId
 		},
@@ -387,101 +374,6 @@ export const useCourseStore = defineStore('course', {
 			}
 			const res = await course_co.finishCourse(entryId, operatorId)
 			return res
-		},
-		async fetchCourseConsumeRecords(courseId: string, studentId: string) {
-			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(studentId) === 'undefined' || studentId.length === 0) {
-				return []
-			}
-			const records = this.courseConsumeRecords.filter(r => r.courseId === courseId && r.studentId === studentId)
-			if (records.length === 0) {
-				const res:CourseConsumeRecord[] = await course_co.fetchCourseConsumeRecords(courseId, studentId)
-				if (res.length > 0) {
-					this.courseConsumeRecords.push(...res)
-				}
-				return res.sort((r1, r2) => {
-					return r2.startTime - r1.startTime
-				})
-			} else {
-				return records.sort((r1, r2) => {
-					return r2.startTime - r1.startTime
-				})
-			}
-		},
-		async modifyCourseConsumeRecord(
-			param:{
-				_id:string, 
-				startTime:number,
-				endTime: number,
-				count: number,
-				content: string,
-				assignment: string,
-				feedback: string,
-				entryId: string,
-				delta: number
-		}) {
-			const { _id, startTime, endTime, count, entryId, delta } = param
-			if (typeof(_id) === 'undefined' || 
-				_id.length === 0 ||
-				typeof(startTime) === 'undefined' || 
-				typeof(endTime) === 'undefined' ||
-				typeof(count) === 'undefined') {
-				return false
-			}
-			if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
-				return false
-			}
-			let { content, assignment, feedback } = param
-			if (typeof(content) === 'undefined') {
-				content = ''
-			}
-			if (typeof(assignment) === 'undefined') {
-				assignment = ''
-			}
-			if (typeof(feedback) === 'undefined') {
-				feedback = ''
-			}
-			const usersStore = useUsersStore()
-			const result = await course_co.modifyCourseConsumeRecord({
-				_id, startTime, endTime, count, content, assignment, feedback,
-				operatorId: usersStore.owner._id,
-				entryId, delta
-			})
-			if (result) {
-				const records = this.courseConsumeRecords.filter(r => r._id === _id)
-				if (records.length > 0) {
-					const r = records[0]
-					r.startTime = startTime
-					r.endTime = endTime
-					r.consume = count
-					r.courseContent = content
-					r.assignment = assignment
-					r.feedback = feedback
-					r.operatorId = usersStore.owner._id
-					r.modifyDate = Date.now()
-					r.status = 4
-				}
-			}
-			return result
-		},
-		async revokeCourseConsumeRecord(_id:string, entryId:string, delta:number) {
-			if (typeof(_id) === 'undefined' || _id.length === 0 ||
-				typeof(entryId) === 'undefined' || entryId.length === 0 ||
-				typeof(delta) === 'undefined') {
-				return false
-			}
-			const usersStore = useUsersStore()
-			const result = await course_co.revokeCourseConsumeRecord(_id, usersStore.owner._id, entryId, delta)
-			if (result) {
-				const records = this.courseConsumeRecords.filter(r => r._id === _id)
-				if (records.length > 0) {
-					const r = records[0]
-					r.operatorId = usersStore.owner._id
-					r.modifyDate = Date.now()
-					r.status = 3
-				}
-			}
-			return result
 		}
 	}
 })

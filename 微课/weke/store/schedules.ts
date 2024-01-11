@@ -355,6 +355,67 @@ export const useScheduleStore = defineStore('schedules', {
 				return result
 			}
 		},
+		async fetchCourseConsumeRecords(courseId: string, studentId: string) {
+			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0) {
+				return []
+			}
+			const res:Schedule[] = await schedules_co.fetchCourseConsumeRecords(courseId, studentId)
+			return res.sort((r1, r2) => {
+				return r2.startTime - r1.startTime
+			})
+		},
+		async modifyCourseConsumeRecord(
+			param:{
+				_id:string, 
+				startTime:number,
+				endTime: number,
+				count: number,
+				content: string,
+				assignment: string,
+				feedback: string,
+				entryId: string,
+				delta: number
+		}) {
+			const { _id, startTime, endTime, count, entryId, delta } = param
+			if (typeof(_id) === 'undefined' || 
+				_id.length === 0 ||
+				typeof(startTime) === 'undefined' || 
+				typeof(endTime) === 'undefined' ||
+				typeof(count) === 'undefined') {
+				return false
+			}
+			if (delta !== 0 && (typeof(entryId) === 'undefined' || entryId.length === 0)) {
+				return false
+			}
+			let { content, assignment, feedback } = param
+			if (typeof(content) === 'undefined') {
+				content = ''
+			}
+			if (typeof(assignment) === 'undefined') {
+				assignment = ''
+			}
+			if (typeof(feedback) === 'undefined') {
+				feedback = ''
+			}
+			const usersStore = useUsersStore()
+			const result = await schedules_co.modifyCourseConsumeRecord({
+				_id, startTime, endTime, count, content, assignment, feedback,
+				operatorId: usersStore.owner._id,
+				entryId, delta
+			})
+			return result
+		},
+		async revokeCourseConsumeRecord(_id:string, entryId:string, delta:number) {
+			if (typeof(_id) === 'undefined' || _id.length === 0 ||
+				typeof(entryId) === 'undefined' || entryId.length === 0 ||
+				typeof(delta) === 'undefined') {
+				return false
+			}
+			const usersStore = useUsersStore()
+			const result = await schedules_co.revokeCourseConsumeRecord(_id, usersStore.owner._id, entryId, delta)
+			return result
+		},
 		async dealSchedule(param: {
 			scheduleId: string,
 			orgId: string,

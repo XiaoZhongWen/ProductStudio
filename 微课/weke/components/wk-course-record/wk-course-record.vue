@@ -36,37 +36,37 @@
 			<text class="title">课程反馈:</text>
 			<text class="content">{{r.feedback}}</text>
 		</view>
-		<view class="bottom" v-if="isValidate && r.status !== 3">
+		<!-- <view class="bottom" v-if="isValidate && r.status !== 3">
 			<text class="action" @tap="onEditTap">编辑</text>
 			<text class="action revoke" @tap="onRevokeTap">撤销</text>
-		</view>
+		</view> -->
 	</view>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { CourseConsumeRecord } from '../../types/course';
 import { useCourseStore } from "@/store/course"
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { format } from '@/utils/wk-date'
 import { User } from '../../types/user';
+import { Schedule } from '../../types/schedule';
 
 const global = getApp().globalData!
 
-const props = defineProps(['rId'])
+const props = defineProps(['record'])
 const emit = defineEmits(['editAction', 'revokeAction'])
-const r = ref<CourseConsumeRecord>()
+const r = ref<Schedule>()
 const courseStore = useCourseStore()
 const operator = ref<User>()
 const isValidate = ref(false)
 const courseType = ref(-1)
 
 onMounted(async () => {
-	const res = courseStore.courseConsumeRecords.filter(r => r._id === props.rId)
-	if (res.length > 0) {
-		r.value = res[0]
+	if (typeof(props.record) === 'undefined') {
+		return
 	}
+	r.value = props.record
 	const usersStore = useUsersStore()
 	const users = usersStore.users.filter(user => user._id === r.value?.operatorId)
 	if (users.length > 0) {
@@ -117,7 +117,7 @@ const statusDesc = computed(() => {
 })
 
 const onEditTap = () => {
-	emit('editAction', {'id': props.rId})
+	emit('editAction', {'id': props.record._id})
 }
 
 const onRevokeTap = () => {
@@ -128,7 +128,7 @@ const onRevokeTap = () => {
 		content: content,
 		success: (res) => {
 			if (res.confirm) {
-				emit('revokeAction', {'id': props.rId})
+				emit('revokeAction', {'id': props.record._id})
 			}
 		}
 	})
