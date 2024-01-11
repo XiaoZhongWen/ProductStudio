@@ -77,7 +77,16 @@
 					</uni-list-item>
 				</uni-list>
 				<view v-show="current === 2">
-					Content of Tab 3
+					<uni-list-item v-for="r in absenceRecords" :key="r._id">
+						<template v-slot:body>
+							<wk-course-record 
+								class="course-record" 
+								:record="r"
+								@editAction="onEditAction"
+								@revokeAction="onRevokeAction">
+							</wk-course-record>
+						</template>
+					</uni-list-item>
 				</view>
 			</view>
 		</view>
@@ -127,6 +136,7 @@ const options = ["课程记录", "续课记录", "请假记录"]
 
 const courseConsumeRecords = ref<Schedule[]>([])
 const paymentRecords = ref<PaymentRecord[]>([])
+const absenceRecords = ref<Schedule[]>([])
 const recordRef = ref(null)
 const paymentRecordRef = ref(null)
 
@@ -195,6 +205,7 @@ onLoad(async (option) => {
 	})
 	courseConsumeRecords.value = await scheduleStore.fetchCourseConsumeRecords(courseId, student.value._id)
 	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
+	absenceRecords.value = await scheduleStore.fetchAbsenceRecords(courseId, student.value._id)
 	uni.hideLoading()
 })
 
@@ -408,7 +419,8 @@ const onPaymentChange = async (param:{
 
 const isShow = computed(() => {
 	return (current.value === 0 && courseConsumeRecords.value.length === 0) ||
-			(current.value === 1 && paymentRecords.value.length === 0)
+			(current.value === 1 && paymentRecords.value.length === 0) ||
+			(current.value === 2 && absenceRecords.value.length === 0)
 })
 
 </script>

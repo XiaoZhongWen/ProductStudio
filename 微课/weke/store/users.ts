@@ -586,6 +586,9 @@ export const useUsersStore = defineStore('users', {
 				(orgIds.length > 0? orgIds.includes(entry.orgId): true)
 			)
 			return data
+		},
+		createActivityId() {
+			users_co.createActivityId()
 		}
 	}
 })

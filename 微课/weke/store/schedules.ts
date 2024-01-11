@@ -416,6 +416,16 @@ export const useScheduleStore = defineStore('schedules', {
 			const result = await schedules_co.revokeCourseConsumeRecord(_id, usersStore.owner._id, entryId, delta)
 			return result
 		},
+		async fetchAbsenceRecords(courseId: string, studentId: string) {
+			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+				typeof(studentId) === 'undefined' || studentId.length === 0) {
+				return []
+			}
+			const res:Schedule[] = await schedules_co.fetchAbsenceRecords(courseId, studentId)
+			return res.sort((r1, r2) => {
+				return r2.startTime - r1.startTime
+			})
+		},
 		async dealSchedule(param: {
 			scheduleId: string,
 			orgId: string,

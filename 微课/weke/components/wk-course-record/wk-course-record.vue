@@ -12,34 +12,42 @@
 			<text class="title">操作时间:</text>
 			<text class="desc">{{format(new Date(r.modifyDate))}}</text>
 		</view>
-		<view class="section">
-			<text class="title">开始时间:</text>
-			<text class="desc">{{format(new Date(r.startTime))}}</text>
-		</view>
-		<view class="section">
-			<text class="title">结束时间:</text>
-			<text class="desc">{{format(new Date(r.endTime))}}</text>
-		</view>
-		<view class="section" v-if="courseType !== -1">
-			<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
-			<text class="desc">{{r.consume}}</text>
-		</view>
-		<view class="section area" v-if="r.courseContent">
-			<text class="title">课程内容:</text>
-			<text class="content">{{r.courseContent}}</text>
-		</view>
-		<view class="section area" v-if="r.assignment">
-			<text class="title">课后作业:</text>
-			<text class="content">{{r.assignment}}</text>
-		</view>
-		<view class="section area" v-if="r.feedback">
-			<text class="title">课程反馈:</text>
-			<text class="content">{{r.feedback}}</text>
-		</view>
-		<!-- <view class="bottom" v-if="isValidate && r.status !== 3">
-			<text class="action" @tap="onEditTap">编辑</text>
-			<text class="action revoke" @tap="onRevokeTap">撤销</text>
-		</view> -->
+		<template v-if="r.status === 2">
+			<view class="section">
+				<text class="title">请假时间:</text>
+				<text class="desc">{{absenceDuration}}</text>
+			</view>
+		</template>
+		<template v-else>
+			<view class="section">
+				<text class="title">开始时间:</text>
+				<text class="desc">{{format(new Date(r.startTime))}}</text>
+			</view>
+			<view class="section">
+				<text class="title">结束时间:</text>
+				<text class="desc">{{format(new Date(r.endTime))}}</text>
+			</view>
+			<view class="section" v-if="courseType !== -1">
+				<text class="title">{{courseType === 2? '消耗课次:':'消耗课时:'}}</text>
+				<text class="desc">{{r.consume}}</text>
+			</view>
+			<view class="section area" v-if="r.courseContent">
+				<text class="title">课程内容:</text>
+				<text class="content">{{r.courseContent}}</text>
+			</view>
+			<view class="section area" v-if="r.assignment">
+				<text class="title">课后作业:</text>
+				<text class="content">{{r.assignment}}</text>
+			</view>
+			<view class="section area" v-if="r.feedback">
+				<text class="title">课程反馈:</text>
+				<text class="content">{{r.feedback}}</text>
+			</view>
+			<!-- <view class="bottom" v-if="isValidate && r.status !== 3">
+				<text class="action" @tap="onEditTap">编辑</text>
+				<text class="action revoke" @tap="onRevokeTap">撤销</text>
+			</view> -->
+		</template>
 	</view>
 </template>
 
@@ -48,7 +56,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useCourseStore } from "@/store/course"
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
-import { format } from '@/utils/wk-date'
+import { format, yyyyMMdd, hhmm } from '@/utils/wk-date'
 import { User } from '../../types/user';
 import { Schedule } from '../../types/schedule';
 
@@ -93,12 +101,12 @@ onMounted(async () => {
 const statusCls = computed(() => {
 	let cls = "desc"
 	const status = r.value?.status ?? 1
-	if (status === 1) {
+	if (status === 1 || status === 2) {
 		cls = "consume"
-	} else if (status === 4) {
-		cls = "modify"
 	} else if (status === 3) {
 		cls = "revoke"
+	} else if (status === 4) {
+		cls = "modify"
 	}
 	return cls
 })
@@ -108,12 +116,21 @@ const statusDesc = computed(() => {
 	const status = r.value?.status ?? 1
 	if (status === 1) {
 		desc = "课消"
-	} else if (status === 4) {
-		desc = "已变更"
+	} else if (status === 2) {
+		desc = "请假"
 	} else if (status === 3) {
 		desc = "已撤销"
+	} else if (status === 4) {
+		desc = "已变更"
 	}
 	return desc
+})
+
+const absenceDuration = computed(() => {
+	const schedule = props.record as Schedule
+	const start = schedule.startTime
+	const end = schedule.endTime
+	return yyyyMMdd(new Date(start)) + " " + hhmm(new Date(start)) + " ~ " + hhmm(new Date(end))
 })
 
 const onEditTap = () => {

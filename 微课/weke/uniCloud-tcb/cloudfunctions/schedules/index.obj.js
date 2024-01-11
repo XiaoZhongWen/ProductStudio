@@ -264,6 +264,24 @@ module.exports = {
 		})).get()
 		return result.data
 	},
+	async fetchAbsenceRecords(courseId, studentId) {
+		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
+			typeof(studentId) === 'undefined' || studentId.length === 0) {
+			return []
+		}
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const result = await db.collection('wk-schedules').where(dbCmd.or({
+			status: 2,
+			courseId,
+			studentId
+		}, {
+			status: 2,
+			courseId,
+			presentIds: studentId
+		})).get()
+		return result.data
+	},
 	async modifyCourseConsumeRecord(param) {
 		const { 
 			_id, 

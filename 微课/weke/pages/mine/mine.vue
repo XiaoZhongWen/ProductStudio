@@ -338,6 +338,8 @@ const selectRole = () => {
 }
 
 const onLogin = () => {
+	debugger
+	usersStore.createActivityId()
 	if (usersStore.isLogin) {
 		loginAuthPopup.value?.open()
 	} else {
