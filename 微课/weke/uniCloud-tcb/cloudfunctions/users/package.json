@@ -1,7 +1,8 @@
 {
   "name": "users",
   "dependencies": {
-    "js-md5": "^0.7.3"
+    "js-md5": "^0.7.3",
+    "uni-subscribemsg": "file:../../../uni_modules/uni-subscribemsg/uniCloud/cloudfunctions/common/uni-subscribemsg"
   },
   "extensions": {
     "uni-cloud-jql": {}

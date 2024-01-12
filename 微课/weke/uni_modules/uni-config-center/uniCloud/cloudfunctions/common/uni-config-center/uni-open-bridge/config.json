@@ -1,0 +1,11 @@
+{
+  "schedule": {
+    "__UNI__1226721": {
+      "enable": true,
+      "weixin-mp": {
+        "enable": true,
+        "tasks": ["accessToken"]
+      }
+    }
+  }
+}

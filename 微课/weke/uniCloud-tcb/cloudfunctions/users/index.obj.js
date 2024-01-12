@@ -2,7 +2,7 @@
 // jsdoc语法提示教程：https://ask.dcloud.net.cn/docs/#//ask.dcloud.net.cn/article/129
 // @ts-ignore
 const md5 = require('js-md5')
-const cloud = require('wx-server-sdk')
+const UniSubscribemsg = require('uni-subscribemsg');
 const mp_wx_data = {
 	AppID:'wx53884ee4fcbb9a5b',
 	AppSecret:'5bf343c79753aa2f2d4e9283886b2aa3'
@@ -576,10 +576,31 @@ module.exports = {
 	   return result
    },
    async createActivityId() {
-	   cloud.init({
-	   	env: cloud.DYNAMIC_CURRENT_ENV
+	   let uniSubscribemsg = new UniSubscribemsg({
+		   dcloudAppid: "__UNI__1226721",
+		   provider: "weixin-h5",
 	   })
-	   const activityId = await cloud.openapi.updatableMessage.createActivityId()
-	   return activityId
+	   let res = await uniSubscribemsg.sendSubscribeMessage({
+			touser: "oYqbZ4jrubwgf_pcAV9OqN6WhFaQ",
+		   	template_id: "IEUnM9EBj59XVp8EYl2T6boBuwdciPYbNNDXoxq_N8s",
+		   	page: "pages/calendar/calendar", // 小程序页面地址
+		   	miniprogram_state: "developer", // 跳转小程序类型：developer为开发版；trial为体验版；formal为正式版；默认为正式版
+		   	lang: "zh_CN",
+		   	data: {
+		   		name3: {
+		   			value: "张三"
+		   		},
+		   		thing26: {
+		   			value: "英语"
+		   		},
+		   		time25: {
+		   			value: "2024年01月20日 8:00 ~ 10:00"
+		   		},
+		   		thing16: {
+		   			value: "准备上课了"
+		   		}
+		   	}
+	   })
+	   console.info(res)
    }
 }
