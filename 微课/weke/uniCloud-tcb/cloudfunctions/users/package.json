@@ -1,8 +1,7 @@
 {
   "name": "users",
   "dependencies": {
-    "js-md5": "^0.7.3",
-    "wx-server-sdk": "^2.6.3"
+    "js-md5": "^0.7.3"
   },
   "extensions": {
     "uni-cloud-jql": {}
