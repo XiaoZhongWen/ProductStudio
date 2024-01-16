@@ -4,7 +4,6 @@ import { PaymentRecord } from '../types/PaymentRecord'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from "@/store/orgs"
 import { Schedule } from '../types/schedule'
-import { yyyyMMdd } from '@/utils/wk-date'
 
 const course_co = uniCloud.importObject('course', {
 	customUI: true

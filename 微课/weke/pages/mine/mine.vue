@@ -216,11 +216,6 @@ const account:ListItem[] = computed({
 				to: "/pages/bind/bind?type=mobile"
 			},
 			{
-				type: "upload-filled",
-				name: "邀请",
-				to: "/pages/share/share"
-			},
-			{
 				type: "vip-filled",
 				name: "会员中心",
 				to: "/pages/memberCenter/memberCenter"
@@ -240,11 +235,7 @@ const account:ListItem[] = computed({
 				})
 			}
 		} else {
-			account = [{
-				type: "upload-filled",
-				name: "邀请",
-				to: "/pages/share/share"
-			}]
+			account = []
 		}
 		return account
 	}
@@ -338,7 +329,6 @@ const selectRole = () => {
 }
 
 const onLogin = () => {
-	usersStore.createActivityId()
 	if (usersStore.isLogin) {
 		loginAuthPopup.value?.open()
 	} else {

@@ -580,7 +580,7 @@ module.exports = {
 		   dcloudAppid: "__UNI__1226721",
 		   provider: "weixin-h5",
 	   })
-	   let res = await uniSubscribemsg.sendSubscribeMessage({
+	   let res = await uniSubscribemsg.sendTemplateMessage({
 			touser: "oYqbZ4jrubwgf_pcAV9OqN6WhFaQ",
 		   	template_id: "IEUnM9EBj59XVp8EYl2T6boBuwdciPYbNNDXoxq_N8s",
 		   	page: "pages/calendar/calendar", // 小程序页面地址
