@@ -35,7 +35,7 @@
 				<!-- 有效期 -->
 				<template v-if="usersStore.owner.from === 'wx'">
 					<template v-if="usersStore.isExpired">
-						<text class="expired">123</text>
+						<text class="expired">{{"会员已于" + yyyyMMdd(new Date(usersStore.owner.expireDate)) + "过期"}}</text>
 					</template>
 					<template v-else>
 						<view class="expired">
@@ -59,6 +59,7 @@
 import WkTag from './WkTag.vue'
 import { useUsersStore } from '@/store/users'
 import { computed } from 'vue';
+import { yyyyMMdd } from '@/utils/wk-date'
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()

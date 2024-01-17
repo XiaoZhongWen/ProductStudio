@@ -47,7 +47,7 @@ import { Course } from '../../types/course'
 
 const global = getApp().globalData!
 const courseStore = useCourseStore()
-
+const usersStore = useUsersStore()
 const props = defineProps(['rId'])
 const emit = defineEmits(['editPaymentAction', 'revokePaymentAction'])
 const r = ref<PaymentRecord>()
@@ -60,7 +60,6 @@ onMounted(() => {
 	if (records.length > 0) {
 		r.value = records[0]
 	}
-	const usersStore = useUsersStore()
 	const users = usersStore.users.filter(user => user._id === r.value?.operatorId)
 	if (users.length > 0) {
 		operator.value = users[0]
@@ -135,7 +134,11 @@ const courseDesc = computed(() => {
 const canOperate = computed(() => {
 	const isFrozen = r.value?.isFrozen ?? false
 	const status = r.value?.status ?? 0
-	return isValidate.value && status !== 2 && status !== 3 && !isFrozen
+	return isValidate.value && 
+			status !== 2 && 
+			status !== 3 && 
+			!isFrozen && 
+			!usersStore.isExpired
 })
 
 </script>

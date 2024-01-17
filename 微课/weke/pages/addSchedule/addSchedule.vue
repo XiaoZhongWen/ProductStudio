@@ -192,6 +192,7 @@
 		</view>
 		<view class="finish">
 			<button
+				v-if="!usersStore.isExpired"
 				@tap="onSchedule"
 				class="btn" 
 				type="default">

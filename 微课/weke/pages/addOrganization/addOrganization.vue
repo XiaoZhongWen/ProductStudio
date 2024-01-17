@@ -117,7 +117,7 @@
 			</uni-list>
 		</view>
 		<button 
-			v-if="isCreator"
+			v-if="isCreator && !usersStore.isExpired"
 			class="btn" 
 			type="default" 
 			@tap="onTapAdd">

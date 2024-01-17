@@ -43,6 +43,13 @@
 						}
 						uni.hideLoading()
 						uni.$emit(this.globalData.didFinishedInitialData)
+						if (usersStore.isExpired) {
+							uni.showToast({
+								title: "您的会员已过期, 请续费",
+								duration: 3000,
+								icon: "none"
+							})
+						}
 					}
 				}
 			})

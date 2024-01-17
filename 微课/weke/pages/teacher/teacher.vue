@@ -8,7 +8,7 @@
 		<button
 			@tap.capture="onAddTap"
 			class="add-container" 
-			v-if="usersStore.owner.roles?.includes(1) && isShowAddBtn">
+			v-if="usersStore.owner.roles?.includes(1) && isShowAddBtn && !usersStore.isExpired">
 			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 		</button>
 	</view>

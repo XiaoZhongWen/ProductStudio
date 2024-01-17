@@ -12,6 +12,7 @@ export type User = {
 	roles?: RoleId[],
 	mobile?: string,
 	expireDate: number,
+	isSubscribed: boolean,
 	signature?: string,
 }
 

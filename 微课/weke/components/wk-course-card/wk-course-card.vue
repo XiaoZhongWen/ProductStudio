@@ -55,7 +55,7 @@
 			<view class="left">
 				<text>{{orgName}}</text>
 			</view>
-			<view class="right" @tap.stop="onActionTap">
+			<view v-if="!usersStore.isExpired" class="right" @tap.stop="onActionTap">
 				<text class="action" id="renew">续课</text>
 				<text :class="finishClass" id="finish" v-if="status !== 2">{{status === 1?"已结课":"结课"}}</text>
 				<text :class="revokeClass" id="revoke" v-if="status !== 1">{{status === 2?"已退课":"退课"}}</text>

@@ -3,7 +3,7 @@
 		<view class="top">
 			订阅
 		</view>
-		<view class="body normal" v-if="props.option">
+		<view :class="bodyCls" v-if="props.option">
 			<view class=".iconfont .icon-rmb rmb"></view>
 			<text class="desc">{{desc}}</text>
 			<text class="charge">{{props.option.charge}}</text>
@@ -13,7 +13,7 @@
 
 <script lang="ts" setup>
 import { computed } from '../../../uni_modules/lime-shared/vue';
-const props = defineProps(['option'])
+const props = defineProps(['option', 'selectedOption'])
 
 const desc = computed(() => {
 	let info = ''
@@ -26,6 +26,15 @@ const desc = computed(() => {
 		info = "一个月"
 	}
 	return info
+})
+
+const bodyCls = computed(() => {
+	const { option, selectedOption } = props
+	if (option.type === selectedOption) {
+		return 'body selected'
+	} else {
+		return 'body normal'
+	}
 })
 
 </script>
@@ -71,13 +80,16 @@ const desc = computed(() => {
 			position: absolute;
 			left: 15px;
 			bottom: 15px;
-		}
-		.desc, .charge {
 			font-size: $uni-font-size-base;
-			margin-top: 10px;
+		}
+		.desc {
+			font-size: $uni-font-size-base;
+			margin-top: 15px;
 		}
 		.charge {
 			font-size: 28px;
+			font-weight: bold;
+			margin-top: 5px;
 		}
 	}
 }

@@ -111,7 +111,7 @@
 				</uni-forms-item>
 			</uni-forms>
 		</view>
-		<view :class="bindClass" @tap="onBindCourse">
+		<view v-if="!usersStore.isExpired" :class="bindClass" @tap="onBindCourse">
 			<text>绑定课程</text>
 		</view>
 	</view>

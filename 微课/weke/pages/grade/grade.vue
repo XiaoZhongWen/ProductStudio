@@ -112,7 +112,8 @@ onMounted(async () => {
 const isShowAddBtn = computed(() => {
 	return usersStore.owner._id === userId.value && 
 			(usersStore.owner.roles?.includes(1) ||
-				usersStore.owner.roles?.includes(2))
+				usersStore.owner.roles?.includes(2)) &&
+			!usersStore.isExpired
 })
 
 uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {

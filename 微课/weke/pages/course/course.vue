@@ -19,8 +19,9 @@ const usersStore = useUsersStore()
 // @ts-ignore
 const isShowAddBtn = computed({
 	get() {
-		return usersStore.owner.roles?.includes(1) ||
-				usersStore.owner.roles?.includes(2)
+		return !usersStore.isExpired &&
+				(usersStore.owner.roles?.includes(1) ||
+				usersStore.owner.roles?.includes(2))
 	}
 })
 

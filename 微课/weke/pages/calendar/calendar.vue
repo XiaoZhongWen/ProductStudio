@@ -50,8 +50,9 @@ const selected = ref<CourseTag[]>([])
 const schedules = ref<Schedule[]>([])
 
 const isShowAddBtn = computed(() => {
-	return usersStore.owner.roles?.includes(1) ||
-			usersStore.owner.roles?.includes(2)
+	return !usersStore.isExpired && 
+			(usersStore.owner.roles?.includes(1) ||
+			usersStore.owner.roles?.includes(2))
 })
 
 onMounted(() => {

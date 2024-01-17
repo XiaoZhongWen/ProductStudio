@@ -27,6 +27,7 @@ export const useUsersStore = defineStore('users', {
 				_id: '',
 				identity: '',
 				expireDate: 0,
+				isSubscribed: false,
 				unionid: '',
 				openid: '',
 				session_key: '',
@@ -112,6 +113,7 @@ export const useUsersStore = defineStore('users', {
 								_id, 
 								nickName, 
 								expireDate,
+								isSubscribed,
 								avatarId, 
 								roles, 
 								mobile,  
@@ -120,6 +122,7 @@ export const useUsersStore = defineStore('users', {
 							this.owner._id = _id
 							this.owner.nickName = nickName
 							this.owner.expireDate = expireDate
+							this.owner.isSubscribed = isSubscribed
 							this.owner.avatarId = avatarId
 							if (typeof(roles) !== 'undefined') {
 								this.owner.roles = roles

@@ -48,7 +48,9 @@ onMounted(() => {
 
 const isShowAddBtn = computed(() => {
 	const id = usersStore.owner._id
-	return usersStore.owner.roles?.includes(1) && id === userId.value
+	return usersStore.owner.roles?.includes(1) && 
+			id === userId.value &&
+			!usersStore.isExpired
 })
 
 const onAddTap = () => {
