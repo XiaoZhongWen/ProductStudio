@@ -14,6 +14,15 @@ app.$mount()
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
 import { createPinia } from 'pinia'
+
+uni.$zp = {
+	config: {
+		//配置分页默认pageSize为15
+		'default-page-no': 0,
+		'default-page-size': 10,
+	}
+}
+
 export function createApp() {
   const app = createSSRApp(App)
   app.use(createPinia())

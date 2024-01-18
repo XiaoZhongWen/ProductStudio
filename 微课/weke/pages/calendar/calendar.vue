@@ -1,29 +1,31 @@
 <template>
-	<view class="calendar-container">
-		<wu-calendar
-			:insert="true" 
-			:fold="true"
-			:selected="selected"
-			color="#5073D6"
-			slideSwitchMode="horizontal"
-			@change="calendarChange"
-			@monthSwitch="onMonthSwitch">
-		</wu-calendar>
-		<uni-load-more v-if="isShowLoading" status="loading" />
-		<template v-for="schedule in schedules" :key="schedule._id">
-			<ScheduleCard 
-				class="scheduleCard" 
-				:ownId="usersStore.owner._id"
-				:schedule="schedule" 
-				@tap="onScheduleCardTap(schedule)" />
-		</template>
-		<view
-			class="add-container" 
-			@tap="onAddTap" 
-			v-if="isShowAddBtn">
-			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
+	<z-paging ref="paging" refresher-only @onRefresh="onRefresh">
+		<view class="calendar-container">
+			<wu-calendar
+				:insert="true" 
+				:fold="true"
+				:selected="selected"
+				color="#5073D6"
+				slideSwitchMode="horizontal"
+				@change="calendarChange"
+				@monthSwitch="onMonthSwitch">
+			</wu-calendar>
+			<uni-load-more v-if="isShowLoading" status="loading" />
+			<template v-for="schedule in schedules" :key="schedule._id">
+				<ScheduleCard 
+					class="scheduleCard" 
+					:ownId="usersStore.owner._id"
+					:schedule="schedule" 
+					@tap="onScheduleCardTap(schedule)" />
+			</template>
+			<view
+				class="add-container" 
+				@tap="onAddTap" 
+				v-if="isShowAddBtn">
+				<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
+			</view>
 		</view>
-	</view>
+	</z-paging>
 </template>
 
 <script setup lang="ts">
@@ -48,6 +50,7 @@ const to = ref<number>()
 const isShowLoading = ref(false)
 const selected = ref<CourseTag[]>([])
 const schedules = ref<Schedule[]>([])
+const paging = ref(null)
 
 const isShowAddBtn = computed(() => {
 	return !usersStore.isExpired && 
@@ -60,9 +63,8 @@ onMounted(() => {
 		const date = new Date()
 		from.value = timestampForBeginOfMonth(date)
 		to.value = timestampForEndOfMonth(date)
-		const userId = usersStore.owner._id
-		await scheduleStore.fetchSchedulesDate(userId, from.value, to.value)
-		await scheduleStore.fetchSchedules(userId, yyyyMMdd(date))
+		selectedDate.value = yyyyMMdd(date)
+		loaddata()
 	})
 })
 
@@ -147,6 +149,23 @@ const onScheduleCardTap = (schedule: Schedule) => {
 	uni.navigateTo({
 		url: "/pages/addSchedule/addSchedule?id="+schedule._id + "&ownId=" + userId
 	})
+}
+
+const onRefresh = async () => {
+	await loaddata()
+	paging.value?.complete()
+}
+
+const loaddata = async () => {
+	if (from.value && to.value) {
+		const userId = usersStore.owner._id
+		const key1 = userId + "-" + from.value + "-" + to.value
+		const key2 = userId + "-" + selectedDate.value
+		scheduleStore.scheduleDatesMap.delete(key1)
+		scheduleStore.schedulesMap.delete(key2)
+		await scheduleStore.fetchSchedulesDate(userId, from.value, to.value)
+		await scheduleStore.fetchSchedules(userId, selectedDate.value)
+	}
 }
 
 </script>

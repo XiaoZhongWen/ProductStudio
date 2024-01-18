@@ -1,23 +1,25 @@
 <template>
-	<view class="calendar2-container">
-		<wu-calendar
-			:insert="true" 
-			:fold="true"
-			:selected="selected"
-			color="#5073D6"
-			slideSwitchMode="horizontal"
-			@change="calendarChange"
-			@monthSwitch="onMonthSwitch">
-		</wu-calendar>
-		<uni-load-more v-if="isShowLoading" status="loading" />
-		<template v-for="schedule in schedules" :key="schedule._id">
-			<ScheduleCard 
-				class="scheduleCard" 
-				:ownId="_id"
-				:schedule="schedule" 
-				@tap="onScheduleCardTap(schedule)" />
-		</template>
-	</view>
+	<z-paging ref="paging" refresher-only @onRefresh="onRefresh">
+		<view class="calendar2-container">
+			<wu-calendar
+				:insert="true" 
+				:fold="true"
+				:selected="selected"
+				color="#5073D6"
+				slideSwitchMode="horizontal"
+				@change="calendarChange"
+				@monthSwitch="onMonthSwitch">
+			</wu-calendar>
+			<uni-load-more v-if="isShowLoading" status="loading" />
+			<template v-for="schedule in schedules" :key="schedule._id">
+				<ScheduleCard 
+					class="scheduleCard" 
+					:ownId="_id"
+					:schedule="schedule" 
+					@tap="onScheduleCardTap(schedule)" />
+			</template>
+		</view>
+	</z-paging>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +45,7 @@ const _to = ref(0)
 const selected = ref<CourseTag[]>([])
 const schedules = ref<Schedule[]>([])
 const isShowLoading = ref(false)
+const paging = ref(null)
 
 onLoad(async (option) => {
 	const { id, role } = option as {
@@ -62,8 +65,8 @@ onMounted(async () => {
 	const to = timestampForEndOfMonth(date)
 	_from.value = from
 	_to.value = to
-	await scheduleStore.fetchSchedulesDate(_id.value, from, to)
-	await scheduleStore.fetchSchedules(_id.value, yyyyMMdd(date))
+	selectedDate.value = yyyyMMdd(date)
+	await loaddata()
 	let title = ''
 	if (_role.value === "2") {
 		const users = usersStore.users.filter(u => u._id === _id.value)
@@ -161,6 +164,23 @@ const onScheduleCardTap = (schedule: Schedule) => {
 	uni.navigateTo({
 		url: "/pages/addSchedule/addSchedule?id="+schedule._id + "&ownId=" + _id.value
 	})
+}
+
+const onRefresh = async () => {
+	await loaddata()
+	paging.value?.complete()
+}
+
+const loaddata = async () => {
+	if (_from.value && _to.value) {
+		const userId = usersStore.owner._id
+		const key1 = userId + "-" + _from.value + "-" + _to.value
+		const key2 = userId + "-" + selectedDate.value
+		scheduleStore.scheduleDatesMap.delete(key1)
+		scheduleStore.schedulesMap.delete(key2)
+		await scheduleStore.fetchSchedulesDate(_id.value, _from.value, _to.value)
+		await scheduleStore.fetchSchedules(_id.value, selectedDate.value)
+	}
 }
 
 </script>
