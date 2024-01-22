@@ -1,12 +1,12 @@
 <template>
 	<z-paging ref="paging" v-model="dataList" @query="queryList">
 		<view class="course-component-container" v-if="usersStore.isLogin">
-			<view v-for="item in dataList" :key="item.courseId">
+			<template v-for="item in dataList" :key="item.courseId">
 				<wk-course-item 
 					:courseId="item.courseId" 
 					:orgId="item.orgId">
 				</wk-course-item>
-			</view>
+			</template>
 		</view>
 	</z-paging>
 </template>
@@ -30,9 +30,9 @@ const useOrgs = useOrgsStore()
 
 const props = defineProps(['orgId'])
 
-const idList = ref<string[]>([])
 const dataList = ref<CourseItem[]>([])
 const paging = ref(null)
+const items = ref<CourseItem[]>([])
 
 onMounted(async () => {
 	uni.showLoading({
@@ -143,16 +143,17 @@ const loadAllCourses = async () => {
 			})
 		})
 	}
-	idList.value = courseIds
+	// await courseStore.fetchCourses(courseIds)
+	items.value = courseItems
 }
 
 const queryList = async (pageNo:number, pageSize:number) => {
-	debugger
 	const s = pageNo * pageSize
 	const e = s + pageSize
-	const cIds = idList.value.slice(s, e)
-	const items = await courseStore.fetchCourses(cIds)
-	paging.value?.complete(items);
+	const datas = items.value.slice(s, e)
+	const cIds = datas.map(item => item.courseId)
+	await courseStore.fetchCourses(cIds)
+	paging.value?.complete(datas);
 }
 
 </script>
