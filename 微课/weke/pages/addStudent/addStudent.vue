@@ -65,7 +65,7 @@ onMounted(() => {
 			uni.showToast({
 				title: "请先创建机构",
 				duration: global.duration_toast,
-				icon: "error"
+				icon: "none"
 			})
 		}
 	}
@@ -137,7 +137,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			uni.showToast({
 				title:"该学员已添加",
 				duration:global.duration_toast,
-				icon:"error"
+				icon:"none"
 			})
 		}
 	}

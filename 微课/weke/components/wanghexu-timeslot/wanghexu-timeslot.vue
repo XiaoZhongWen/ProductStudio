@@ -153,7 +153,7 @@ export default {
 					this.close()
 				}else{
 					uni.showToast({
-						icon:"error",
+						icon:"none",
 						title:"结束时间要大于开始时间"
 					})
 				}

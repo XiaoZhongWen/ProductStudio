@@ -175,7 +175,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 		uni.showToast({
 			title:"已添加",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -209,7 +209,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 			uni.showToast({
 				title:"已添加",
 				duration:global.duration_toast,
-				icon:"error"
+				icon:"none"
 			})
 		}
 	}
@@ -235,7 +235,7 @@ const onDelete = async (orgId:string) => {
 	uni.showToast({
 		title:result?"删除成功":"删除失败",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 	selectedId.value = ''
 }

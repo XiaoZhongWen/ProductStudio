@@ -54,7 +54,7 @@ module.exports = {
 			typeof(name) === 'undefined' || name.length === 0 ||
 			typeof(icon) === 'undefined' || icon.length === 0 ||
 			typeof(type) === 'undefined' || ![0, 1, 2, 3].includes(type) ||
-			typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration)) {
+			type !== 2 && (typeof(duration) === 'undefined' || ![30, 35, 40, 45, 50, 60].includes(duration))) {
 			return false
 		}
 		const db = uniCloud.database()

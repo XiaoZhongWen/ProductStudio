@@ -23,7 +23,7 @@ type CourseItem = {
 	courseId: string,
 	orgId: string
 }
-
+const global = getApp().globalData!
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
@@ -34,15 +34,20 @@ const dataList = ref<CourseItem[]>([])
 const paging = ref(null)
 const items = ref<CourseItem[]>([])
 
-onMounted(async () => {
+onMounted(() => {
 	uni.showLoading({
 		title: "加载课程数据"
 	})
-	await loadAllCourses()
+	loadAllCourses()
 	uni.hideLoading()
+	
+	uni.$on(global.event_name.didUpdateOrgCourse, () => {
+		loadAllCourses()
+		paging.value?.reload()
+	})
 })
 
-const loadAllCourses = async () => {
+const loadAllCourses = () => {
 	const courseIds:string[] = []
 	const courseItems:CourseItem[] = []
 	const orgId = props.orgId
@@ -143,7 +148,6 @@ const loadAllCourses = async () => {
 			})
 		})
 	}
-	// await courseStore.fetchCourses(courseIds)
 	items.value = courseItems
 }
 

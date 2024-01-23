@@ -65,7 +65,7 @@ const onConfirm = () => {
 		uni.showToast({
 			title: '请选择角色',
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 	}
 }

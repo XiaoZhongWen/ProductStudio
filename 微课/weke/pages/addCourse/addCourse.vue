@@ -36,7 +36,7 @@ onLoad(async (option) => {
 			uni.showToast({
 				title: "请先创建机构",
 				duration: global.duration_toast,
-				icon: "error"
+				icon: "none"
 			})
 		}
 	}

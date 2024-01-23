@@ -62,7 +62,7 @@ const onAddTap = async () => {
 		uni.showToast({
 			title:"请输入学号",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -97,7 +97,7 @@ const onUnBindTap = async (studentNo:string) => {
 	uni.showToast({
 		title:result?"解绑成功":"解绑失败",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 }
 	

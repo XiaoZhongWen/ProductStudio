@@ -87,7 +87,7 @@ const onDeleteTap = async () => {
 	uni.showToast({
 		title:result?"删除成功":"删除失败",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 	selectedId.value = ''
 	if (result) {

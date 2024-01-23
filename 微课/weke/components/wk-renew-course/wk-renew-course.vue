@@ -224,7 +224,7 @@ const renewCourse = async () => {
 		uni.showToast({
 			title:"课程单价不能小于0",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return false
 	}
@@ -232,7 +232,7 @@ const renewCourse = async () => {
 		uni.showToast({
 			title:"续课数要大于0",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return false
 	}
@@ -268,7 +268,7 @@ const renewCourse = async () => {
 	uni.showToast({
 		title:result?"续课成功":"续课失败",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 	isRenewing.value = false
 	return result

@@ -381,7 +381,7 @@ const createGrade = async () => {
 		uni.showToast({
 			title: "请设置班级名称",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -400,7 +400,7 @@ const createGrade = async () => {
 	uni.showToast({
 		title: result?"添加成功":"添加失败",
 		duration: global.duration_toast,
-		icon: result?"success":"error"
+		icon: result?"success":"none"
 	})
 	if (result) {
 		const grade = {
@@ -455,7 +455,7 @@ const updateGrade = async () => {
 			uni.showToast({
 				title: result?"更新成功":"更新失败",
 				duration: global.duration_toast,
-				icon: result?"success":"error"
+				icon: result?"success":"none"
 			})
 		}
 	}

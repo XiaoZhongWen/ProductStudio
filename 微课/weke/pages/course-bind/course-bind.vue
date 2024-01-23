@@ -321,7 +321,7 @@ const onChange = (e:string) => {
 		uni.showToast({
 			title: "请先添加老师",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 	}
 }
@@ -331,7 +331,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "总课" + (type.value === 2?"次":"时") + "数格式错误",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -339,7 +339,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "已耗课" + (type.value === 2?"次":"时") + "数格式错误",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -347,7 +347,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "单价格式错误",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -355,7 +355,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "总课" + (type.value === 2?"次":"时") + "不能小于0",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -363,7 +363,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "已耗课" + (type.value === 2?"次":"时") + "不能小于0",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -371,7 +371,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: "单价不能小于0",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return
 	}
@@ -398,7 +398,7 @@ const onBindCourse = async () => {
 		uni.showToast({
 			title: result? "绑定成功": "绑定失败",
 			duration: global.duration_toast,
-			icon: result? "success": "error"
+			icon: result? "success": "none"
 		})
 		if (result) {
 			const entry: Entry = {

@@ -322,7 +322,7 @@ const onTapAdd = async () => {
 		uni.showToast({
 			title: orgId.value.length === 0? "机构创建失败": "机构更新失败",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 	}
 }

@@ -42,7 +42,7 @@ const onAddTap = () => {
 		uni.showToast({
 			title:"请输入姓名",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -50,7 +50,7 @@ const onAddTap = () => {
 		uni.showToast({
 			title:"不能包含空格",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -58,7 +58,7 @@ const onAddTap = () => {
 		uni.showToast({
 			title:"请输入手机号",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -66,7 +66,7 @@ const onAddTap = () => {
 		uni.showToast({
 			title:"手机号格式不正确",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -74,7 +74,7 @@ const onAddTap = () => {
 		uni.showToast({
 			title:"不能添加自己",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}

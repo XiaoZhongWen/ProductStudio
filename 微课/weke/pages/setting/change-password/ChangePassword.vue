@@ -46,7 +46,7 @@ const onConfirm = async () => {
 		uni.showToast({
 			title:"请输入原密码",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -56,7 +56,7 @@ const onConfirm = async () => {
 		uni.showToast({
 			title:"新密码长度不能少于6位",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -65,7 +65,7 @@ const onConfirm = async () => {
 		uni.showToast({
 			title:"密码确认输入有误",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -74,7 +74,7 @@ const onConfirm = async () => {
 		uni.showToast({
 			title:"新旧密码不能相同",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -93,7 +93,7 @@ const onConfirm = async () => {
 	uni.showToast({
 		title: result?"密码修改成功":"密码修改失败",
 		duration:global.duration_toast,
-		icon:result?"success":"error"
+		icon:result?"success":"none"
 	})
 }
 

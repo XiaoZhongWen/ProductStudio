@@ -7,7 +7,7 @@ export default function() {
 			if (!usersStore.isLogin) {
 				uni.showToast({
 					title: "请登录",
-					icon:"error"
+					icon:"none"
 				})
 			}
 			return usersStore.isLogin

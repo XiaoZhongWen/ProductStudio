@@ -281,7 +281,7 @@ const onConfirm = async (data: {memberId: string}) => {
 		uni.showToast({
 			title: result?"变更成功":"变更失败",
 			duration: global.duration_toast,
-			icon: result?"success":"error"
+			icon: result?"success":"none"
 		})
 	}
 	popup.value?.close()

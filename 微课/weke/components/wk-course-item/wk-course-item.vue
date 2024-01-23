@@ -11,11 +11,11 @@
 			</wk-circle-progress>
 		</view>
 		<view class="duration" v-if="course">
-			<template v-if="course.type === 2">
-				<text>课程次数: {{course.duration}}次</text>
+			<template v-if="course.type !== 2">
+				<text>课程时长: {{course.duration}}分钟</text>
 			</template>
 			<template v-else>
-				<text>课程时长: {{course.duration}}分钟</text>
+				<view class="placeholder"></view>
 			</template>
 		</view>
 		<view class="bottom" v-if="org">
@@ -149,6 +149,9 @@ const loadProgress = () => {
 		font-size: $uni-font-size-sm;
 		color: $wk-text-color-grey;
 		margin-top: $uni-spacing-col-sm;
+		.placeholder {
+			margin-top: $uni-spacing-col-lg;
+		}
 	}
 	.bottom {
 		display: flex;

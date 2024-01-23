@@ -194,7 +194,7 @@ const onDeleteTap = async () => {
 	uni.showToast({
 		title: result?"删除成功":"删除失败",
 		duration: global.duration_toast,
-		icon: result?"success":"error"
+		icon: result?"success":"none"
 	})
 	if (result) {
 		const index = courses.value.findIndex(course => course._id === longPressCourseId.value)
@@ -206,6 +206,7 @@ const onDeleteTap = async () => {
 			reset()
 		}
 		longPressCourseId.value = ''
+		uni.$emit(global.event_name.didUpdateOrgCourse)
 	}
 }
 
@@ -241,7 +242,7 @@ const validate = () => {
 		uni.showToast({
 			title: "请选择课程类型",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return false
 	}
@@ -249,7 +250,7 @@ const validate = () => {
 		uni.showToast({
 			title: "请输入课程名称",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return false
 	}
@@ -258,7 +259,7 @@ const validate = () => {
 		uni.showToast({
 			title: "请设置课程时长",
 			duration: global.duration_toast,
-			icon: "error"
+			icon: "none"
 		})
 		return false
 	}
@@ -287,7 +288,7 @@ const createCourse = async () => {
 	uni.showToast({
 		title: result?"添加成功":"添加失败",
 		duration: global.duration_toast,
-		icon: result?"success":"error"
+		icon: result?"success":"none"
 	})
 	if (result) {
 		const course = {
@@ -300,6 +301,7 @@ const createCourse = async () => {
 		}
 		courses.value.push(course)
 		reset()
+		uni.$emit(global.event_name.didUpdateOrgCourse)
 	}
 }
 
@@ -335,17 +337,17 @@ const updateCourse = async () => {
 			uni.showToast({
 				title: result?"更新成功":"更新失败",
 				duration: global.duration_toast,
-				icon: result?"success":"error"
+				icon: result?"success":"none"
 			})
 			if (result) {
 				course.name = courseName.value
 				course.icon = selectedIconId.value
 				course.type = type.value
-				course.duration === minutes
-				course.desc === courseDesc.value
-				
+				course.duration = minutes
+				course.desc = courseDesc.value
 				selectedCourseId.value = ''
 				reset()
+				uni.$emit(global.event_name.didUpdateOrgCourse)
 			}
 		}
 	}
@@ -382,6 +384,7 @@ const reset = () => {
 }
 .course-container {
 	display: flex;
+	flex-wrap: wrap;
 	margin: $uni-padding-base;
 	.course-cell {
 		position: relative;

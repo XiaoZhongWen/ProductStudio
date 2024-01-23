@@ -381,7 +381,7 @@ uni.$on(global.event_name.login, async (data) => {
 		uni.showToast({
 			title:"请设置头像",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -394,7 +394,7 @@ uni.$on(global.event_name.login, async (data) => {
 		uni.showToast({
 			title:"请设置昵称",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -422,7 +422,7 @@ uni.$on(global.event_name.login, async (data) => {
 				uni.showToast({
 					title:"用户信息更新失败",
 					duration:global.duration_toast,
-					icon:"error"
+					icon:"none"
 				})
 			}
 		} else {
@@ -440,7 +440,7 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 		uni.showToast({
 			title:"请输入学号",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -449,7 +449,7 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 		uni.showToast({
 			title:"请输入密码",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 		return
 	}
@@ -465,7 +465,7 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 		uni.showToast({
 			title:"学号或密码错误",
 			duration:global.duration_toast,
-			icon:"error"
+			icon:"none"
 		})
 	}
 }

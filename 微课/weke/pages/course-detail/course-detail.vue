@@ -267,7 +267,7 @@ const onRevokeAction = async (param:{id:string}) => {
 	uni.showToast({
 		title: flag? "撤销成功": "撤销失败",
 		duration: global.duration_toast,
-		icon:flag?"success":"error"
+		icon:flag?"success":"none"
 	})
 }
 
@@ -310,7 +310,7 @@ const onRevokePaymentAction = async (param:{id:string}) => {
 	uni.showToast({
 		title: flag? "撤销成功": "撤销失败",
 		duration: global.duration_toast,
-		icon:flag?"success":"error"
+		icon:flag?"success":"none"
 	})
 }
 
@@ -369,7 +369,7 @@ const onChange = async (
 	uni.showToast({
 		title: flag? "修改成功": "修改失败",
 		duration: global.duration_toast,
-		icon:flag?"success":"error"
+		icon:flag?"success":"none"
 	})
 }
 
@@ -413,7 +413,7 @@ const onPaymentChange = async (param:{
 	uni.showToast({
 		title: flag? "修改成功": "修改失败",
 		duration: global.duration_toast,
-		icon:flag?"success":"error"
+		icon:flag?"success":"none"
 	})
 }
 
