@@ -370,7 +370,7 @@ onLoad(async (option) => {
 				selectedTeacherId.value = schedule.teacherId
 			} else {
 				selectedClassId.value = schedule.classId ?? ''
-				students.value = usersStore.students.filter(s => schedule.presentIds?.includes(s._id))
+				students.value = await usersStore.fetchStudentsByIds(schedule.presentIds ?? [])
 				selectedClassCourseId.value = schedule.courseId
 				selectedClassTeacherId.value = schedule.teacherId
 			}
@@ -420,7 +420,7 @@ watch(selectedCourseType, async (type) => {
 		const orgIds = useOrgs.orgs.filter(o => o.creatorId === userId).map(org => org._id)
 		let studentNo = ''
 		if (selectedStudentId.value.length > 0) {
-			const res = usersStore.students.filter(s => s._id === selectedStudentId.value)
+			const res = await usersStore.fetchStudentsByIds([selectedStudentId.value])
 			if (res.length === 1) {
 				studentNo = res[0].studentNo
 			}
@@ -448,7 +448,7 @@ watch(selectedCourseType, async (type) => {
 				}
 			}
 		})
-		students.value = usersStore.students.filter(s => studentIds.includes(s.studentNo))
+		students.value = await usersStore.fetchStudentsByNos(studentIds)
 		if (students.value.length === 1) {
 			const student = students.value[0]
 			selectedStudentId.value = student._id
@@ -480,7 +480,7 @@ watch(selectedCourseType, async (type) => {
 			const courseId = grade.courseId ?? ''
 			const teacherId = grade.teacherId ?? ''
 			if (scheduleId.value.length === 0) {
-				students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+				students.value = await usersStore.fetchStudentsByIds(grade.studentIds ?? [])
 			}
 			courses.value = courseStore.courses.filter(c => c._id === courseId)
 			teachers.value = usersStore.users.filter(u => u._id === teacherId)
@@ -504,7 +504,7 @@ watch(selectedCourseType, async (type) => {
 					teacherIds.push(c.teacherId)
 				}
 			})
-			students.value = usersStore.students.filter(s => studentIds.includes(s._id))
+			students.value = await usersStore.fetchStudentsByIds(studentIds)
 			if (students.value.length === 1) {
 				const student = students.value[0]
 				selectedStudentId.value = student._id
@@ -526,7 +526,7 @@ watch(selectedStudentId, async (sId) => {
 	const courseIds:string[] = []
 	const teacherIds:string[] = []
 	const orgIds = useOrgs.orgs.filter(o => o.creatorId === userId).map(org => org._id)
-	const res = usersStore.students.filter(s => s._id === sId)
+	const res = await usersStore.fetchStudentsByIds([sId])
 	if (res.length === 1) {
 		const student = res[0]
 		usersStore.entries.forEach(e => {
@@ -564,11 +564,11 @@ watch(selectedStudentId, async (sId) => {
 	}
 })
 
-watch(selectedClassId, (classId) => {
+watch(selectedClassId, async (classId) => {
 	const res = grades.value.filter(c => c._id === classId)
 	if (res.length === 1) {
 		const grade = res[0]
-		students.value = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+		students.value = await usersStore.fetchStudentsByIds(grade.studentIds ?? [])
 		courses.value = courseStore.courses.filter(c => c._id === grade.courseId)
 		teachers.value = usersStore.users.filter(u => u._id === grade.teacherId)
 		selectedClassCourseId.value = grade.courseId ?? ''
@@ -776,24 +776,26 @@ const remainCount = computed(() => {
 		if (classes.length === 1) {
 			const c:Grade = classes[0]
 			const res = usersStore.students.filter(s => c.studentIds?.includes(s._id))
-			const studentNos = res.map(s => s.studentNo)
-			let total = 0
-			let consume = 0
-			usersStore.entries.forEach(e => {
-				if (studentNos.includes(e.studentId) &&
-					e.courseId === selectedClassCourseId.value &&
-					e.teacherId === selectedClassTeacherId.value) {
-					total += e.total
-					consume += e.consume
-				}
-			})
-			return total - consume
+			if (res.length > 0) {
+				const studentNos = res.map(s => s.studentNo)
+				let total = 0
+				let consume = 0
+				usersStore.entries.forEach(e => {
+					if (studentNos.includes(e.studentId) &&
+						e.courseId === selectedClassCourseId.value &&
+						e.teacherId === selectedClassTeacherId.value) {
+						total += e.total
+						consume += e.consume
+					}
+				})
+				return total - consume
+			}
 		}
 		return ''
 	}
 })
 
-const onStudentTap = (type:string) => {
+const onStudentTap = async (type:string) => {
 	if (students.value.length < 2 && selectedCourseType.value === 0) {
 		return
 	}
@@ -814,7 +816,7 @@ const onStudentTap = (type:string) => {
 			const res = grades.value.filter(c => c._id === selectedClassId.value)
 			if (res.length === 1) {
 				const grade = res[0]
-				const members = usersStore.students.filter(s => grade.studentIds?.includes(s._id))
+				const members = await usersStore.fetchStudentsByIds(grade.studentIds ?? [])
 				const memberIds = members.map(member => member._id)
 				instance.initial({
 					memberIds: memberIds,
@@ -935,7 +937,7 @@ const onNoticeSwitchChange = (e:{detail:{value: boolean}}) => {
 	isNotice.value = value
 }
 
-const onConfirm = (data: {
+const onConfirm = async (data: {
 	role:string, 
 	type:string, 
 	memberId: string,
@@ -947,7 +949,7 @@ const onConfirm = (data: {
 		if (type === 'single') {
 			selectedStudentId.value = memberId
 		} else if (type === 'multiple-plus') {
-			students.value = usersStore.students.filter(s => memberIds.includes(s._id))
+			students.value = await usersStore.fetchStudentsByIds(memberIds)
 		}
 	} else if (role === 'teacher') {
 		if (selectedCourseType.value === 0) {
