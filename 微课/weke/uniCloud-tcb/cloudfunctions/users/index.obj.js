@@ -395,6 +395,15 @@ module.exports = {
 	   return res.data
    },
    
+   async fetchStudentsByNos(nos) {
+   	   const db = uniCloud.database()
+   	   const dbCmd = db.command
+   	   const res = await db.collection('wk-student').where({
+   	   		studentNo: dbCmd.in(nos)
+   	   }).get()
+   	   return res.data
+   },
+   
    /**
 	* 通过学员学号获取学员信息
 	* @param {Object} studentNo

@@ -35,7 +35,7 @@
 							title: "加载初始数据",
 							mask: true
 						})
-						await usersStore.fetchStudents()
+						// await usersStore.fetchStudents()
 						await usersStore.loadAllEntries()
 						await orgsStore.loadOrgData()
 						if (usersStore.owner.from === 'wx') {

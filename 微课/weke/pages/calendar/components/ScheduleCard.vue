@@ -194,19 +194,26 @@ onMounted(async () => {
 	if (orgs.length === 1) {
 		org.value = orgs[0]
 	}
+	
+	const studentIds = props.schedule.presentIds ?? []
+	if (studentIds.length > 0) {
+		await usersStore.fetchStudentsByIds(studentIds)
+	}
+	
 	const classId = props.schedule.classId ?? ''
 	if (typeof(classId) !== 'undefined' && 
 		classId.length > 0) {
 		const grades = gradesStore.grades.filter(c => c._id === classId)
 		if (grades.length === 1) {
 			grade.value = grades[0]
+			await usersStore.fetchStudentsByIds(grade.value.studentIds ?? [])
 		}
 	} else {
 		const studentId = props.schedule.studentId
 		if (typeof(studentId) !== 'undefined' && 
 			studentId.length > 0) {
-			const res = usersStore.students.filter(s => s._id === studentId)
-			if (res.length === 1) {
+			const res = await usersStore.fetchStudentsByIds([studentId])
+			if (res && res.length === 1) {
 				student.value = res[0]
 			}
 		}

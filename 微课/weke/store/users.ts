@@ -373,6 +373,60 @@ export const useUsersStore = defineStore('users', {
 				}
 			}
 		},
+		async fetchStudentsByIds(ids: string[]) {
+			if (typeof(ids) === 'undefined' || ids.length === 0) {
+				return []
+			}
+			const didLoadIds = this.students.map(s => s._id)
+			const willLoadIds = ids.filter(id => !didLoadIds.includes(id))
+			if (willLoadIds.length === 0) {
+				return this.students.filter(s => ids.includes(s._id))
+			}
+			const students = await users_co.fetchStudentsByIds(willLoadIds) as Student[]
+			for (let item of students) {
+				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+					const res = await uniCloud.getTempFileURL({
+						fileList:[item.avatarId]
+					})
+					if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+						const { tempFileURL } = res.fileList[0]
+						item.avatarUrl = tempFileURL
+					}
+				}
+				const index = this.students.findIndex(stu => stu._id === item._id)
+				if (index === -1) {
+					this.students.push(item)
+				}
+			}
+			return students
+		},
+		async fetchStudentsByNos(nos: string[]) {
+			if (typeof(nos) === 'undefined' || nos.length === 0) {
+				return []
+			}
+			const didLoadNos = this.students.map(s => s.studentNo)
+			const willLoadNos = nos.filter(no => !didLoadNos.includes(no))
+			if (willLoadNos.length === 0) {
+				return this.students.filter(s => nos.includes(s.studentNo))
+			}
+			const students = await users_co.fetchStudentsByNos(willLoadNos) as Student[]
+			for (let item of students) {
+				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+					const res = await uniCloud.getTempFileURL({
+						fileList:[item.avatarId]
+					})
+					if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+						const { tempFileURL } = res.fileList[0]
+						item.avatarUrl = tempFileURL
+					}
+				}
+				const index = this.students.findIndex(stu => stu._id === item._id)
+				if (index === -1) {
+					this.students.push(item)
+				}
+			}
+			return students
+		},
 		// 根据学号获取学员记录
 		async fetchStudentByNo(studentNo:string) {
 			if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
