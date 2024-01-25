@@ -32,30 +32,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useUsersStore } from "@/store/users"
+import { Student } from '../../../types/user';
 
 const global = getApp().globalData!
 const studentNo = ref('')
 const usersStore = useUsersStore()
+const students = ref<Student[]>([])
 
-// @ts-ignore
- const students:Student[] = computed({
-	 get() {
-		 if (usersStore.owner.from === 'wx') {
-			 const roles = usersStore.owner.roles ?? []
-			 if (roles.includes(3)) {
-				const id = usersStore.owner._id
-				const result = usersStore.students.filter(student => student.associateIds?.includes(id))
-			 	return result
-			 } else {
-				return []
-			 }
-		 } else {
-			return [] 
-		 }
-	 }
- })
+onMounted(async () => {
+	if (usersStore.owner.from === 'wx') {
+		const roles = usersStore.owner.roles ?? []
+		if (roles.includes(3)) {
+			const id = usersStore.owner._id
+			students.value = await usersStore.fetchChildren(id)
+		}
+	}
+})
 
 const onAddTap = async () => {
 	if (studentNo.value.length === 0) {

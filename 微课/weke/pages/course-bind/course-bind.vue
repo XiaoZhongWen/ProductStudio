@@ -23,12 +23,7 @@
 	<template v-for="entry in entries" :key="entry._id">
 		<wk-course-card
 			forStudent
-			:entryId="entry._id"
-			:courseId="entry.courseId"
-			:teacherId="entry.teacherId"
-			:orgId="entry.orgId"
-			:total="entry.total"
-			:consume="entry.consume">
+			:entry="entry">
 		</wk-course-card>
 	</template>
 	<uni-section title="绑定课程" type="line" v-if="canBindCourse && courseSelectorData.length > 0">

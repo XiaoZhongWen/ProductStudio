@@ -125,6 +125,7 @@ const is_mask_click = ref(false)
 const usersStore = useUsersStore()
 const orgsStore = useOrgsStore()
 const global = getApp().globalData!
+const students = ref<Student[]>([])
 
 let inviteOrgId = ''
 let invitePhoneNumber = ''
@@ -240,26 +241,8 @@ const account:ListItem[] = computed({
 		return account
 	}
 })
-
- // @ts-ignore
- const students:Student[] = computed({
-	 get() {
-		 if (usersStore.owner.from === 'wx') {
-			 const roles = usersStore.owner.roles ?? []
-			 if (roles.includes(3)) {
-				const id = usersStore.owner._id
-				const result = usersStore.students.filter(student => student.associateIds?.includes(id))
-			 	return result
-			 } else {
-				return []
-			 }
-		 } else {
-			return [] 
-		 }
-	 }
- })
  
- const other:ListItem[] = [
+const other:ListItem[] = [
 	 {
 	 	type: "navigate-filled",
 	 	name: "新手指南",
@@ -280,10 +263,15 @@ const account:ListItem[] = computed({
 	 	name: "设置",
 	 	to: "/pages/setting/setting"
 	 }
- ]
+]
 
-onMounted(() => {
+onMounted(async () => {
+	uni.showLoading({
+		title: "加载中"
+	})
 	selectRole()
+	await fetchChildren()
+	uni.hideLoading()
 })
 
 // @ts-ignore
@@ -478,6 +466,7 @@ const nickNameBrief = (nickName:string) => {
 
 uni.$on(global.event_name.didSelectedRole, () => {
 	selectRolePopup.value?.close()
+	fetchChildren()
 })
 
 uni.$on(global.event_name.selectRole, () => {
@@ -490,13 +479,24 @@ const loadInitialData = async () => {
 		title: "正在加载初始数据",
 		mask: true
 	})
-	await usersStore.fetchStudents()
 	await usersStore.loadAllEntries()
 	await orgsStore.loadOrgData()
 	if (usersStore.owner.from === 'wx') {
 		await orgsStore.fetchAnonymousOrg()
 	}
 	uni.hideLoading()
+}
+
+const fetchChildren = async () => {
+	if (usersStore.owner.from === 'wx') {
+		const roles = usersStore.owner.roles ?? []
+		if (roles.includes(3)) {
+			const id = usersStore.owner._id
+			students.value = await usersStore.fetchChildren(id)
+			return
+		}
+	}
+	students.value = []
 }
 
 </script>

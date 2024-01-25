@@ -114,7 +114,7 @@ onLoad(async (option) => {
 		})
 	}
 	
-	courses.forEach(c => {
+	courses.forEach(async c => {
 		let orgId = ''
 		let orgName = ''
 		let studentNos:string[] = []
@@ -139,7 +139,7 @@ onLoad(async (option) => {
 			orgName = org.name
 		}
 		
-		const students = usersStore.students.filter(s => studentNos.includes(s.studentNo))
+		const students = await usersStore.fetchStudentsByNos(studentNos)
 		const info: MemberCourseInfo = {
 			id: c._id,
 			orgId,

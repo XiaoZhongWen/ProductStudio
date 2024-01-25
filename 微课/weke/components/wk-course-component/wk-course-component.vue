@@ -18,6 +18,7 @@ import { useCourseStore } from "@/store/course"
 import { onMounted, ref } from "../../uni_modules/lime-shared/vue";
 import { Org } from "../../types/org";
 import { Entry } from "../../types/entry";
+import { Student } from "../../types/user";
 
 type CourseItem = {
 	courseId: string,
@@ -41,13 +42,13 @@ onMounted(() => {
 	loadAllCourses()
 	uni.hideLoading()
 	
-	uni.$on(global.event_name.didUpdateOrgCourse, () => {
-		loadAllCourses()
+	uni.$on(global.event_name.didUpdateOrgCourse, async () => {
+		await loadAllCourses()
 		paging.value?.reload()
 	})
 })
 
-const loadAllCourses = () => {
+const loadAllCourses = async () => {
 	const courseIds:string[] = []
 	const courseItems:CourseItem[] = []
 	const orgId = props.orgId
@@ -103,7 +104,7 @@ const loadAllCourses = () => {
 			}
 			if (roles?.length === 1 && roles.includes(3)) {
 				// 家长 - 孩子上的所有课程
-				const students = usersStore.students.filter(student => student.associateIds?.includes(userId))
+				const students = await usersStore.fetchChildren(userId) as Student[]
 				students.forEach(student => {
 					const result = usersStore.entries.filter(entry => entry.studentId === student.studentNo)
 					result.forEach(entry => {

@@ -47,6 +47,7 @@ export const useUsersStore = defineStore('users', {
 				tempFileUrl: ''
 			},
 			students: [] as Student[],
+			children: [] as Student[],
 			users: [] as User[],
 			entries: [] as Entry[]
 		}
@@ -379,26 +380,25 @@ export const useUsersStore = defineStore('users', {
 			}
 			const didLoadIds = this.students.map(s => s._id)
 			const willLoadIds = ids.filter(id => !didLoadIds.includes(id))
-			if (willLoadIds.length === 0) {
-				return this.students.filter(s => ids.includes(s._id))
-			}
-			const students = await users_co.fetchStudentsByIds(willLoadIds) as Student[]
-			for (let item of students) {
-				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
-					const res = await uniCloud.getTempFileURL({
-						fileList:[item.avatarId]
-					})
-					if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
-						const { tempFileURL } = res.fileList[0]
-						item.avatarUrl = tempFileURL
+			if (willLoadIds.length > 0) {
+				const students = await users_co.fetchStudentsByIds(willLoadIds) as Student[]
+				for (let item of students) {
+					if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+						const res = await uniCloud.getTempFileURL({
+							fileList:[item.avatarId]
+						})
+						if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+							const { tempFileURL } = res.fileList[0]
+							item.avatarUrl = tempFileURL
+						}
+					}
+					const index = this.students.findIndex(stu => stu._id === item._id)
+					if (index === -1) {
+						this.students.push(item)
 					}
 				}
-				const index = this.students.findIndex(stu => stu._id === item._id)
-				if (index === -1) {
-					this.students.push(item)
-				}
 			}
-			return students
+			return this.students.filter(s => ids.includes(s._id))
 		},
 		async fetchStudentsByNos(nos: string[]) {
 			if (typeof(nos) === 'undefined' || nos.length === 0) {
@@ -406,26 +406,25 @@ export const useUsersStore = defineStore('users', {
 			}
 			const didLoadNos = this.students.map(s => s.studentNo)
 			const willLoadNos = nos.filter(no => !didLoadNos.includes(no))
-			if (willLoadNos.length === 0) {
-				return this.students.filter(s => nos.includes(s.studentNo))
-			}
-			const students = await users_co.fetchStudentsByNos(willLoadNos) as Student[]
-			for (let item of students) {
-				if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
-					const res = await uniCloud.getTempFileURL({
-						fileList:[item.avatarId]
-					})
-					if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
-						const { tempFileURL } = res.fileList[0]
-						item.avatarUrl = tempFileURL
+			if (willLoadNos.length > 0) {
+				const students = await users_co.fetchStudentsByNos(willLoadNos) as Student[]
+				for (let item of students) {
+					if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+						const res = await uniCloud.getTempFileURL({
+							fileList:[item.avatarId]
+						})
+						if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+							const { tempFileURL } = res.fileList[0]
+							item.avatarUrl = tempFileURL
+						}
+					}
+					const index = this.students.findIndex(stu => stu._id === item._id)
+					if (index === -1) {
+						this.students.push(item)
 					}
 				}
-				const index = this.students.findIndex(stu => stu._id === item._id)
-				if (index === -1) {
-					this.students.push(item)
-				}
 			}
-			return students
+			return this.students.filter(s => nos.includes(s.studentNo))
 		},
 		// 根据学号获取学员记录
 		async fetchStudentByNo(studentNo:string) {
@@ -445,6 +444,45 @@ export const useUsersStore = defineStore('users', {
 				this.students.push(student)
 			}
 			return student
+		},
+		async fetchStudentIdsByNos(studentNos: string[]) {
+			if (typeof(studentNos) === 'undefined' || studentNos.length === 0) {
+				return []
+			}
+			const didLoadNos = this.students.map(s => s.studentNo)
+			const willLoadNos = studentNos.filter(no => !didLoadNos.includes(no))
+			if (willLoadNos.length > 0) {
+				await this.fetchStudentsByNos(willLoadNos)
+			}
+			return this.students.filter(s => studentNos.includes(s.studentNo))
+								.map(s => s._id)
+		},
+		async fetchChildren(associateId:string) {
+			if (typeof(associateId) === 'undefined' || associateId.length === 0) {
+				return []
+			}
+			if (associateId === this.owner._id && this.children.length > 0) {
+				return this.children
+			}
+			const data = await users_co.fetchChildren(associateId)
+			if (typeof(data) !== 'undefined' && data.length > 0) {
+				for (let item of data) {
+					if (typeof(item.avatarId) !== 'undefined' && item.avatarId.length > 0) {
+						const res = await uniCloud.getTempFileURL({
+							fileList:[item.avatarId]
+						})
+						if (typeof(res.fileList) !== 'undefined' && res.fileList.length > 0) {
+							const { tempFileURL } = res.fileList[0]
+							item.avatarUrl = tempFileURL
+						}
+					}
+					const index = this.children.findIndex(stu => stu._id === item._id)
+					if (index === -1) {
+						this.children.push(item)
+					}
+				}
+			}
+			return data
 		},
 		async fetchUserByPhoneNumber(phoneNumber: string) {
 			if (typeof(phoneNumber) === 'undefined' || phoneNumber.length === 0) {

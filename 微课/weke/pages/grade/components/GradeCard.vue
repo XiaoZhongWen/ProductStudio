@@ -78,9 +78,12 @@ const loadGradeData = async () => {
 	if (grades.length === 1) {
 		grade.value = grades[0]
 	}
-	const courses = courseStore.courses.filter(c => c._id === grade.value?.courseId)
-	if (courses.length === 1) {
-		course.value = courses[0]
+	if (grade.value?.courseId) {
+		const courseIds = [grade.value.courseId] ?? []
+		const courses = await courseStore.fetchCourses(courseIds)
+		if (courses.length === 1) {
+			course.value = courses[0]
+		}
 	}
 	const teacherId = grade.value?.teacherId ?? ''
 	if (teacherId.length > 0) {
@@ -89,7 +92,7 @@ const loadGradeData = async () => {
 			teacher.value = users[0]
 		}
 	}
-	students.value = usersStore.students.filter(s => grade.value?.studentIds?.includes(s._id))
+	students.value = await usersStore.fetchStudentsByIds(grade.value?.studentIds ?? [])
 }
 
 const onTap = (studentId:string) => {

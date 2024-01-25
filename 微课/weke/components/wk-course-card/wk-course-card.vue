@@ -12,10 +12,10 @@
 				v-if="status === 0">
 			</uni-icons> -->
 			<wk-circle-progress 
-				v-if="props.forStudent && entry" 
+				v-if="props.forStudent && props.entry" 
 				class="circle-progress"
-				:total="entry.total"
-				:consume="entry.consume">
+				:total="props.entry.total"
+				:consume="props.entry.consume">
 			</wk-circle-progress>
 		</view>
 		<view class="courseType">
@@ -77,7 +77,7 @@
 		<uni-popup ref="renewPopup" type="bottom" id="renewPopup">
 			<wk-renew-course
 				id="course"
-				:entryId="props.entryId"
+				:entryId="props.entry._id"
 				@onConfirm="onRenewConfirm">
 			</wk-renew-course>
 		</uni-popup>
@@ -117,7 +117,7 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
-const props = defineProps(['forStudent', 'entryId', 'courseId', 'teacherId', 'orgId', 'total', 'consume'])
+const props = defineProps(['forStudent', 'entry'])
 const global = getApp().globalData!
 
 const popup = ref<{
@@ -133,16 +133,16 @@ const renewPopup = ref<{
 onMounted(async () => {
 	if (typeof(props.forStudent) !== 'undefined' && 
 		props.forStudent &&
-		typeof(props.teacherId) !== 'undefined' && 
-		props.teacherId.length > 0) {
-		const res = await usersStore.fetchUsers([props.teacherId]) as User[]
+		typeof(props.entry.teacherId) !== 'undefined' && 
+		props.entry.teacherId.length > 0) {
+		const res = await usersStore.fetchUsers([props.entry.teacherId]) as User[]
 		if (res.length > 0) {
 			teacher.value = res[0]
 		}
 	}
-	if (typeof(props.courseId) !== 'undefined' && 
-		props.courseId.length > 0) {
-		const res = await courseStore.fetchCourses([props.courseId])
+	if (typeof(props.entry.courseId) !== 'undefined' && 
+		props.entry.courseId.length > 0) {
+		const res = await courseStore.fetchCourses([props.entry.courseId])
 		if (res.length > 0) {
 			course.value = res[0]
 			if (course.value.type === 0) {
@@ -160,9 +160,9 @@ onMounted(async () => {
 			display.value = true
 		}
 	}
-	if (typeof(props.orgId) !== 'undefined' &&
-		props.orgId.length > 0) {
-		org.value = useOrgs.fetchOrgById(props.orgId)
+	if (typeof(props.entry.orgId) !== 'undefined' &&
+		props.entry.orgId.length > 0) {
+		org.value = useOrgs.fetchOrgById(props.entry.orgId)
 		const userId = usersStore.owner._id
 		isCreator.value = org.value.creatorId === userId
 		const roles = usersStore.owner.roles ?? []
@@ -174,15 +174,14 @@ onMounted(async () => {
 		canReplaceTeacher.value = isCreator.value && hasAdminOrTeacherRole.value && teacherIds.value.length > 1
 		orgName.value = org.value.name
 	}
-	const entries = usersStore.entries.filter(entry => entry._id === props.entryId)
-	if (entries.length > 0) {
-		entry.value = entries[0]
-		status.value = entry.value.status
-		const operatorId = entry.value.operatorId
+	if (typeof(props.entry) !== 'undefined') {
+		entry.value = props.entry
+		status.value = props.entry.status
+		const operatorId = props.entry.operatorId
 		const users = await usersStore.fetchUsers([operatorId]) as User[]
 		if (users.length > 0) {
 			operator.value = users[0]
-			const timestamp = entry.value.modifyDate
+			const timestamp = props.entry.modifyDate
 			const date = new Date(timestamp)
 			operateTime.value = format(date)
 		}
@@ -313,7 +312,7 @@ const onActionTap = (e:UniHelper.EventTarget) => {
 
 const finishCourse = async () => {
 	// 1. 检查剩余课时
-	const count = props.total - props.consume
+	const count = props.entry.total - props.entry.consume
 	if (count > 0) {
 		uni.showToast({
 			title:"还剩余" + count + (course.value?.type === 2? "课次":"课时") + "，不能结课",

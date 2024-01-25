@@ -282,7 +282,7 @@ const onAddTap = () => {
 	}
 }
 
-const onAddStudent = () => {
+const onAddStudent = async () => {
 	if (selectedCourseId.value.length === 0) {
 		uni.showToast({
 			title: "请选择课程",
@@ -309,8 +309,7 @@ const onAddStudent = () => {
 			}
 		}
 	})
-	const result = usersStore.students.filter(student => studentNos.includes(student.studentNo))
-	const studentIds = result.map(student => student._id)
+	const studentIds = await usersStore.fetchStudentIdsByNos(studentNos)
 	if (studentIds.length === 0) {
 		const cItems = courseSelectorData.value.filter(item => item.value === selectedCourseId.value)
 		const tItems = teacherSelectorData.value.filter(item => item.value === selectedTeacherId.value)

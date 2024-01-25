@@ -120,7 +120,7 @@ const initial = async (data:{
 	if (role === 'teacher') {
 		members.value = await usersStore.fetchUsers(memberIds ?? []) as User[]
 	} else if (role === 'student') {
-		members.value = usersStore.students.filter(student => memberIds.includes(student._id)) as Student[]
+		members.value = await usersStore.fetchStudentsByIds(memberIds) as Student[]
 	} else if (role === 'course') {
 		members.value = courseStore.courses.filter(c => memberIds.includes(c._id)) as Course[]
 	} else if (role === 'class') {
@@ -203,7 +203,7 @@ const confirmDesc = computed(() => {
 	if (chooseType.value === "multiple-plus") {
 		return "确定"
 	} else if (selectedId.value.length > 0 || selectedIds.value.length > 0) {
-		return chooseType.value === 'single'? '确定': '确定' + '（' + count + ')'				
+		return chooseType.value === 'single'? '确定': '确定' + '（' + count.value + ')'				
 	}
 	return ""
 })

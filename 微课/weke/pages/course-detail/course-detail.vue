@@ -353,7 +353,6 @@ const onChange = async (
 					let consume = entry.value.consume
 					consume -= delta
 					entry.value.consume = consume
-					usersStore.entries
 					uni.$emit(global.event_name.didUpdateCourseData, {
 						studentNo:entry.value.studentId,
 						courseId: entry.value.courseId

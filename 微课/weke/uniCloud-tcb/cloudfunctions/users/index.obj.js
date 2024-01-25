@@ -2,6 +2,7 @@
 // jsdoc语法提示教程：https://ask.dcloud.net.cn/docs/#//ask.dcloud.net.cn/article/129
 // @ts-ignore
 const md5 = require('js-md5')
+const { type } = require('os');
 const UniSubscribemsg = require('uni-subscribemsg');
 const mp_wx_data = {
 	AppID:'wx53884ee4fcbb9a5b',
@@ -434,6 +435,17 @@ module.exports = {
 	   		user = res.data[0]
 	   }
 	   return user
+   },
+   
+   async fetchChildren(associateId) {
+	   if (typeof(associateId) === 'undefined' || associateId.length === 0) {
+		   return []
+	   }
+	   const db = uniCloud.database()
+	   const res = await db.collection('wk-student').where({
+	   		associateIds: associateId
+	   }).get()
+	   return res.data
    },
    
    /**

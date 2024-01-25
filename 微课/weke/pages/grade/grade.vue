@@ -1,12 +1,14 @@
 <template>
 	<view class="grade-container">
-		<template v-for="item in gradeList" :key="item.gradeId">
-			<GradeCard
-				@tap="onTap(item.gradeId)"
-				:gradeId="item.gradeId"
-				:orgId="item.orgId"
-			/>
-		</template>
+		<z-paging ref="paging" v-model="dataList" @query="queryList">
+			<template v-for="item in dataList" :key="item.gradeId">
+				<GradeCard
+					@tap="onTap(item.gradeId)"
+					:gradeId="item.gradeId"
+					:orgId="item.orgId"
+				/>
+			</template>
+		</z-paging>
 		<view
 			class="add-container" 
 			@tap="onAddTap" 
@@ -36,8 +38,10 @@ const useOrgs = useOrgsStore()
 const useGrades = useGradesStore()
 
 const gradeList = ref<GradeItem[]>([])
+const dataList = ref<GradeItem[]>([])
 const userId = ref(usersStore.owner._id)
 const organizationId = ref('')
+const paging = ref(null)
 
 onLoad(async (option) => {
 	const { id, orgId } = option as { 
@@ -53,6 +57,58 @@ onLoad(async (option) => {
 })
 
 onMounted(async () => {
+	uni.showLoading({
+		title: "加载班级数据"
+	})
+	await loaddata()
+	uni.hideLoading()
+})
+
+const isShowAddBtn = computed(() => {
+	return usersStore.owner._id === userId.value && 
+			(usersStore.owner.roles?.includes(1) ||
+				usersStore.owner.roles?.includes(2)) &&
+			!usersStore.isExpired
+})
+
+uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {
+	const { gradeId, orgId } = data
+	if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
+		typeof(orgId) === 'undefined' || orgId.length === 0) {
+		return
+	}
+	const item = {
+		gradeId: gradeId,
+		orgId: orgId
+	}
+	gradeList.value.push(item)
+	paging.value?.reload()
+})
+
+const onAddTap = () => {
+	let url = "/pages/addGrade/addGrade"
+	if (organizationId.value.length > 0) {
+		url = "/pages/addGrade/addGrade?orgId=" + organizationId.value
+	}
+	uni.navigateTo({
+		url
+	})
+}
+
+const onTap = (gradeId:string) => {
+	uni.navigateTo({
+		url: "/pages/addGrade/addGrade?gradeId="+gradeId
+	})
+}
+
+const queryList = (pageNo:number, pageSize:number) => {
+	const s = pageNo * pageSize
+	const e = s + pageSize
+	const data = gradeList.value.slice(s, e)
+	paging.value?.complete(data)
+}
+
+const loaddata = async () => {
 	const roles = usersStore.owner.roles
 	if (organizationId.value.length === 0) {
 		if (userId.value === usersStore.owner._id) {
@@ -107,42 +163,6 @@ onMounted(async () => {
 			})
 		})
 	}
-})
-
-const isShowAddBtn = computed(() => {
-	return usersStore.owner._id === userId.value && 
-			(usersStore.owner.roles?.includes(1) ||
-				usersStore.owner.roles?.includes(2)) &&
-			!usersStore.isExpired
-})
-
-uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {
-	const { gradeId, orgId } = data
-	if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
-		typeof(orgId) === 'undefined' || orgId.length === 0) {
-		return
-	}
-	const item = {
-		gradeId: gradeId,
-		orgId: orgId
-	}
-	gradeList.value.push(item)
-})
-
-const onAddTap = () => {
-	let url = "/pages/addGrade/addGrade"
-	if (organizationId.value.length > 0) {
-		url = "/pages/addGrade/addGrade?orgId=" + organizationId.value
-	}
-	uni.navigateTo({
-		url
-	})
-}
-
-const onTap = (gradeId:string) => {
-	uni.navigateTo({
-		url: "/pages/addGrade/addGrade?gradeId="+gradeId
-	})
 }
 
 </script>

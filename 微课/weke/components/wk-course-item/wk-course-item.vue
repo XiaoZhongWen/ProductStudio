@@ -32,6 +32,7 @@ import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
+import { Student } from '../../types/user';
 
 const global = getApp().globalData!
 
@@ -83,12 +84,12 @@ onMounted(async () => {
 	})
 })
 
-const loadProgress = () => {
+const loadProgress = async () => {
 	const roles = usersStore.owner.roles
 	const userId = usersStore.owner._id
 	const entries = usersStore.entries.filter(entry => entry.courseId === props.courseId &&
 														entry.orgId === props.orgId)
-	const children = usersStore.students.filter(student => student.associateIds?.includes(userId))
+	const children = await usersStore.fetchChildren(userId) as Student[]
 	const childNos = children.map(child => child.studentNo)
 	let totalValue = 0
 	let consumeValue = 0
