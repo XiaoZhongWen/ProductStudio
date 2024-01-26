@@ -111,6 +111,7 @@ const useOrgs = useOrgsStore()
 const studentAvatarUrl = ref('')
 const studentNickname = ref('')
 const studentNo = ref('')
+const studentId = ref('')
 const teacherAvatarUrl = ref('')
 const teacherNickname = ref('')
 const orgId = ref('')
@@ -153,6 +154,7 @@ onMounted(async () => {
 			studentAvatarUrl.value = student.avatarUrl ?? ''
 			studentNickname.value = student.nickName
 			studentNo.value = student.studentNo
+			studentId.value = student._id
 			
 			const teachers = await usersStore.fetchUsers([entry.value.teacherId]) as User[]
 			if (teachers.length === 1) {
@@ -239,7 +241,7 @@ const renewCourse = async () => {
 	isRenewing.value = true
 	const id = await courseStore.addPaymentRecord({
 		orgId: orgId.value,
-		studentId: studentNo.value,
+		studentId: studentId.value,
 		date: Date.now(),
 		courseId: courseId.value,
 		count: renewCount.value,
@@ -275,7 +277,7 @@ const renewCourse = async () => {
 }
 
 const fetchLastestPaymentRecord = async (courseId:string, studentId:string) => {
-	const records = await courseStore.fetchPaymentRecords(courseId, studentId)
+	const records = await courseStore.fetchPaymentRecords(courseId, studentId, Date.now())
 	if (records.length > 0) {
 		records.sort((r1, r2) => {
 			return r2.date - r1.date

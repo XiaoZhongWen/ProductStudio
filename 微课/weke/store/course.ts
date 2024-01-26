@@ -347,21 +347,19 @@ export const useCourseStore = defineStore('course', {
 			const result = await course_co.changeCourseTeacher(entryId, teacherId)
 			return result
 		},
-		async fetchPaymentRecords(courseId:string, studentNo:string) {
+		async fetchPaymentRecords(courseId:string, studentNo:string, before:number) {
 			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(studentNo) === 'undefined' || studentNo.length === 0) {
+				typeof(studentNo) === 'undefined' || studentNo.length === 0 ||
+				typeof(before) === 'undefined') {
 				return []
 			}
-			let records = this.paymentRecords.filter(r => r.courseId === courseId && r.studentId === studentNo)
-			if (records.length === 0) {
-				records = await course_co.fetchPaymentRecords(courseId, studentNo)
-				if (records.length > 0) {
-					const res = this.paymentRecords.filter(r => r.courseId === courseId && r.studentId === studentNo)
-					if (res.length === 0) {
-						this.paymentRecords.push(...records)
-					}
+			let records = await course_co.fetchPaymentRecords(courseId, studentNo, before) as PaymentRecord[]
+			records.forEach(r => {
+				const index = this.paymentRecords.findIndex(item => item._id === r._id)
+				if (index === -1) {
+					this.paymentRecords.push(r)
 				}
-			}
+			})
 			return records.sort((r1, r2) => {
 					return r2.date - r1.date
 				})

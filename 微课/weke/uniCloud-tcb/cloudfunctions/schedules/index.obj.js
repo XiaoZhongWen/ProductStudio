@@ -246,40 +246,48 @@ module.exports = {
 		})
 		return datas
 	},
-	async fetchCourseConsumeRecords(courseId, studentId) {
+	async fetchCourseConsumeRecords(courseId, studentId, before) {
 		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-			typeof(studentId) === 'undefined' || studentId.length === 0) {
+			typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(before) === 'undefined') {
 			return []
 		}
+		const pageSize = 10
 		const db = uniCloud.database()
 		const dbCmd = db.command
 		const result = await db.collection('wk-schedules').where(dbCmd.or({
 			status: dbCmd.in([1, 3, 4]),
+			startTime: dbCmd.lt(before),
 			courseId,
 			studentId
 		}, {
 			status: dbCmd.in([1, 3, 4]),
+			startTime: dbCmd.lt(before),
 			courseId,
 			presentIds: studentId
-		})).get()
+		})).orderBy('startTime', 'desc').limit(pageSize).get()
 		return result.data
 	},
-	async fetchAbsenceRecords(courseId, studentId) {
+	async fetchAbsenceRecords(courseId, studentId, before) {
 		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-			typeof(studentId) === 'undefined' || studentId.length === 0) {
+			typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(before) === 'undefined') {
 			return []
 		}
+		const pageSize = 10
 		const db = uniCloud.database()
 		const dbCmd = db.command
 		const result = await db.collection('wk-schedules').where(dbCmd.or({
 			status: 2,
+			startTime: dbCmd.lt(before),
 			courseId,
 			studentId
 		}, {
 			status: 2,
+			startTime: dbCmd.lt(before),
 			courseId,
 			presentIds: studentId
-		})).get()
+		})).orderBy('startTime', 'desc').limit(pageSize).get()
 		return result.data
 	},
 	async modifyCourseConsumeRecord(param) {

@@ -203,7 +203,7 @@ onMounted(async () => {
 	const classId = props.schedule.classId ?? ''
 	if (typeof(classId) !== 'undefined' && 
 		classId.length > 0) {
-		const grades = gradesStore.grades.filter(c => c._id === classId)
+		const grades = await gradesStore.fetchGrades([classId])
 		if (grades.length === 1) {
 			grade.value = grades[0]
 			await usersStore.fetchStudentsByIds(grade.value.studentIds ?? [])

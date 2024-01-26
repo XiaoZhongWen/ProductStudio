@@ -320,16 +320,20 @@ module.exports = {
 		}
 		return result.updated === 1
 	},
-	async fetchPaymentRecords(courseId, studentId) {
+	async fetchPaymentRecords(courseId, studentId, before) {
 		if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-			typeof(studentId) === 'undefined' || studentId.length === 0) {
+			typeof(studentId) === 'undefined' || studentId.length === 0 ||
+			typeof(before) === 'undefined') {
 			return []
 		}
+		const pageSize = 10
 		const db = uniCloud.database()
+		const dbCmd = db.command
 		const result = await db.collection('wk-payment-records').where({
+			date: dbCmd.lt(before),
 			studentId,
 			courseId
-		}).orderBy("date", "desc").get()
+		}).orderBy("date", "desc").limit(pageSize).get()
 		return result.data
 	},
 	async fetchEntriesWithStudentNo(studentNo, ordIds) {
@@ -344,6 +348,89 @@ module.exports = {
 			orgId: dbCmd.in(ordIds)
 		}).get()
 		return result.data
+	},
+	async fetchEntries(id, studentNo, before, from = 'wx') {
+		const pageSize = 50
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const s = []
+		if (from === 'wx') {
+			const forCreator = []
+			let res = await db.collection("wk-orgs").where({
+				creatorId: id
+			}).get()
+			if (res.data.length > 0) {
+				const orgIds = res.data.map(org => org._id)
+				// 1. 获取所有机构相关的实体
+				res = await db.collection('wk-mapping').where({
+					orgId: dbCmd.in(orgIds),
+					modifyDate: dbCmd.lte(before)
+				}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+				if (res.data.length > 0) {
+					forCreator.push(...res.data)
+				}
+			}
+			
+			const forTeacher = []
+			// 2. 获取老师相关的所有实体
+			res = await db.collection('wk-mapping').where({
+				teacherId: id,
+				modifyDate: dbCmd.lte(before)
+			}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+			if (res.data.length > 0) {
+				forTeacher.push(...res.data)
+			}
+			
+			const forParents = []
+			// 3. 获取所有孩子相关的实体
+			res = await db.collection('wk-student').where({
+				associateIds: id
+			}).get()
+			if (res.data.length > 0) {
+				const students = res.data
+				const studentNos = students.map((student) => student.studentNo)
+				res = await db.collection('wk-mapping').where({
+					studentId: dbCmd.in(studentNos),
+					modifyDate: dbCmd.lte(before)
+				}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+				if (res.data.length > 0) {
+					const courseIds = res.data.map(entry => entry.courseId)
+					res = await db.collection('wk-mapping').where({
+						courseId: dbCmd.in(courseIds),
+						modifyDate: dbCmd.lte(before)
+					}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+					forParents.push(...res.data)
+				}
+			}
+			s.push(...forCreator, ...forTeacher, ...forParents)
+		} else if (from === 'stuNo') {
+			const forStudents = []
+			res = await db.collection('wk-mapping').where({
+				studentId: studentNo,
+				modifyDate: dbCmd.lte(before)
+			}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+			if (res.data.length > 0) {
+				const courseIds = res.data.map(entry => entry.courseId)
+				res = await db.collection('wk-mapping').where({
+					courseId: dbCmd.in(courseIds),
+					modifyDate: dbCmd.lte(before)
+				}).orderBy('modifyDate', 'desc').limit(pageSize).get()
+				forStudents.push(...res.data)
+			}
+			s.push(...forStudents)
+		}
+		const entries = []
+		s.forEach(entry => {
+			const index = entries.findIndex(e => e._id === entry._id)
+			if (index === -1) {
+				entries.push(entry)
+			}
+		})
+		if (entries.length > pageSize) {
+			return entries.slice(0, pageSize)
+		} else {
+			return entries
+		}
 	},
 	async loadAllEntries(id, studentNo, from = 'wx') {
 		const db = uniCloud.database()

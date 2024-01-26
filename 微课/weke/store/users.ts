@@ -648,16 +648,44 @@ export const useUsersStore = defineStore('users', {
 			if (this.entries.length > 0) {
 				return
 			}
-			const entries = await course_co.loadAllEntries(
-				this.owner._id, 
-				this.owner.studentNo, 
-				this.owner.from
-			)
-			if (entries.length) {
-				entries.forEach(entry => {
-					const index = this.entries.findIndex(e => e._id === entry._id)
-					if (index === -1) {
-						this.entries.push(entry)
+			try {
+				let loop = true
+				let before = Date.now()
+				while(loop) {
+					const entries = await course_co.fetchEntries(
+						this.owner._id,
+						this.owner.studentNo, 
+						before,
+						this.owner.from
+					) as Entry[]
+					loop = false
+					if (entries.length) {
+						entries.forEach(entry => {
+							const index = this.entries.findIndex(e => e._id === entry._id)
+							if (index === -1) {
+								this.entries.push(entry)
+								loop = true
+							}
+						})
+						const entry = entries.slice(-1)[0]
+						before = entry.modifyDate
+					}
+				}
+			} catch(e) {
+				const that = this
+				uni.showModal({
+					title: '嗒嗒课吧',
+					content: '初始数据加载失败, 请重新加载',
+					showCancel: false,
+					success: async function (res) {
+						if (res.confirm) {
+							uni.showLoading({
+								title: "加载初始数据",
+								mask: true
+							})
+							await that.loadAllEntries()
+							uni.hideLoading()
+						}
 					}
 				})
 			}

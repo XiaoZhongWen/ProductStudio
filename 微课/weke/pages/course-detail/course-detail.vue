@@ -53,40 +53,46 @@
 			</uni-segmented-control>
 			<view class="content">
 				<uni-list v-show="current === 0">
-					<uni-list-item v-for="r in courseConsumeRecords" :key="r._id">
-						<template v-slot:body>
-							<wk-course-record 
-								class="course-record" 
-								:record="r"
-								@editAction="onEditAction"
-								@revokeAction="onRevokeAction">
-							</wk-course-record>
-						</template>
-					</uni-list-item>
+					<z-paging ref="course_paging" v-model="courseConsumeRecords" use-page-scroll @query="course_queryList">
+						<uni-list-item v-for="r in courseConsumeRecords" :key="r._id">
+							<template v-slot:body>
+								<wk-course-record 
+									class="course-record" 
+									:record="r"
+									@editAction="onEditAction"
+									@revokeAction="onRevokeAction">
+								</wk-course-record>
+							</template>
+						</uni-list-item>
+					</z-paging>
 				</uni-list>
 				<uni-list v-show="current === 1">
-					<uni-list-item v-for="r in paymentRecords" :key="r._id">
-						<template v-slot:body>
-							<wk-payment-records
-								class="payment-record" 
-								:rId="r._id"
-								@editPaymentAction="onEditPaymentAction"
-								@revokePaymentAction="onRevokePaymentAction">
-							</wk-payment-records>
-						</template>
-					</uni-list-item>
+					<z-paging ref="payment_paging" v-model="paymentRecords" use-page-scroll @query="payment_queryList">
+						<uni-list-item v-for="r in paymentRecords" :key="r._id">
+							<template v-slot:body>
+								<wk-payment-records
+									class="payment-record" 
+									:rId="r._id"
+									@editPaymentAction="onEditPaymentAction"
+									@revokePaymentAction="onRevokePaymentAction">
+								</wk-payment-records>
+							</template>
+						</uni-list-item>
+					</z-paging>
 				</uni-list>
 				<view v-show="current === 2">
-					<uni-list-item v-for="r in absenceRecords" :key="r._id">
-						<template v-slot:body>
-							<wk-course-record 
-								class="course-record" 
-								:record="r"
-								@editAction="onEditAction"
-								@revokeAction="onRevokeAction">
-							</wk-course-record>
-						</template>
-					</uni-list-item>
+					<z-paging ref="absence_paging" v-model="absenceRecords" use-page-scroll @query="absence_queryList">
+						<uni-list-item v-for="r in absenceRecords" :key="r._id">
+							<template v-slot:body>
+								<wk-course-record 
+									class="course-record" 
+									:record="r"
+									@editAction="onEditAction"
+									@revokeAction="onRevokeAction">
+								</wk-course-record>
+							</template>
+						</uni-list-item>
+					</z-paging>
 				</view>
 			</view>
 		</view>
@@ -121,6 +127,7 @@ import EditCourseRecord from './components/EditCourseRecord.vue'
 import EditPaymentRecord from './components/EditPaymentRecord.vue'
 import { PaymentRecord } from '../../types/PaymentRecord';
 import { Schedule } from '../../types/schedule'
+import useZPaging from "@/uni_modules/z-paging/components/z-paging/js/hooks/useZPaging.js";
 
 const global = getApp().globalData!
 
@@ -144,6 +151,11 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const scheduleStore = useScheduleStore()
 const useOrgs = useOrgsStore()
+
+const course_paging = ref(null)
+const payment_paging = ref(null)
+const absence_paging = ref(null)
+useZPaging(course_paging)
 
 const editCourseRecordPopup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -200,13 +212,6 @@ onLoad(async (option) => {
 	}
 	org.value = orgs[0]
 	orgName.value = org.value.name
-	uni.showLoading({
-		title: "加载中"
-	})
-	courseConsumeRecords.value = await scheduleStore.fetchCourseConsumeRecords(courseId, student.value._id)
-	paymentRecords.value = await courseStore.fetchPaymentRecords(entry.value.courseId, student.value._id)
-	absenceRecords.value = await scheduleStore.fetchAbsenceRecords(courseId, student.value._id)
-	uni.hideLoading()
 })
 
 const onClickItem = (e: { currentIndex:number }) => {
@@ -421,6 +426,45 @@ const isShow = computed(() => {
 			(current.value === 1 && paymentRecords.value.length === 0) ||
 			(current.value === 2 && absenceRecords.value.length === 0)
 })
+
+const course_queryList = async (pageNo:number, pageSize:number) => {
+	let before = Number.MAX_VALUE
+	if (pageNo > 0 && courseConsumeRecords.value.length > 0) {
+		const s = courseConsumeRecords.value.slice(-1)[0]
+		before = s.startTime
+	}
+	const records = await scheduleStore.fetchCourseConsumeRecords(
+		entry.value?.courseId ?? '', 
+		student.value?._id ?? '', 
+		before)
+	course_paging.value?.complete(records)
+}
+
+const payment_queryList = async (pageNo:number, pageSize:number) => {
+	let before = Date.now()
+	if (pageNo > 0 && paymentRecords.value.length > 0) {
+		const record = paymentRecords.value.slice(-1)[0]
+		before = record.modifyDate
+	}
+	const records =  await courseStore.fetchPaymentRecords(
+		entry.value?.courseId ?? '', 
+		student.value?._id ?? '',
+		before)
+	payment_paging.value?.complete(records)
+}
+
+const absence_queryList = async (pageNo:number, pageSize:number) => {
+	let before = Number.MAX_VALUE
+	if (pageNo > 0 && courseConsumeRecords.value.length > 0) {
+		const s = absenceRecords.value.slice(-1)[0]
+		before = s.startTime
+	}
+	const records = await scheduleStore.fetchAbsenceRecords(
+		entry.value?.courseId ?? '', 
+		student.value?._id ?? '',
+		before)
+	absence_paging.value?.complete(records)
+}
 
 </script>
 

@@ -184,6 +184,22 @@ export const useOrgsStore = defineStore('orgs', {
 				this.fetchOrgCreator()
 			} catch(e) {
 				result = false
+				const that = this
+				uni.showModal({
+					title: '嗒嗒课吧',
+					content: '初始数据加载失败, 请重新加载',
+					showCancel: false,
+					success: async function (res) {
+						if (res.confirm) {
+							uni.showLoading({
+								title: "加载初始数据",
+								mask: true
+							})
+							await that.loadOrgData()
+							uni.hideLoading()
+						}
+					}
+				})
 			}
 			return result
 		},

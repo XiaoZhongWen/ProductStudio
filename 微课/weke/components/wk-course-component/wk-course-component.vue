@@ -36,11 +36,7 @@ const paging = ref(null)
 const items = ref<CourseItem[]>([])
 
 onMounted(() => {
-	uni.showLoading({
-		title: "加载课程数据"
-	})
 	loadAllCourses()
-	uni.hideLoading()
 	
 	uni.$on(global.event_name.didUpdateOrgCourse, async () => {
 		await loadAllCourses()
@@ -153,12 +149,16 @@ const loadAllCourses = async () => {
 }
 
 const queryList = async (pageNo:number, pageSize:number) => {
+	uni.showLoading({
+		title: "加载课程数据"
+	})
 	const s = pageNo * pageSize
 	const e = s + pageSize
 	const datas = items.value.slice(s, e)
 	const cIds = datas.map(item => item.courseId)
 	await courseStore.fetchCourses(cIds)
 	paging.value?.complete(datas);
+	uni.hideLoading()
 }
 
 </script>

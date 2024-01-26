@@ -355,12 +355,13 @@ export const useScheduleStore = defineStore('schedules', {
 				return result
 			}
 		},
-		async fetchCourseConsumeRecords(courseId: string, studentId: string) {
+		async fetchCourseConsumeRecords(courseId: string, studentId: string, before: number) {
 			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(studentId) === 'undefined' || studentId.length === 0) {
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(before) === 'undefined') {
 				return []
 			}
-			const res:Schedule[] = await schedules_co.fetchCourseConsumeRecords(courseId, studentId)
+			const res:Schedule[] = await schedules_co.fetchCourseConsumeRecords(courseId, studentId, before)
 			return res.sort((r1, r2) => {
 				return r2.startTime - r1.startTime
 			})
@@ -416,12 +417,13 @@ export const useScheduleStore = defineStore('schedules', {
 			const result = await schedules_co.revokeCourseConsumeRecord(_id, usersStore.owner._id, entryId, delta)
 			return result
 		},
-		async fetchAbsenceRecords(courseId: string, studentId: string) {
+		async fetchAbsenceRecords(courseId: string, studentId: string, before:number) {
 			if (typeof(courseId) === 'undefined' || courseId.length === 0 ||
-				typeof(studentId) === 'undefined' || studentId.length === 0) {
+				typeof(studentId) === 'undefined' || studentId.length === 0 ||
+				typeof(before) === 'undefined') {
 				return []
 			}
-			const res:Schedule[] = await schedules_co.fetchAbsenceRecords(courseId, studentId)
+			const res:Schedule[] = await schedules_co.fetchAbsenceRecords(courseId, studentId, before)
 			return res.sort((r1, r2) => {
 				return r2.startTime - r1.startTime
 			})
