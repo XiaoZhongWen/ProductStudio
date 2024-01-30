@@ -1,0 +1,27 @@
+.dada_app .main {
+  margin: 20px;
+}
+
+.main .head {
+  width: 100%;
+  font-size: 0.32rem;
+  color: #191919;
+  font-weight: 700;
+  margin-top: 20px;
+}
+
+.main .divider {
+  border-bottom: solid 1px #f4f5f6; /* 或者 dashed 1px */
+  margin-bottom: 10px;
+}
+
+.main .content,
+.content li {
+  margin: 20px 0;
+  font-size: 0.2rem;
+  color: #191919;
+}
+
+.main .roles .role {
+  margin: 5px 5px 5px 15px;
+}

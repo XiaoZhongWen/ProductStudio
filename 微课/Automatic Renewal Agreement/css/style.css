@@ -1,0 +1,57 @@
+@charset "utf-8";
+.wrap {
+  width: 6.4rem;
+  margin: 0 auto;
+  position: relative;
+  padding-bottom: 0.3rem;
+}
+.dada_app {
+  margin: 10px;
+}
+.head {
+  height: 1.31rem;
+  background: #5073d6 no-repeat center center;
+}
+.head h1 {
+  color: #fff;
+  font-size: 0.38rem;
+  line-height: 1.31rem;
+  text-align: center;
+  font-weight: 400;
+}
+.mod {
+  background-size: 100%;
+}
+.mod.noneBg {
+  background: 0 0;
+}
+.main {
+  padding: 0.1rem 0.3rem 0.3rem;
+}
+.mod.noneBg .main {
+  padding: 0.2rem 0.3rem 0.3rem;
+}
+h2 {
+  font-size: 0.32rem;
+  color: #747474;
+  font-weight: 700;
+  margin-bottom: 0.1rem;
+}
+h3 {
+  font-size: 0.28rem;
+  color: #747474;
+  font-weight: 400;
+  margin-top: 0.05rem;
+  margin-bottom: 0.05rem;
+}
+p {
+  font-size: 0.24rem;
+  color: #747474;
+  line-height: 0.37rem;
+}
+.mt_35 {
+  margin-top: 0.35rem;
+}
+.text-right {
+  text-align: right;
+}

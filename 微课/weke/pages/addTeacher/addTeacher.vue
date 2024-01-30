@@ -110,7 +110,7 @@ onMounted(async () => {
 		orgs.value = useOrgs.myOrgs.filter(org => {
 			const flag = organizationId.length === 0 ||
 			(organizationId.length > 0 && org._id === organizationId)
-			return flag
+			return flag && org.type === 0
 		})
 		
 		const teacherIds:string[] = []
