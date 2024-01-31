@@ -1,0 +1,8 @@
+1. 创建机构 done
+2. 添加老师 done
+3. 添加学员 done
+4. 创建课程 done
+5. 创建班级 done
+6. 排课 done
+7. 消课 done
+8. 请假 done
