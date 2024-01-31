@@ -39,7 +39,7 @@ onLoad(async (option) => {
 onMounted(() => {
 	if (organizationId.value.length === 0) {
 		const id = usersStore.owner._id
-		let result = useOrgs.orgs.filter(org => org.creatorId === id)
+		let result = useOrgs.orgs.filter(org => org.creatorId === id && org.type === 0)
 		if (gId.value.length > 0) {
 			result = useOrgs.orgs.filter(org => org.classIds?.includes(gId.value))
 			if (result.length === 1) {
