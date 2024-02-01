@@ -493,13 +493,26 @@ module.exports = {
 				return {}
 			}
 		}
-		res = await db.collection('wk-student').count()
-		const suffix = (res.total + 1).toString()
-		const studentNo = "0".repeat(8 - suffix.length) + suffix
+		const date = new Date()
+		const prefix = date.getFullYear()
+		const suffix = ~~(date.getTime() / 1000)
+		let studentNo = prefix.toString() + suffix.toString().slice(-5)
+		let loop = true
+		while(loop) {
+			const data = await db.collection('wk-student').where({
+				studentNo
+			}).count()
+			loop = data.total !== 0
+			if (loop) {
+				const randomInteger = Math.floor(Math.random() * 100000)
+				const randomString = randomInteger.toString().padStart(5, '0')
+				studentNo = prefix.toString() + randomString
+			}
+		}
 		res = await db.collection('wk-student').add({
 			studentNo: studentNo,
 			nickName: name,
-			registerDate: Date.now(),
+			registerDate: date.getTime(),
 			pwd: md5(studentNo),
 			identity: identity,
 		})
