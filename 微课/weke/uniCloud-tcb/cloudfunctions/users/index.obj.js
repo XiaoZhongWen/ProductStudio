@@ -5,8 +5,8 @@ const md5 = require('js-md5')
 const { type } = require('os');
 const UniSubscribemsg = require('uni-subscribemsg');
 const mp_wx_data = {
-	AppID:'wx53884ee4fcbb9a5b',
-	AppSecret:'5bf343c79753aa2f2d4e9283886b2aa3'
+	AppID:'wxb77ba7aa134b341f',
+	AppSecret:'0fe022b41897142359794f8778e4d963'
 }
 
 module.exports = {
