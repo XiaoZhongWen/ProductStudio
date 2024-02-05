@@ -4,9 +4,17 @@
 	  "tokenExpiresIn": 259200,
 	  "oauth": {
 	    "weixin": {
-	      "appid": "wx53884ee4fcbb9a5b",
-	      "appsecret": "5bf343c79753aa2f2d4e9283886b2aa3"
+	      "appid": "wxb77ba7aa134b341f",
+	      "appsecret": "0fe022b41897142359794f8778e4d963"
 	    }
 	  }
+	},
+	"web": {
+		"oauth": {
+			"weixin-h5": {
+				"appid": "wx2c866433a4651860",
+				"appsecret": "12a2d877853448a6baf7715db073b502"
+			}
+	    }
 	}
 }
