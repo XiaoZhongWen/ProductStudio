@@ -793,6 +793,10 @@ export const useScheduleStore = defineStore('schedules', {
 			innerAudioContext.autoplay = true;
 			innerAudioContext.src = this.checkedAudioUrl
 			innerAudioContext.onPlay(() => {})
+		},
+		scheduleSuccess() {
+			// test
+			schedules_co.scheduleSuccess()
 		}
 	}
 })

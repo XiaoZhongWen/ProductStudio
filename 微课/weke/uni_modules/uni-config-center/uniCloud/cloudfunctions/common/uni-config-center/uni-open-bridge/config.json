@@ -5,7 +5,11 @@
       "weixin-mp": {
         "enable": true,
         "tasks": ["accessToken"]
-      }
+      },
+	  "weixin-h5": {
+		  "enable": true,
+		  "tasks": ["ticket"]
+	  }
     }
   }
 }

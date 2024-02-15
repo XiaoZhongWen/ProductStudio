@@ -4,7 +4,7 @@
 			<view :class="statusCls">{{statusDesc}}</view>
 		</view>
 		<view class="content">
-			<view class="left" v-if="!isStudentOrParents">
+			<view class="left" v-if="hasPermission">
 				<view 
 					@tap.stop="onCheckedTap"
 					:checked="checked" 
@@ -110,7 +110,7 @@
 		</view>
 		<view class="bottom">
 			<text v-if="org">{{org.name}}</text>
-			<template v-if="!isStudentOrParents">
+			<template v-if="hasPermission">
 				<view class="right offset-sm" v-if="props.schedule.status===0">
 					<view
 						@tap.stop="onEditCoursePreviewTap"
@@ -189,7 +189,6 @@ onMounted(async () => {
 		return
 	}
 	checked.value = props.schedule.status !== 0
-	
 	const orgs = useOrgs.orgs.filter(org => org._id === orgId)
 	if (orgs.length === 1) {
 		org.value = orgs[0]
@@ -392,10 +391,20 @@ const isShowFeedback = computed(() => {
 	return feedback.length > 0
 })
 
-const isStudentOrParents = computed(() => {
+const hasPermission = computed(() => {
+	const userId = usersStore.owner._id
 	const roles = usersStore.roles ?? []
-	return usersStore.owner.from === 'stuNo' || 
-		(roles.includes(3) && roles.length === 1)
+	const teacherPermission = roles.includes(2) && props.schedule.teacherId === userId
+	let adminPermission = false
+	if (roles.includes(1)) {
+		const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
+		orgs.forEach(org => {
+			if (!adminPermission && org._id === props.schedule.orgId) {
+				adminPermission = true
+			}
+		})
+	}
+	return teacherPermission || adminPermission
 })
 
 const statusDesc = computed(() => {

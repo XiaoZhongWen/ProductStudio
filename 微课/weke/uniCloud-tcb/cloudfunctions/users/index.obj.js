@@ -19,17 +19,24 @@ module.exports = {
 	 * @param {string} code wx.login的返回值
 	 */
     async code2Session(code) {
-	   const session = await uniCloud.httpclient.request('https://api.weixin.qq.com/sns/jscode2session', {
-		   method:"GET",
-		   data:{
-			   appid: mp_wx_data.AppID,
-			   secret: mp_wx_data.AppSecret,
-			   js_code: code,
-			   grant_type: 'authorization_code'
-		   },
-		   dataType:"json"
-	   })
-	   return session
+		const db = uniCloud.database()
+		const res = await db.collection("wk-app").field({"mp":true}).get()
+		const data = res.data
+		if (data.length > 0) {
+			const { appid, appsecret } = data[0].mp
+			const session = await uniCloud.httpclient.request('https://api.weixin.qq.com/sns/jscode2session', {
+					   method:"GET",
+					   data:{
+						   appid: appid,
+						   secret: appsecret,
+						   js_code: code,
+						   grant_type: 'authorization_code'
+					   },
+					   dataType:"json"
+			})
+			return session
+		}
+		return ''
    },
    
    /**
