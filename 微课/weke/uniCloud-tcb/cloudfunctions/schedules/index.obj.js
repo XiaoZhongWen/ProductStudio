@@ -562,8 +562,8 @@ module.exports = {
 		}).update(update)
 		return result.updated === 1
 	},
-	scheduleSuccess() {
+	scheduleSuccess(code) {
 		const sender = uniCloud.importObject("sender")
-		sender.scheduleSuccessMessage()
+		sender.scheduleSuccessMessage(code)
 	}
 }
