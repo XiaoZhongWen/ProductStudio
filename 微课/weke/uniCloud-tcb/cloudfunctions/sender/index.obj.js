@@ -2,6 +2,7 @@
 // jsdoc语法提示教程：https://ask.dcloud.net.cn/docs/#//ask.dcloud.net.cn/article/129
 
 let uobc = require('uni-open-bridge-common')
+const crypto = require('crypto')
 const key = {
 	"dcloudAppid": "__UNI__1226721",
 	"platform": "weixin-h5"
@@ -56,6 +57,20 @@ module.exports = {
 			console.info(access_token)
 		} catch(e) {
 			console.info(e)
+		}
+	},
+	async publicAccount(ctx) {
+		let {signature = '', timestamp = '', nonce = '', echostr = ''} = ctx
+		let token = "xwkj912"
+		// 验证token
+		let str = [token, timestamp, nonce].sort().join('')
+		let sha1 = crypto.createHash('sha1').update(str).digest('hex')
+		console.info(sha1)
+		console.info(signature)
+		if (sha1 !== signature) {
+			return 'token验证失败'
+		} else {
+			return echostr
 		}
 	}
 }

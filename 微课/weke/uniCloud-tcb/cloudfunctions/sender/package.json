@@ -1,6 +1,7 @@
 {
   "name": "sender",
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "uni-open-bridge-common": "file:../../../uni_modules/uni-open-bridge-common/uniCloud/cloudfunctions/common/uni-open-bridge-common"
   },
   "extensions": {
