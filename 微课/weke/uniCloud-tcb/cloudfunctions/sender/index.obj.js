@@ -84,7 +84,13 @@ module.exports = {
 		}
 	},
 	async publicAccount(ctx) {
-		console.info(ctx.body)
+		const httpInfo = this.getHttpInfo()
+		let body = httpInfo.body
+		if(httpInfo.isBase64Encoded){
+		    body = Buffer.from(body, 'base64').toString('utf8')
+			console.info("base64")
+		}
+		console.info(body)
 		const db = uniCloud.database()
 		const res = await db.collection("wk-tokens").where({
 			"platform": "wxfwh"
