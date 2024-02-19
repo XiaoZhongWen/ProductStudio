@@ -565,7 +565,7 @@ module.exports = {
 			result = false
 		} else {
 			const student = res.data[0]
-			const associateIds = student.associateIds ?? []
+			const associateIds = student.associateIds
 			if (associateIds.includes(bindId)) {
 				result = true
 			} else {
@@ -602,7 +602,7 @@ module.exports = {
 			result = false
 		} else {
 			const student = res.data[0]
-			const associateIds = student.associateIds ?? []
+			const associateIds = student.associateIds
 			const index = associateIds.findIndex(id => bindId === id)
 			if (index !== -1) {
 				associateIds.splice(index, 1)
