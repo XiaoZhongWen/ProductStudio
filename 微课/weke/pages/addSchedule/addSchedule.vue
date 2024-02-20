@@ -1115,10 +1115,6 @@ const validate = () => {
 }
 
 const onSchedule = async () => {
-	// test
-	scheduleStore.scheduleSuccess()
-	return
-	
 	const isValid = validate()
 	if (!isValid) {
 		return

@@ -10,7 +10,7 @@ enum IdentityType {
 	UseOpenId = 'openid'
 }
 
-let identityType = IdentityType.UseOpenId
+let identityType = IdentityType.UseUnionId
 const users_co = uniCloud.importObject('users', {
 	customUI: true
 })

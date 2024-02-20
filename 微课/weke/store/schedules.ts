@@ -793,13 +793,6 @@ export const useScheduleStore = defineStore('schedules', {
 			innerAudioContext.autoplay = true;
 			innerAudioContext.src = this.checkedAudioUrl
 			innerAudioContext.onPlay(() => {})
-		},
-		async scheduleSuccess() {
-			// test
-			const res = await uni.login({
-				provider:"weixin"
-			})
-			schedules_co.scheduleSuccess(res.code)
 		}
 	}
 })

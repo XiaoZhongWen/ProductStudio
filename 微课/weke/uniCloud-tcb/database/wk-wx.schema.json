@@ -20,6 +20,10 @@
 			"bsonType": "string",
 			"description": "微信小程序平台openId"
 		},
+		"fwh_openid": {
+			"bsonType": "string",
+			"description": "微信公众号openId"
+		},
 		"userId": {
 			"bsonType": "string",
 			"description": "用户id",

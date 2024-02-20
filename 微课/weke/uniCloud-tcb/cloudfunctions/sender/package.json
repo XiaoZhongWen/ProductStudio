@@ -2,7 +2,9 @@
   "name": "sender",
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "uni-open-bridge-common": "file:../../../uni_modules/uni-open-bridge-common/uniCloud/cloudfunctions/common/uni-open-bridge-common"
+    "uni-open-bridge-common": "file:../../../uni_modules/uni-open-bridge-common/uniCloud/cloudfunctions/common/uni-open-bridge-common",
+    "wechat-crypto": "^0.0.2",
+    "xml2js": "^0.6.2"
   },
   "extensions": {
     "uni-cloud-jql": {}

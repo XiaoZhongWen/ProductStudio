@@ -25,6 +25,7 @@ import { useUsersStore } from "@/store/users"
 const usersStore = useUsersStore()
 
 const onChooseAvatar = (res:UniHelper.ButtonOnChooseavatarEvent) => {
+	console.info(res)
 	usersStore.updateTempFileUrl(res.detail.avatarUrl)
 }
 </script>

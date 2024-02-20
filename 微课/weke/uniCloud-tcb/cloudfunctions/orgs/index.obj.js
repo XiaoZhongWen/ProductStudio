@@ -22,15 +22,42 @@ module.exports = {
 				return orgId
 			}
 		}
-		const tel = param.tel ?? ""
-		const addr = param.addr ?? ""
-		const desc = param.desc ?? ""
-		const logoId = param.logoId ?? ""
-		const teacherIds = param.teacherIds ?? []
-		const studentIds = param.studentIds ?? []
-		const courseIds = param.courseIds ?? []
-		const classIds = param.classIds ?? []
-		const type = param.type ?? 0
+		let tel = param.tel
+		let addr = param.addr
+		let desc = param.desc
+		let logoId = param.logoId
+		let teacherIds = param.teacherIds
+		let studentIds = param.studentIds
+		let courseIds = param.courseIds
+		let classIds = param.classIds
+		let type = param.type
+		if (typeof(tel) === 'undefined') {
+			tel = ""
+		}
+		if (typeof(addr) === 'undefined') {
+			addr = ""
+		}
+		if (typeof(desc) === 'undefined') {
+			desc = ""
+		}
+		if (typeof(logoId) === 'undefined') {
+			logoId = ""
+		}
+		if (typeof(teacherIds) === 'undefined') {
+			teacherIds = []
+		}
+		if (typeof(studentIds) === 'undefined') {
+			studentIds = []
+		}
+		if (typeof(courseIds) === 'undefined') {
+			courseIds = []
+		}
+		if (typeof(classIds) === 'undefined') {
+			classIds = []
+		}
+		if (typeof(type) === 'undefined') {
+			type = 0
+		}
 		if (isCreate) {
 			// 机构不存在
 			let res = await db.collection('wk-orgs').add({

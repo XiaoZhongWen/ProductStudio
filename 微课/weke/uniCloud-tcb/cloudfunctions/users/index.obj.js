@@ -60,11 +60,13 @@ module.exports = {
 	   let res = await db.collection('wk-wx').where(condition).field({'userId':true}).get()
 	   if (res.data.length === 1) {
 		   const { userId } = res.data[0]
-		   res = await db.collection('wk-users').where({
-			   _id: userId
-		   }).get()
-		   if (res.data.length === 1) {
-		   		user = res.data[0]
+		   if (typeof(userId) !== 'undefined' && userId.length > 0) {
+			   res = await db.collection('wk-users').where({
+			   			   _id: userId
+			   }).get()
+			   if (res.data.length === 1) {
+			   		user = res.data[0]
+			   }
 		   }
 	   }
 	   return user
@@ -181,12 +183,12 @@ module.exports = {
 	   }
 	   // 判断用户是否存在
 	   let userId = ''
+	   const timestamp = Date.now()
+	   const freeDuration = 1000 * 60 * 60 * 24 * 15
 	   const db = uniCloud.database()
 	   let res = await db.collection('wk-wx').where(condition).get()
 	   if (res.data.length === 0) {
 		   // 用户不存在
-		   const timestamp = Date.now()
-		   const freeDuration = 1000 * 60 * 60 * 24 * 15
 		   res = await db.collection('wk-users').add({
 			   nickName: nickName,
 			   avatarId: avatarId,
@@ -207,15 +209,35 @@ module.exports = {
 			   }
 		   }
 	   } else {
-		   // 用户存在
 		   const wx = res.data[0]
 		   userId = wx.userId
-		   res = await db.collection('wk-users').where({
-		   		_id: userId
-		   }).update({
-		   		nickName: nickName,
-		   		avatarId: avatarId
-		   })
+		   if (typeof(userId) === 'undefined' || userId.length === 0) {
+			   res = await db.collection('wk-users').add({
+			   		nickName: nickName,
+					avatarId: avatarId,
+			   		registerDate: timestamp,
+			   		lastLoginDate: timestamp,
+			   		orgExpireDate: timestamp + freeDuration,
+			   		familyExpireDate: timestamp + freeDuration
+			   })
+			   const { id } = res
+			   if (typeof(id) !== 'undefined' && id.length > 0) {
+				   res = await db.collection('wk-wx').where(condition).update({
+					   userId: id
+				   })
+				   if (typeof(res.id) !== 'undefined' && res.id.length > 0) {
+				   		userId = id
+				   }
+			   }
+		   } else {
+			   // 用户存在
+			   res = await db.collection('wk-users').where({
+			   		_id: userId
+			   }).update({
+			   		nickName: nickName,
+			   		avatarId: avatarId
+			   })
+		   }
 	   }
 	   let userInfo = {}
 	   if (userId.length > 0) {
