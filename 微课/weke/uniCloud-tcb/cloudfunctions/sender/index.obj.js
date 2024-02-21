@@ -75,74 +75,54 @@ module.exports = {
 	_before: function () { // 通用预处理器
 
 	},
-	async scheduleSuccessMessage(code) {
+	async scheduleSuccessMessage(s) {
 		try {
 			const { access_token } = await uobc.getAccessToken(key)
-			const result = await uniCloud.httpclient.request('https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + access_token, {
-				method:'POST',
-				data:{
-					"touser": "oTYu_6UxjfCC8Pt6WDK_qiPzu7hY",
-					"template_id": "7svCP-LitRyI_EXA12KLb6ojKoZtv7lEJSgH5XeWChs",
-					"data": {
-						"thing1": {
-							"value": "雅思口语课"
-						},
-						"thing5": {
-							"value": "Julien"
-						},
-						"thing4": {
-							"value": "肖兮子"
-						},
-						"time2": {
-							"value": "2023-08-08 10:00"
+			const db = uniCloud.database()
+			const response = await db.collection("wk-app").field({"mp":true}).get()
+			const record = response.data
+			if (record.length > 0) {
+				const { appid } = record[0].mp
+				for (let notification of s) {
+					const { userId, course, teacher, student, duration } = notification
+					const res = await db.collection("wk-wx").where({
+						userId
+					}).get()
+					if (res.data.length > 0) {
+						const item = res.data[0]
+						const fwh_openid = item.fwh_openid
+						if (typeof(fwh_openid) !== 'undefined' && fwh_openid.length > 0) {
+							const result = await uniCloud.httpclient.request('https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + access_token, {
+								method:'POST',
+								data:{
+									"touser": fwh_openid,
+									"template_id": "7svCP-LitRyI_EXA12KLb6ojKoZtv7lEJSgH5XeWChs",
+									"miniprogram": {
+										"appid": appid
+									},
+									"data": {
+										"thing1": {
+											"value": course
+										},
+										"thing5": {
+											"value": teacher
+										},
+										"thing4": {
+											"value": student
+										},
+										"time2": {
+											"value": duration
+										}
+									}
+								},
+								contentType: 'json',
+								dataType: 'json'
+							})
 						}
 					}
-				},
-				contentType: 'json',
-				dataType: 'json'
-			})
-			// const db = uniCloud.database()
-			// const res = await db.collection("wk-app").field({"h5":true}).get()
-			// const data = res.data
-			// if (data.length > 0) {
-			// 	const { appid, appsecret } = data[0].h5
-			// 	const session = await uniCloud.httpclient.request('https://api.weixin.qq.com/sns/jscode2session', {
-			// 			   method:"GET",
-			// 			   data:{
-			// 				   appid: appid,
-			// 				   secret: appsecret,
-			// 				   js_code: code,
-			// 				   grant_type: 'authorization_code'
-			// 			   },
-			// 			   dataType:"json"
-			// 	})
-			// 	const { openid } = session.data
-			// 	const result = await uniCloud.httpclient.request('https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + access_token, {
-			// 		method:'POST',
-			// 		data:{
-			// 			"touser": "oTYu_6UxjfCC8Pt6WDK_qiPzu7hY",
-			// 			"template_id": "7svCP-LitRyI_EXA12KLb6ojKoZtv7lEJSgH5XeWChs",
-			// 			"data": {
-			// 				"thing1": {
-			// 					"value": "雅思口语课"
-			// 				},
-			// 				"thing5": {
-			// 					"value": "Julien"
-			// 				},
-			// 				"thing4": {
-			// 					"value": "肖兮子"
-			// 				},
-			// 				"time2": {
-			// 					"value": "2023-08-08 10:00"
-			// 				},
-			// 			}
-			// 		}
-			// 	})
-			// 	console.info(result)
-			// }
-			// console.info(access_token)
+				}
+			}
 		} catch(e) {
-			console.info(e)
 		}
 	},
 	async publicAccount(ctx) {

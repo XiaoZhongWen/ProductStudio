@@ -166,11 +166,14 @@ import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { useGradesStore } from "@/store/grades"
 import { useScheduleStore } from "@/store/schedules"
+import { useSenderStore } from "@/store/sender"
 import { Course } from '../../../types/course';
 import { hhmm, md } from '@/utils/wk-date'
 import { Org } from '../../../types/org';
 import { Grade } from '../../../types/grade';
 import { Schedule } from '../../../types/schedule';
+import { ScheduleNotification } from '../../../types/notification';
+import { ymd } from '@/utils/wk-date'
 
 const props = defineProps(['schedule', 'ownId'])
 
@@ -179,6 +182,7 @@ const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 const gradesStore = useGradesStore()
 const scheduleStore = useScheduleStore()
+const senderStore = useSenderStore()
 
 const student = ref<Student>()
 const org = ref<Org>()
@@ -236,19 +240,37 @@ const onNotify = () => {
 		content: "如果学员或家长关注了嗒嗒课吧公众号, 将会收到排课通知的公众号消息",
 		success: (res) => {
 			if (res.confirm) {
-				const associateIds:string[] = []
+				const set:ScheduleNotification[] = []
+				const date = new Date(props.schedule.startTime)
 				if (props.schedule.classId) {
 					presents.value.forEach(s => {
 						s.associateIds?.forEach(id => {
-							if (!associateIds.includes(id)) {
-								associateIds.push(id)
+							const item:ScheduleNotification = {
+								userId: id,
+								course: course.value.name,
+								teacher: teacher.value.nickName,
+								student: s.nickName,
+								duration: ymd(date) + " " + start.value + "~" + end.value
 							}
+							set.push(item)
 						})
 					})
 				} else {
-					associateIds.push(...(student.value?.associateIds ?? []))
+					const nickName = student.value?.nickName ?? ""
+					if (nickName.length > 0) {
+						student.value?.associateIds?.forEach(id => {
+							const item:ScheduleNotification = {
+								userId: id,
+								course: course.value.name,
+								teacher: teacher.value.nickName,
+								student: nickName,
+								duration: ymd(date) + " " + start.value + "~" + end.value
+							}
+							set.push(item)
+						})
+					}
 				}
-				
+				senderStore.sendScheduleNotifications(set)
 			}
 		}
 	})
