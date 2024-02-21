@@ -19,5 +19,6 @@ export type Schedule = {
 	consume: number,
 	status: number,
 	modifyDate?:number,
-	operatorId?:string
+	operatorId?:string,
+	isNotified?:boolean
 }

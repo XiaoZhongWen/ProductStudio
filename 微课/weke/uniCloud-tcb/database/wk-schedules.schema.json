@@ -102,6 +102,10 @@
 		"operatorId": {
 			"bsonType": "string",
 			"description": "操作人id"
+		},
+		"isNotified": {
+			"bsonType": "bool",
+			"description": "是否已经发送了排课通知"
 		}
 	}
 }

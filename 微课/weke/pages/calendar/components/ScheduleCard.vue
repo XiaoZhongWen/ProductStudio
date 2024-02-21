@@ -2,6 +2,14 @@
 	<view class="schedule-card-container">
 		<view class="top">
 			<view :class="statusCls">{{statusDesc}}</view>
+			<uni-tag
+				v-if="props.schedule.status === 0"
+				class="notify" 
+				size="small"
+				@tap.stop="onNotify"
+				:text="checked?'已通知':'通知'" 
+				:type="checked?'':'success'"  
+				:circle="true" />
 		</view>
 		<view class="content">
 			<view class="left" v-if="hasPermission">
@@ -218,6 +226,33 @@ onMounted(async () => {
 		}
 	}
 })
+
+const onNotify = () => {
+	if (checked.value) {
+		return
+	}
+	uni.showModal({
+		title: global.appName,
+		content: "如果学员或家长关注了嗒嗒课吧公众号, 将会收到排课通知的公众号消息",
+		success: (res) => {
+			if (res.confirm) {
+				const associateIds:string[] = []
+				if (props.schedule.classId) {
+					presents.value.forEach(s => {
+						s.associateIds?.forEach(id => {
+							if (!associateIds.includes(id)) {
+								associateIds.push(id)
+							}
+						})
+					})
+				} else {
+					associateIds.push(...(student.value?.associateIds ?? []))
+				}
+				
+			}
+		}
+	})
+}
 
 const onCheckedTap = async () => {
 	const isChecked = !checked.value
@@ -585,10 +620,10 @@ const consume = computed(() => {
 	.top {
 		display: flex;
 		flex-direction: row;
-		justify-content: space-between;
+		align-items: center;
+		margin-bottom: $uni-spacing-row-base;
 		.row {
 			font-size: $uni-font-size-sm;
-			margin-bottom: $uni-spacing-row-base;;
 		}
 		.status_0 {
 			color: $wk-theme-color;
@@ -598,6 +633,9 @@ const consume = computed(() => {
 		}
 		.status_2 {
 			color: $uni-color-warning;
+		}
+		.notify {
+			margin-left: $uni-spacing-row-sm;
 		}
 	}
 	.content {

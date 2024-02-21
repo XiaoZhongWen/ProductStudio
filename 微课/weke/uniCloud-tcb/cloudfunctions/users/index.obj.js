@@ -223,7 +223,8 @@ module.exports = {
 			   const { id } = res
 			   if (typeof(id) !== 'undefined' && id.length > 0) {
 				   res = await db.collection('wk-wx').where(condition).update({
-					   userId: id
+					   userId: id,
+					   wx_openid: openid
 				   })
 				   if (typeof(res.id) !== 'undefined' && res.id.length > 0) {
 				   		userId = id
