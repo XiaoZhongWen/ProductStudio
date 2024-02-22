@@ -173,6 +173,69 @@ function buildTemplateMessageBody(openId, appid, type, data) {
 				}
 			}
 		}
+	} else if (type === "bind_course") {
+		const { student, course } = data
+		result = {
+			"touser": openId,
+			"template_id": "m7fRBBfzHfgpxW1CVyE_xpswVm-bRBSEIIQ7Hx0lfY0",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing1": {
+					"value": student
+				},
+				"thing3": {
+					"value": course
+				}
+			}
+		}
+	} else if (type === "renew_course1") {
+		const { student, renewCount, total, date } = data
+		result = {
+			"touser": openId,
+			"template_id": "YW-1eYDy97cXLW2DyhNgRCS32tu4FbenxQDzqt04YzQ",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing1": {
+					"value": student
+				},
+				"character_string3": {
+					"value": renewCount.toString()
+				},
+				"character_string4": {
+					"value": total.toString()
+				},
+				"time5": {
+					"value": date
+				}
+			}
+		}
+	} else if (type === "renew_course2") {
+		const { student, renewCount, total, date } = data
+		result = {
+			"touser": openId,
+			"template_id": "YW-1eYDy97cXLW2DyhNgRK_Dd-OeVdSk7NmHXgry7VQ",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing1": {
+					"value": student
+				},
+				"character_string9": {
+					"value": renewCount.toString()
+				},
+				"character_string11": {
+					"value": total.toString()
+				},
+				"time5": {
+					"value": date
+				}
+			}
+		}
 	}
 	return result
 }

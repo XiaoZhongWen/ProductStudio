@@ -118,10 +118,12 @@ import { computed, onMounted, ref } from 'vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
+import { useSenderStore } from "@/store/sender"
 import { Course } from '../../types/course';
 import { Org } from '../../types/org';
 import { Student, User } from '../../types/user';
 import { Entry } from '../../types/entry';
+import { BindCourseNotification } from '../../types/notification';
 
 const global = getApp().globalData!
 
@@ -134,6 +136,7 @@ let teachers:User[] = []
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
+const sender = useSenderStore()
 
 const type = ref(-1)
 const courseType = ref('')
@@ -414,6 +417,19 @@ const onBindCourse = async () => {
 			}
 			entries.value.push(entry)
 			usersStore.entries.push(entry)
+			
+			const notifications:BindCourseNotification[] = []
+			const courses = courseStore.courses.filter(c => c._id === selectedCourseId.value)
+			student.value.associateIds?.forEach(id => {
+				const item:BindCourseNotification = {
+					userId: id,
+					student: student.value?.nickName ?? '',
+					course: courses[0].name
+				}
+				notifications.push(item)
+			})
+			sender.templateMessage(notifications, "bind_course")
+			
 			reset()
 			uni.$emit(global.event_name.didUpdateCourseData, {
 				studentNo:stuNo,

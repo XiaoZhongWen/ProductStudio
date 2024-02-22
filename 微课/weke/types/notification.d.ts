@@ -30,3 +30,17 @@ export type CancelNotification = {
 	time:string,
 	reason:string
 }
+
+export type BindCourseNotification = {
+	userId:string,
+	student:string,
+	course:string,
+}
+
+export type RenewCourseNotification = {
+	userId:string,
+	student:string,
+	renewCount: number,
+	total: number,
+	date: string
+}

@@ -98,15 +98,19 @@
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
+import { useSenderStore } from "@/store/sender"
 import { computed, onMounted, ref } from "vue";
 import { Student, User } from "../../types/user";
 import { PaymentRecord } from "../../types/PaymentRecord";
 import { Entry } from "../../types/entry";
+import { RenewCourseNotification } from "../../types/notification";
+import { ymd } from "../../utils/wk-date";
 
 const props = defineProps(['entryId'])
 const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
+const senderStore = useSenderStore()
 
 const studentAvatarUrl = ref('')
 const studentNickname = ref('')
@@ -266,6 +270,21 @@ const renewCourse = async () => {
 			studentNo: entry.value.studentId,
 			courseId: entry.value.courseId
 		})
+		const students = usersStore.students.filter(s =>s._id === studentId.value)
+		if (students.length === 1) {
+			const notifications:RenewCourseNotification[] = []
+			students[0].associateIds?.forEach(id => {
+				const item = {
+					userId: id,
+					student: studentNickname.value,
+					renewCount: renewCount.value,
+					total: entry.value!.total,
+					date: ymd(new Date())
+				}
+				notifications.push(item)
+			})
+			senderStore.templateMessage(notifications, type.value === 2?"renew_course1":"renew_course2")
+		}
 	}
 	uni.showToast({
 		title:result?"续课成功":"续课失败",
