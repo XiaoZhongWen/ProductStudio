@@ -561,5 +561,17 @@ module.exports = {
 			_id: scheduleId
 		}).update(update)
 		return result.updated === 1
+	},
+	async updateScheduleNotified(scheduleId) {
+		if (typeof(scheduleId) === 'undefined' || scheduleId.length === 0) {
+			return false
+		}
+		const db = uniCloud.database()
+		const result = await db.collection('wk-schedules').where({
+			_id: scheduleId
+		}).update({
+			isNotified: true
+		})
+		return result.updated === 1
 	}
 }

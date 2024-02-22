@@ -7,8 +7,8 @@
 				class="notify" 
 				size="small"
 				@tap.stop="onNotify"
-				:text="checked?'已通知':'通知'" 
-				:type="checked?'':'success'"  
+				:text="props.schedule.isNotified?'已通知':'通知'" 
+				:type="props.schedule.isNotified?'':'success'"  
 				:circle="true" />
 		</view>
 		<view class="content">
@@ -168,12 +168,11 @@ import { useGradesStore } from "@/store/grades"
 import { useScheduleStore } from "@/store/schedules"
 import { useSenderStore } from "@/store/sender"
 import { Course } from '../../../types/course';
-import { hhmm, md } from '@/utils/wk-date'
+import { ymd, hhmm, md } from '@/utils/wk-date'
 import { Org } from '../../../types/org';
 import { Grade } from '../../../types/grade';
 import { Schedule } from '../../../types/schedule';
 import { ScheduleNotification } from '../../../types/notification';
-import { ymd } from '@/utils/wk-date'
 
 const props = defineProps(['schedule', 'ownId'])
 
@@ -232,13 +231,13 @@ onMounted(async () => {
 })
 
 const onNotify = () => {
-	if (checked.value) {
+	if (props.schedule.isNotified) {
 		return
 	}
 	uni.showModal({
 		title: global.appName,
 		content: "如果学员或家长关注了嗒嗒课吧公众号, 将会收到排课通知的公众号消息",
-		success: (res) => {
+		success: async (res) => {
 			if (res.confirm) {
 				const set:ScheduleNotification[] = []
 				const date = new Date(props.schedule.startTime)
@@ -270,7 +269,14 @@ const onNotify = () => {
 						})
 					}
 				}
-				senderStore.sendScheduleNotifications(set)
+				senderStore.templateMessage(set, "schedule_success")
+				props.schedule.isNotified = true
+				const result = await scheduleStore.updateScheduleNotified(props.schedule._id)
+				uni.showToast({
+					title: result? "已通知": "通知失败",
+					duration: 2000,
+					icon: result? "success": "none"
+				})
 			}
 		}
 	})
@@ -342,7 +348,7 @@ const onLeaveTap = async () => {
 }
 
 const onDeleteTap = () => {
-	const content = "确定要删除学员" + student.value?.nickName + "在" + dateDesc.value + start.value + "~" + end.value + "的" + course.value?.name + "课程吗?"
+	const content = "确定要取消学员" + student.value?.nickName + "在" + dateDesc.value + start.value + "~" + end.value + "的" + course.value?.name + "课程吗?"
 	uni.showModal({
 		title: global.appName,
 		content: content,

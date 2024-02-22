@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ScheduleNotification } from '../types/notification'
+import { ModifyDateNotification, ScheduleNotification, ConsumeNotification, CancelNotification } from '../types/notification'
 
 const sender_co = uniCloud.importObject('sender', {
 	customUI: true
@@ -13,8 +13,11 @@ export const useSenderStore = defineStore('sender', {
 		
 	},
 	actions: {
-		sendScheduleNotifications(s:ScheduleNotification[]) {
-			sender_co.scheduleSuccessMessage(s)
+		templateMessage(s:ScheduleNotification[]|
+						ModifyDateNotification[]|
+						ConsumeNotification[]|
+						CancelNotification[], type:string) {
+			sender_co.templateMessage(s, type)
 		}
 	}
 })

@@ -227,20 +227,23 @@ import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
 import { useScheduleStore } from "@/store/schedules"
+import { useSenderStore } from "@/store/sender"
 import { Grade } from '../../types/grade'
 import { onLoad } from '@dcloudio/uni-app'
-import { totalClasses, yyyyMMdd } from '@/utils/wk-date'
+import { totalClasses, yyyyMMdd, ymd, hhmm } from '@/utils/wk-date'
 import DateCard from './components/DateCard.vue'
 import RepeatCard from './components/RepeatCard.vue'
 import wkChooseMemberVue from '@/components/wk-choose-member/wk-choose-member.vue';
 import { Entry } from '../../types/entry'
 import { Schedule } from '../../types/schedule'
+import { ModifyDateNotification } from '../../types/notification'
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 const courseStore = useCourseStore()
 const gradesStore = useGradesStore()
 const scheduleStore = useScheduleStore()
+const senderStore = useSenderStore()
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -258,6 +261,7 @@ const calendar = ref<{
 }>()
 
 const scheduleId = ref('')
+const originalSchedule = ref<Schedule>()
 const consume = ref(0)
 const isFullDay = ref(false)
 const isNotice = ref(false)
@@ -361,6 +365,7 @@ onLoad(async (option) => {
 			}
 			return result
 		})
+		originalSchedule.value = schedule
 		
 		if (JSON.stringify(schedule) !== '{}') {
 			const type = schedule.classId?.length === 0? 0: 1
@@ -869,7 +874,8 @@ const onClassTap = () => {
 }
 
 const onCourseTap = () => {
-	if (courses.value.length < 2) {
+	// 课程数小于2或者该排课已经发送过通知
+	if (courses.value.length < 2 || originalSchedule.value?.isNotified) {
 		return
 	}
 	if (chooseMemberRef.value) {
@@ -1203,6 +1209,8 @@ const onSchedule = async () => {
 			return result
 		})
 		if (JSON.stringify(schedule) !== '{}') {
+			const oStartTime = originalSchedule.value!.startTime
+			const oEndTime = originalSchedule.value!.endTime
 			const preCourseDate = schedule.courseDate
 			const result = await scheduleStore.updateSchedule2({
 				scheduleId: scheduleId.value,
@@ -1238,6 +1246,17 @@ const onSchedule = async () => {
 						courseDate, 
 						schedule.status
 					)
+				}
+				if (oStartTime !== startTime ||
+					oEndTime !== endTime) {
+					// 排课时间变更通知
+					const oStart = new Date(oStartTime)
+					const oEnd = new Date(oEndTime)
+					const mStartTime = new Date(startTime)
+					const mEndTime = new Date(endTime)
+					const originalTime = ymd(oStart) + " " + hhmm(oStart) + "~" + hhmm(oEnd)
+					const modifyTime = ymd(mStartTime) + " " + hhmm(mStartTime) + "~" + hhmm(mEndTime)
+					modifyTimeNotification(originalTime, modifyTime)
 				}
 			} else {
 				uni.showToast({
@@ -1290,6 +1309,39 @@ const onSchedule = async () => {
 			endRepeatDate.value = ''
 		}
 	}
+}
+
+const modifyTimeNotification = (originalTime:string, newTime:string) => {
+	const set:ModifyDateNotification[] = []
+	if (selectedCourseType.value === 0) {
+		const s = usersStore.students.filter(s => s._id === selectedStudentId.value)
+		if (s.length === 1) {
+			s[0].associateIds?.forEach(id => {
+				const item:ModifyDateNotification = {
+					userId: id,
+					course: selectedCourse.value,
+					student: selectedStudent.value,
+					originalTime,
+					newTime
+				}
+				set.push(item)
+			})
+		}
+	} else {
+		students.value.forEach(s => {
+			s.associateIds?.forEach(id => {
+				const item:ModifyDateNotification = {
+					userId: id,
+					course: selectedCourse.value,
+					student: s.nickName,
+					originalTime,
+					newTime
+				}
+				set.push(item)
+			})
+		})
+	}
+	senderStore.templateMessage(set, "modify_date")
 }
 
 </script>

@@ -5,6 +5,7 @@ let uobc = require('uni-open-bridge-common')
 const crypto = require('crypto')
 const xml2js = require('xml2js')
 const WXBizMsgCrypt = require('wechat-crypto')
+const { stringify } = require('querystring')
 const key = {
 	"dcloudAppid": "__UNI__1226721",
 	"platform": "weixin-h5"
@@ -71,11 +72,116 @@ async function handleSubscribeEvent(event, openId) {
 	}
 }
 
+function buildTemplateMessageBody(openId, appid, type, data) {
+	if (typeof(openId) === 'undefined' || openId.length === 0 ||
+		typeof(type) === 'undefined' || type.length === 0) {
+		return {}
+	}
+	let result = {}
+	if (type === "schedule_success") {
+		const { course, teacher, student, duration } = data
+		result = {
+			"touser": openId,
+			"template_id": "7svCP-LitRyI_EXA12KLb6ojKoZtv7lEJSgH5XeWChs",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing1": {
+					"value": course
+				},
+				"thing5": {
+					"value": teacher
+				},
+				"thing4": {
+					"value": student
+				},
+				"time2": {
+					"value": duration
+				}
+			}
+		}
+	} else if (type === "modify_date") {
+		const { course, student, originalTime, newTime } = data
+		result = {
+			"touser": openId,
+			"template_id": "l9mWta55NG_ZtrC449jV-ZVi8JCZvHvSkPv_-fHD0yk",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing2": {
+					"value": course
+				},
+				"thing17": {
+					"value": student
+				},
+				"time4": {
+					"value": originalTime
+				},
+				"time5": {
+					"value": newTime
+				}
+			}
+		}
+	} else if (type === "schedule_consume") {
+		const { student, course, consume, surplus } = data
+		result = {
+			"touser": openId,
+			"template_id": "qsPlJVejULxe2mRzOEQpDpNomgLhNrLRvfpiFA6d3t4",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing2": {
+					"value": student
+				},
+				"thing6": {
+					"value": course
+				},
+				"short_thing3": {
+					"value": consume
+				},
+				"short_thing4": {
+					"value": surplus
+				}
+			}
+		}
+	} else if (type === "schedule_cancel") {
+		const { orgName, student, course, time, reason } = data
+		result = {
+			"touser": openId,
+			"template_id": "5HPlCwe9TXJQXdS60RPsvyIpXPExmzWJ0rlrSrb5vvM",
+			"miniprogram": {
+				"appid": appid
+			},
+			"data": {
+				"thing10": {
+					"value": orgName
+				},
+				"thing5": {
+					"value": student
+				},
+				"thing1": {
+					"value": course
+				},
+				"time8": {
+					"value": time
+				},
+				"thing4": {
+					"value": reason
+				}
+			}
+		}
+	}
+	return result
+}
+
 module.exports = {
 	_before: function () { // 通用预处理器
 
 	},
-	async scheduleSuccessMessage(s) {
+	async templateMessage(s, type) {
 		try {
 			const { access_token } = await uobc.getAccessToken(key)
 			const db = uniCloud.database()
@@ -84,7 +190,7 @@ module.exports = {
 			if (record.length > 0) {
 				const { appid } = record[0].mp
 				for (let notification of s) {
-					const { userId, course, teacher, student, duration } = notification
+					const { userId } = notification
 					const res = await db.collection("wk-wx").where({
 						userId
 					}).get()
@@ -92,37 +198,21 @@ module.exports = {
 						const item = res.data[0]
 						const fwh_openid = item.fwh_openid
 						if (typeof(fwh_openid) !== 'undefined' && fwh_openid.length > 0) {
-							const result = await uniCloud.httpclient.request('https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + access_token, {
-								method:'POST',
-								data:{
-									"touser": fwh_openid,
-									"template_id": "7svCP-LitRyI_EXA12KLb6ojKoZtv7lEJSgH5XeWChs",
-									"miniprogram": {
-										"appid": appid
-									},
-									"data": {
-										"thing1": {
-											"value": course
-										},
-										"thing5": {
-											"value": teacher
-										},
-										"thing4": {
-											"value": student
-										},
-										"time2": {
-											"value": duration
-										}
-									}
-								},
-								contentType: 'json',
-								dataType: 'json'
-							})
+							const data = buildTemplateMessageBody(fwh_openid, appid, type, notification)
+							if (JSON.stringify(data) !== "{}") {
+								const result = await uniCloud.httpclient.request('https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + access_token, {
+									method:'POST',
+									data,
+									contentType: 'json',
+									dataType: 'json'
+								})
+							}
 						}
 					}
 				}
 			}
 		} catch(e) {
+			console.info(e)
 		}
 	},
 	async publicAccount(ctx) {
