@@ -6,7 +6,7 @@
 		onLaunch: function() {
 			navigateInterceptor()
 		},
-		onShow: function() {
+		onShow: function(option) {
 			uni.getStorage({
 				key: 'wk-login',
 				success: async (res) => {
@@ -20,6 +20,25 @@
 					let result = false
 					if (data.from === 'wx') {
 						result = await usersStore.login()
+						if (result) {
+							const { shareTicket } = option
+							if (typeof(shareTicket) !== 'undefined' && shareTicket.length > 0) {
+								uni.authPrivateMessage({
+									shareTicket,
+									success: (res) => {
+										const { valid } = res
+										if (valid) {
+											uni.getShareInfo(shareTicket, success:(response) => {
+												console.info(response)
+											})
+										}
+									},
+									fail: (res) => {
+										console.info("fail: " + res)
+									}
+								})
+							}
+						}
 					} else {
 						const { stuNo, pwd } = data
 						result = await usersStore.login('stuNo', stuNo, pwd)

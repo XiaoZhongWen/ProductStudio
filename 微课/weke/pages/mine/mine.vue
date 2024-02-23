@@ -41,11 +41,17 @@
 			<view class="account-container">
 				<uni-list>
 					<uni-list-item link v-for="item in account" :key="item.name" :to="item.to">
-						<template v-slot:header>
+						<template v-slot:header v-if="item.type !== 'phone-filled'">
 							<view class="slot-box">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">{{item.name}}</text>
 							</view>
+						</template>
+						<template v-slot:header v-else>
+							<button open-type="getPhoneNumber" @getphonenumber="getPhoneNumber" class="slot-box btn" :plain="true">
+								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
+								<text class="slot-text">{{item.name}}</text>
+							</button>
 						</template>
 					</uni-list-item>
 				</uni-list>
@@ -136,6 +142,7 @@ onLoad((option) => {
 		phoneNumber: string|undefined,
 		timestamp: number|undefined
 	}
+	console.info(option)
 	if (typeof(orgId) !== 'undefined' && orgId.length > 0 &&
 		typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0 &&
 		typeof(timestamp) !== 'undefined' && timestamp > Date.now()) {
@@ -213,8 +220,7 @@ const account:ListItem[] = computed({
 		let account = [
 			{
 				type: "phone-filled",
-				name: "绑定手机号",
-				to: "/pages/bind/bind?type=mobile"
+				name: "绑定手机号"
 			},
 			{
 				type: "vip-filled",
@@ -222,6 +228,14 @@ const account:ListItem[] = computed({
 				to: "/pages/memberCenter/memberCenter"
 			}
 		]
+		const mobile = usersStore.owner.mobile ?? ''
+		if (mobile.length) {
+			account = [{
+				type: "vip-filled",
+				name: "会员中心",
+				to: "/pages/memberCenter/memberCenter"
+			}]
+		}
 		if (usersStore.owner.from === 'wx') {
 			const roles = new Set(usersStore.owner.roles)
 			if (roles.size === 0) {
@@ -474,6 +488,17 @@ uni.$on(global.event_name.selectRole, () => {
 	uni.hideTabBar()
 })
 
+const getPhoneNumber = async (e) => {
+	const { code } = e.detail
+	const result = await usersStore.fetchPhoneNumber(code)
+	const res = typeof(result) !== 'undefined' && result.length > 0
+	uni.showToast({
+		title: res? "绑定成功": "绑定失败",
+		duration: global.duration_toast,
+		icon: res? "success": "none"
+	})
+}
+
 const loadInitialData = async () => {
 	uni.showLoading({
 		title: "正在加载初始数据",
@@ -531,6 +556,15 @@ const fetchChildren = async () => {
 			position: relative;
 			top: 3px;
 		}
+	}
+	.btn {
+		border-radius: 0;
+		background-color: transparent;
+		border: none;
+		padding: 0;
+		line-height: 1;
+		width: 100%;
+		text-align: left;
 	}
 }
 
