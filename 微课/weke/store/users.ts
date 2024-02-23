@@ -710,8 +710,32 @@ export const useUsersStore = defineStore('users', {
 			)
 			return data
 		},
-		createActivityId() {
-			users_co.createActivityId()
+		async fetchPhoneNumber(code:string) {
+			if (typeof(code) === 'undefined' || code.length === 0) {
+				return ''
+			}
+			const result = await users_co.fetchPhoneNumber(code, this.owner._id) as {
+				data : {
+					phone_info: {
+						phoneNumber: string
+					}
+				}
+			}
+			const { phoneNumber } = result.data.phone_info
+			this.owner.mobile = phoneNumber
+			return phoneNumber
+		},
+		async unbindPhoneNumber() {
+			const result = await users_co.unbindPhoneNumber(this.owner._id)
+			if (result) {
+				this.owner.mobile = ""
+			}
+			return result
+		},
+		async createActivityId() {
+			const result = await users_co.createActivityId()
+			const { activity_id } = result
+			return activity_id
 		}
 	}
 })

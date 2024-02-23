@@ -3,10 +3,10 @@
 // @ts-ignore
 const md5 = require('js-md5')
 const { type } = require('os');
-const UniSubscribemsg = require('uni-subscribemsg');
-const mp_wx_data = {
-	AppID:'',
-	AppSecret:''
+let uobc = require('uni-open-bridge-common')
+const key = {
+	"dcloudAppid": "__UNI__1226721",
+	"platform": "weixin-mp"
 }
 
 module.exports = {
@@ -639,32 +639,54 @@ module.exports = {
 		}
 	   return result
    },
+   async fetchPhoneNumber(code, userId) {
+	   if (typeof(code) === 'undefined' || code.length === 0 ||
+		typeof(userId) === 'undefined' || userId.length === 0) {
+		   return ''
+	   }
+	   try {
+		   const { access_token } = await uobc.getAccessToken(key)
+		   const result = await uniCloud.httpclient.request("https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=" + access_token, {
+			   method:'POST',
+			   data: {
+				   code
+			   },
+			   contentType: 'json',
+			   dataType: 'json'
+		   })
+		   const { phoneNumber } = result.data.phone_info
+		   if (typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0) {
+			   const db = uniCloud.database()
+			   const res = await db.collection("wk-users").where({
+			   		_id: userId
+			   }).update({
+				   mobile: phoneNumber
+			   })
+		   }
+		   return result
+	   } catch (e) {}
+   },
+   async unbindPhoneNumber(userId) {
+	   if (typeof(userId) === 'undefined' || userId.length === 0) {
+		   return false
+	   }
+	   const db = uniCloud.database()
+	   const res = await db.collection("wk-users").where({
+	   		_id: userId
+	   }).update({
+	   		mobile: ""
+	   })
+	   return res.updated === 1
+   },
    async createActivityId() {
-	   let uniSubscribemsg = new UniSubscribemsg({
-		   dcloudAppid: "__UNI__1226721",
-		   provider: "weixin-h5",
-	   })
-	   let res = await uniSubscribemsg.sendTemplateMessage({
-			touser: "oYqbZ4jrubwgf_pcAV9OqN6WhFaQ",
-		   	template_id: "IEUnM9EBj59XVp8EYl2T6boBuwdciPYbNNDXoxq_N8s",
-		   	page: "pages/calendar/calendar", // 小程序页面地址
-		   	miniprogram_state: "developer", // 跳转小程序类型：developer为开发版；trial为体验版；formal为正式版；默认为正式版
-		   	lang: "zh_CN",
-		   	data: {
-		   		name3: {
-		   			value: "张三"
-		   		},
-		   		thing26: {
-		   			value: "英语"
-		   		},
-		   		time25: {
-		   			value: "2024年01月20日 8:00 ~ 10:00"
-		   		},
-		   		thing16: {
-		   			value: "准备上课了"
-		   		}
-		   	}
-	   })
-	   console.info(res)
+	   try {
+		   const { access_token } = await uobc.getAccessToken(key)
+		   const result = await uniCloud.httpclient.request("https://api.weixin.qq.com/cgi-bin/message/wxopen/activityid/create?access_token=" + access_token, {
+				method:'GET',
+			    contentType: 'json',
+   			    dataType: 'json'
+		   })
+		   return result.data
+	   } catch(e) {}
    }
 }

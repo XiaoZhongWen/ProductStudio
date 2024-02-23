@@ -88,9 +88,25 @@ onLoad((option) => {
 	}
 })
 
-onShareAppMessage((option) => {
+onShareAppMessage(async (option) => {
 	const { from, target } = option
 	if (from === "button") {
+		const activityId = await usersStore.createActivityId()
+		uni.updateShareMenu({
+			withShareTicket: true,
+			isPrivateMessage: true,
+			activityId,
+			templateInfo: {
+				parameterList: [{
+					name: "orgId",
+					value: orgId
+				}, {
+					name: "phoneNumber",
+					value: phoneNumber
+				}]
+			}
+		})
+		console.info(activityId)
 		const { orgId, phoneNumber, timestamp } = target.dataset.info
 		const title = usersStore.owner.nickName + "向你发起老师邀请"
 		const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
@@ -107,10 +123,11 @@ onShareAppMessage((option) => {
 
 onMounted(async () => {
 	if (usersStore.isLogin) {
+		// 匿名机构也可以添加老师
 		orgs.value = useOrgs.myOrgs.filter(org => {
 			const flag = organizationId.length === 0 ||
 			(organizationId.length > 0 && org._id === organizationId)
-			return flag && org.type === 0
+			return flag
 		})
 		
 		const teacherIds:string[] = []

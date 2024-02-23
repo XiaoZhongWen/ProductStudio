@@ -2,7 +2,7 @@
   "name": "users",
   "dependencies": {
     "js-md5": "^0.7.3",
-    "uni-subscribemsg": "file:../../../uni_modules/uni-subscribemsg/uniCloud/cloudfunctions/common/uni-subscribemsg"
+    "uni-open-bridge-common": "file:../../../uni_modules/uni-open-bridge-common/uniCloud/cloudfunctions/common/uni-open-bridge-common"
   },
   "extensions": {
     "uni-cloud-jql": {}

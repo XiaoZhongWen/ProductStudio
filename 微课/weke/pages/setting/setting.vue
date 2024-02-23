@@ -1,14 +1,20 @@
 <template>
 	<view class="setting-container">
 		<uni-list>
-			<uni-list-item v-for="item in menu" :key="item.name" clickable @tap="onTapChangePwd">
+			<uni-list-item v-if="isShowChangePwdMenu" clickable @tap="onTapChangePwd">
 				<template v-slot:header>
 					<view class="slot-box">
-						<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
-						<text class="slot-text">{{item.name}}</text>
+						<uni-icons class="icon" type="locked-filled" color="#007aff" size=22></uni-icons>
+						<text class="slot-text">修改密码</text>
 					</view>
 				</template>
 			</uni-list-item>
+			<uni-list-item 
+				v-if="usersStore.owner.mobile" 
+				title="已绑定手机号" 
+				:note="usersStore.owner.mobile" 
+				rightText="解除绑定" 
+				@tap="unbind" />
 		</uni-list>
 		<button class="btn" type="default" @tap="onLogout">
 			<text class="text">退出登录</text>
@@ -23,7 +29,7 @@
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import ChangePassword from './change-password/ChangePassword'
-import { computed, ref } from "vue";
+import { computed, ref } from "vue"
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
@@ -39,27 +45,36 @@ type ListItem = {
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
 
+const global = getApp().globalData!
+
+const isShowChangePwdMenu = ref(usersStore.owner.from === 'stuNo' && 
+		usersStore.owner.studentNo.length > 0)
+
 const onLogout = () => {
 	usersStore.$reset()
 	useOrgs.$reset()
 	uni.navigateBack()
 }
  
- const menu = computed<ListItem[]>(() => {
-	 if (usersStore.owner.from === 'stuNo' && 
-		usersStore.owner.studentNo.length > 0) {
-		 return [
-			 {
-				 type: "locked-filled",name: "修改密码",
-			 }
-		 ]
-	 } else {
-		 return []
-	 }
- })
- 
  const onTapChangePwd = () => {
 	 popup.value?.open()
+ }
+ 
+ const unbind = () => {
+	 uni.showModal({
+	 	title: global.appName,
+	 	content: "解除绑定后，嗒嗒课吧用户将不能通过手机号直接添加您，确定要解除绑定吗?",
+		success: async (res) => {
+			if (res.confirm) {
+				const result = await usersStore.unbindPhoneNumber()
+				uni.showToast({
+					title: result? "已解绑": "解绑失败",
+					duration: global.duration_toast,
+					icon: result? "success": "none"
+				})
+			}
+		}
+	 })
  }
  
  const onComplete = (data: {status: boolean}) => {
