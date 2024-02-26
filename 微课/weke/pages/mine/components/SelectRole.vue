@@ -49,8 +49,7 @@ const onConfirm = () => {
 	if (selectedId.value.length) {
 		let flag = roleIds.length !== selectedId.value.length
 		if (!flag) {
-			const set = new Set(roleIds)
-			const res = selectedId.value.filter(item => !set.has(item))
+			const res = selectedId.value.filter(item => !roleIds.includes(item))
 			flag = res.length !== 0
 		}
 		if (flag) {

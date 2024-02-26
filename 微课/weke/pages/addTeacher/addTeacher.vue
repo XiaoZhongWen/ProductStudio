@@ -91,23 +91,13 @@ onLoad((option) => {
 onShareAppMessage(async (option) => {
 	const { from, target } = option
 	if (from === "button") {
+		const { orgId, phoneNumber, timestamp } = target.dataset.info
 		const activityId = await usersStore.createActivityId()
 		uni.updateShareMenu({
 			withShareTicket: true,
 			isPrivateMessage: true,
-			activityId,
-			templateInfo: {
-				parameterList: [{
-					name: "orgId",
-					value: orgId
-				}, {
-					name: "phoneNumber",
-					value: phoneNumber
-				}]
-			}
+			activityId
 		})
-		console.info(activityId)
-		const { orgId, phoneNumber, timestamp } = target.dataset.info
 		const title = usersStore.owner.nickName + "向你发起老师邀请"
 		const path = `/pages/mine/mine?orgId=${orgId}&phoneNumber=${phoneNumber}&timestamp=${timestamp}`
 		return {
@@ -219,7 +209,7 @@ const onAddTap = async (data:{info:EditInfo}) => {
 	} else {
 		const org = orgs.value.filter(org => org._id === orgId)[0]
 		if (!org.teacherIds?.includes(user._id)) {
-			useOrgs.addTeachers(org._id, [user._id])
+			await useOrgs.addTeachers(org._id, [user._id])
 			teachers.value.push(user)
 			uni.$emit("modify-teacher-success")
 		} else {

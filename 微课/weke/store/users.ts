@@ -22,6 +22,7 @@ const course_co = uniCloud.importObject('course', {
 export const useUsersStore = defineStore('users', {
 	state: () => {
 		return {
+			beInvited: false,
 			isLogin: false,
 			owner: {
 				_id: '',
@@ -108,7 +109,6 @@ export const useUsersStore = defineStore('users', {
 							this.owner.openid = openid
 							this.owner.unionid = (identityType === IdentityType.UseUnionId)? unionid: ""
 							this.owner.session_key = session_key
-							this.isLogin = true
 							
 							const { 
 								_id, 
@@ -148,6 +148,7 @@ export const useUsersStore = defineStore('users', {
 							if (index === -1) {
 								this.users.push(this.owner)
 							}
+							this.isLogin = true
 						} else {
 							this.owner.openid = openid
 							this.owner.unionid = unionid
@@ -167,7 +168,6 @@ export const useUsersStore = defineStore('users', {
 						typeof(pwd) !== 'undefined' && pwd.length) {
 						const student = await users_co.authStuIdentity(stuNo, pwd)
 						if (JSON.stringify(student) !== '{}') {
-							this.isLogin = true
 							const { _id, identity, avatarId, mobile, nickName, status, studentNo, signature } = student
 							this.owner._id = _id
 							this.owner.identity = identity
@@ -193,6 +193,7 @@ export const useUsersStore = defineStore('users', {
 									pwd
 								}
 							})
+							this.isLogin = true
 						}
 					}
 				}
@@ -254,10 +255,14 @@ export const useUsersStore = defineStore('users', {
 			let result = false
 			try {
 				if (this.owner.from === 'wx') {
-					await users_co.updateUser({
+					const res = await users_co.updateUser({
 						...this.owner,
 						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 					})
+					const { _id } = res as {_id: string}
+					if (this.owner._id.length === 0) {
+						this.owner._id = _id
+					}
 				} else {
 					await users_co.updateStudent({...this.owner})
 				}

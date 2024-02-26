@@ -142,10 +142,8 @@ onLoad((option) => {
 		phoneNumber: string|undefined,
 		timestamp: number|undefined
 	}
-	console.info(option)
 	if (typeof(orgId) !== 'undefined' && orgId.length > 0 &&
-		typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0 &&
-		typeof(timestamp) !== 'undefined' && timestamp > Date.now()) {
+		typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0) {
 		inviteOrgId = orgId
 		invitePhoneNumber = phoneNumber
 	}
@@ -180,6 +178,7 @@ type ListItem = {
 // @ts-ignore
 const org:ListItem[] = computed({
 	get() {
+		console.info("computed org...")
 		let org = [
 			{
 				type: "shop-filled",
@@ -198,14 +197,14 @@ const org:ListItem[] = computed({
 			}
 		]
 		if (usersStore.owner.from === 'wx') {
-			const roles = new Set(usersStore.owner.roles)
-			if (roles.size === 0) {
+			const roles = usersStore.owner.roles ?? []
+			if (roles.length === 0) {
 				org = []
 			} else {
-				if (roles.has(3) && roles.size === 1) {
+				if (roles.includes(3) && roles.length === 1) {
 					// 家长
 					org = []
-				} else if (!roles.has(1)) {
+				} else if (!roles.includes(1)) {
 					org.splice(1, 1)
 				}
 			}
@@ -217,6 +216,7 @@ const org:ListItem[] = computed({
 // @ts-ignore
 const account:ListItem[] = computed({
 	get() {
+		console.info("computed account...")
 		let account = [
 			{
 				type: "phone-filled",
@@ -237,11 +237,11 @@ const account:ListItem[] = computed({
 			}]
 		}
 		if (usersStore.owner.from === 'wx') {
-			const roles = new Set(usersStore.owner.roles)
-			if (roles.size === 0) {
+			const roles = usersStore.owner.roles ?? []
+			if (roles.length === 0) {
 				account = []
 			}
-			if (usersStore.owner.roles?.includes(3)) {
+			if (roles.includes(3)) {
 				// 包含家长角色
 				account.unshift({
 					type: "auth-filled",
@@ -280,18 +280,26 @@ const other:ListItem[] = [
 ]
 
 onMounted(async () => {
+	console.info("show loading - onMounted")
 	uni.showLoading({
 		title: "加载中"
 	})
 	selectRole()
 	await fetchChildren()
 	uni.hideLoading()
+	handleTeacherInvite()
 })
 
 // @ts-ignore
-const { isLogin } = storeToRefs(usersStore)
+const { isLogin, beInvited } = storeToRefs(usersStore)
 watch(isLogin, () => {
 	selectRole()
+})
+
+watch(beInvited, () => {
+	if (beInvited) {
+		handleTeacherInvite()
+	}
 })
 
 const selectRole = () => {
@@ -302,27 +310,6 @@ const selectRole = () => {
 			if (roles.length === 0) {
 				showSelectRole()
 				uni.hideTabBar()
-			}
-			if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
-				const mobile = usersStore.owner.mobile
-				if (typeof(mobile) === 'undefined' || mobile.length === 0) {
-					uni.showToast({
-						title:"请绑定手机号",
-						duration:global.duration_toast,
-						icon:"none"
-					})
-				} else if (mobile === invitePhoneNumber) {
-					// 1. 添加到机构的老师集合中
-					// 2. 提醒用户加入机构成功
-				}
-			}
-		} else {
-			if (inviteOrgId.length > 0 && invitePhoneNumber.length > 0) {
-				uni.showToast({
-					title:"请登录注册",
-					duration:global.duration_toast,
-					icon:"none"
-				})
 			}
 		}
 	} else if (usersStore.owner.from === 'stuNo') {
@@ -401,6 +388,10 @@ uni.$on(global.event_name.login, async (data) => {
 		return
 	}
 	try {
+		onPopup()
+		uni.showLoading({
+			title: '正在登录...'
+		})
 		// 3. 登录
 		if (usersStore.owner.from !== 'stuNo') {
 			await usersStore.login()
@@ -411,14 +402,13 @@ uni.$on(global.event_name.login, async (data) => {
 		const isUpdatedNickname = usersStore.updateNickname(nickname)
 		const unionid = usersStore.owner.unionid ?? ''
 		const openid = usersStore.owner.openid ?? ''
+		let isUpdated = true
 		// 6. 更新云端用户信息
 		if ((isUpdatedPortrait || isUpdatedNickname) &&
 			(usersStore.owner.from === 'stuNo' ||
 			(usersStore.owner.from === 'wx' && (unionid.length > 0 || openid.length > 0)))) {
-			const isUpdated = await usersStore.updateCloudUser()
+			isUpdated = await usersStore.updateCloudUser()
 			if (isUpdated) {
-				// 7. 退出界面
-				onPopup()
 				loadInitialData()
 			} else {
 				uni.showToast({
@@ -427,9 +417,8 @@ uni.$on(global.event_name.login, async (data) => {
 					icon:"none"
 				})
 			}
-		} else {
-			onPopup()
 		}
+		uni.hideLoading()
 	} catch(e) {
 		console.error(e)
 	}
@@ -455,6 +444,7 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 		})
 		return
 	}
+	
 	uni.showLoading({
 		title: '正在登录...'
 	})
@@ -497,6 +487,42 @@ const getPhoneNumber = async (e) => {
 		duration: global.duration_toast,
 		icon: res? "success": "none"
 	})
+	if (result) {
+		handleTeacherInvite()
+	}
+}
+
+const handleTeacherInvite = async () => {
+	console.info("handleTeacherInvite: " + inviteOrgId + " " + invitePhoneNumber)
+	if (inviteOrgId.length > 0 && 
+	 	invitePhoneNumber.length > 0) {
+		const mobile = usersStore.owner.mobile ?? ''
+		if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+			console.info("手机号空")
+			uni.showToast({
+				title:"请绑定手机号",
+				duration:global.duration_toast,
+				icon:"none"
+			})
+		} else if (mobile === invitePhoneNumber) {
+			console.info("手机号一致")
+			// 1. 添加到机构的老师集合中
+			const result = await orgsStore.addTeachers(inviteOrgId, [usersStore.owner._id])
+			// 2. 提醒用户加入机构成功
+			uni.showToast({
+				title:result?"加入机构成功":"加入机构失败",
+				duration:global.duration_toast,
+				icon:result?"success":"none"
+			})
+		} else {
+			console.info("手机号不一致")
+			uni.showToast({
+				title:"您绑定的手机号与受邀请的手机号不一致",
+				duration:global.duration_toast,
+				icon:"none"
+			})
+		}
+	}
 }
 
 const loadInitialData = async () => {

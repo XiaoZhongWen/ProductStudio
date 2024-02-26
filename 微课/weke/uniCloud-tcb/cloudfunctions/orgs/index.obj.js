@@ -100,14 +100,14 @@ module.exports = {
 		}
 		return orgId
 	},
-	async fetchOrgsByIds(orgIds) {
-		if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
+	async asyncFetchOrgById(orgId) {
+		if (typeof(orgId) === 'undefined' || orgId.length === 0) {
 			return []
 		}
 		const db = uniCloud.database()
 		const dbCmd = db.command
 		const res = await db.collection("wk-orgs").where({
-			_id: dbCmd.in(orgIds)
+			_id: orgId
 		}).get()
 		return res.data
 	},
@@ -217,7 +217,7 @@ module.exports = {
 		}).update({
 			teacherIds: ids
 		})
-		return res
+		return res.updated > 0
 	},
 	async removeStudents(orgId, sIds) {
 		if (typeof(orgId) === 'undefined' || orgId.length === 0 ||

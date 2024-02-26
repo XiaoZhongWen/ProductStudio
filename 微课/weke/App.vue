@@ -7,42 +7,39 @@
 			navigateInterceptor()
 		},
 		onShow: function(option) {
+			const usersStore = useUsersStore()
+			if (usersStore.isLogin) {
+				const { shareTicket } = option
+				if (typeof(shareTicket) !== 'undefined' && shareTicket.length > 0) {
+					uni.authPrivateMessage({
+						shareTicket,
+						success: (res) => {
+							const { valid } = res
+							usersStore.beInvited = valid
+						},
+						fail: (res) => {}
+					})
+				}
+				return
+			}
 			uni.getStorage({
 				key: 'wk-login',
 				success: async (res) => {
 					const data = res.data
+					console.info("show loading - getStorage")
 					uni.showLoading({
 						title: "正在登录",
 						mask: true
 					})
-					const usersStore = useUsersStore()
 					const orgsStore = useOrgsStore()
 					let result = false
 					if (data.from === 'wx') {
 						result = await usersStore.login()
-						if (result) {
-							const { shareTicket } = option
-							if (typeof(shareTicket) !== 'undefined' && shareTicket.length > 0) {
-								uni.authPrivateMessage({
-									shareTicket,
-									success: (res) => {
-										const { valid } = res
-										if (valid) {
-											uni.getShareInfo(shareTicket, success:(response) => {
-												console.info(response)
-											})
-										}
-									},
-									fail: (res) => {
-										console.info("fail: " + res)
-									}
-								})
-							}
-						}
 					} else {
 						const { stuNo, pwd } = data
 						result = await usersStore.login('stuNo', stuNo, pwd)
 					}
+					console.info("hide loading - getStorage")
 					uni.hideLoading()
 					uni.showToast({
 						title: result? "登录成功": "登录失败",
@@ -50,6 +47,7 @@
 						icon: result? "success": "none"
 					})
 					if (result) {
+						console.info("show loading - 加载初始数据")
 						uni.showLoading({
 							title: "加载初始数据",
 							mask: true
@@ -59,6 +57,7 @@
 						if (usersStore.owner.from === 'wx') {
 							await orgsStore.fetchAnonymousOrg()
 						}
+						console.info("hide loading - 加载初始数据")
 						uni.hideLoading()
 						uni.$emit(this.globalData.didFinishedInitialData)
 						if (usersStore.isExpired) {

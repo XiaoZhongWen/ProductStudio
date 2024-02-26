@@ -241,16 +241,19 @@ export const useOrgsStore = defineStore('orgs', {
 				}
 			}
 		},
-		fetchOrgsByIds(orgIds:string[]) {
-			if (typeof(orgIds) === 'undefined' || orgIds.length === 0) {
-				return []
+		async asyncFetchOrgById(orgId:string) {
+			let org = this.fetchOrgById(orgId)
+			if (typeof(org) === 'undefined') {
+				const data = await orgs_co.asyncFetchOrgById(orgId)
+				org = data[0]
+				if (typeof(org) !== 'undefined') {
+					const index = this.orgs.findIndex(o => o._id === orgId)
+					if (index === -1) {
+						this.orgs.push(org)
+					}
+				}
 			}
-			const orgs:Org[] = []
-			orgIds.forEach(orgId => {
-				const index = this.orgs.findIndex(org => org._id === orgId)
-				orgs.push(this.orgs[index])
-			})
-			return orgs
+			return org
 		},
 		fetchOrgById(orgId:string) {
 			let result = this.orgs.filter(org => org._id === orgId)
@@ -262,16 +265,25 @@ export const useOrgsStore = defineStore('orgs', {
 		/**
 		 * 向机构添加老师
 		 */
-		addTeachers(orgId:string, teacherIds:string[]) {
+		async addTeachers(orgId:string, teacherIds:string[]) {
 			const res = this.orgs.filter(org => org._id === orgId)
+			if (res.length === 0) {
+				const org = await this.asyncFetchOrgById(orgId)
+				if (typeof(org) !== 'undefined') {
+					res.push(org)
+				}
+			}
+			let result = false
 			if (res.length > 0) {
 				const org = res[0]
 				const ids = teacherIds.filter(id => !org.teacherIds?.includes(id))
 				if (ids.length > 0) {
 					org.teacherIds?.push(...ids)
 					orgs_co.addTeachers(orgId, ids)
+					result = true
 				}
 			}
+			return result
 		},
 		/**
 		 * 删除机构学员
