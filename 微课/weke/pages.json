@@ -286,8 +286,28 @@
                 "enablePullDownRefresh": false
             }
             
-        }
-    ],
+        }],
+	"subPackages": [
+		{
+				"root": "uni_modules/uni-pay/pages",
+				"pages": [
+					{
+						"path": "success/success",
+						"style": {
+							"navigationBarTitleText": "支付成功",
+							"backgroundColor": "#F8F8F8"
+						}
+					},
+					{
+						"path": "ad-interactive-webview/ad-interactive-webview",
+						"style": {
+							"navigationBarTitleText": "ad",
+							"backgroundColor": "#F8F8F8"
+						}
+					}
+				]
+			}
+	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

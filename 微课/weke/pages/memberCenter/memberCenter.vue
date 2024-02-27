@@ -1,5 +1,11 @@
 <template>
 	<view class="member-center-container">
+		<template>
+			<view>
+				<button @click="open">唤起收银台支付</button>
+				<uni-pay ref="pay"></uni-pay>
+			</view>
+		</template>
 		<view class="member-card-container" v-if="!usersStore.owner.isSubscribed">
 			<template v-for="option in memberOptions" :key="option._id">
 				<member-card 
@@ -92,6 +98,28 @@ const capacities = [{
 	title: "消息通知",
 	desc: "上课通知、消课通知、课程反馈"
 }]
+
+const total_fee = ref(1)
+const order_no = ref("")
+const out_trade_no = ref("")
+const description = ref("测试订单")
+const type = ref("test")
+const custom = ref({
+	a: "a",
+	b: 1
+})
+const pay = ref()
+const open = () => {
+	debugger
+	pay.open({
+		total_fee: total_fee.value,
+		order_no: order_no.value,
+		out_trade_no: out_trade_no.value,
+		description: description.value,
+		type: type.value,
+		custom: custom.value
+	})
+}
 
 onMounted(async () => {
 	const options = await memberStore.fetchMemberOptions()
