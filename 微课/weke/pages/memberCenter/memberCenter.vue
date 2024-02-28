@@ -2,8 +2,12 @@
 	<view class="member-center-container">
 		<template>
 			<view>
-				<button @click="open">唤起收银台支付</button>
-				<uni-pay ref="pay"></uni-pay>
+				<uni-pay 
+					ref="pay" 
+					@success="onSuccess" 
+					@cancel="onCancel" 
+					@fail="onFail">
+				</uni-pay>
 			</view>
 		</template>
 		<view class="member-card-container" v-if="!usersStore.owner.isSubscribed">
@@ -67,15 +71,18 @@
 import { computed, onMounted, ref } from "vue";
 import { useMemberStore } from "@/store/member"
 import { useUsersStore } from "@/store/users"
+import { useOrdersStore } from "@/store/orders"
 import MemberCard from "./components/member-card.vue"
 import { MemberOption } from "../../types/MemberOption";
 import { yyyyMMdd } from '@/utils/wk-date'
 
 const memberStore = useMemberStore()
 const usersStore = useUsersStore()
+const ordersStore = useOrdersStore()
 const memberOptions = ref<MemberOption[]>([])
 const selectedOption = ref(0)
 const checked = ref(false)
+const global = getApp().globalData!
 
 const capacities = [{
 	icon: "🏫",
@@ -99,26 +106,77 @@ const capacities = [{
 	desc: "上课通知、消课通知、课程反馈"
 }]
 
-const total_fee = ref(1)
-const order_no = ref("")
-const out_trade_no = ref("")
-const description = ref("测试订单")
-const type = ref("test")
-const custom = ref({
-	a: "a",
-	b: 1
-})
 const pay = ref()
-const open = () => {
-	debugger
-	pay.open({
-		total_fee: total_fee.value,
-		order_no: order_no.value,
-		out_trade_no: out_trade_no.value,
-		description: description.value,
-		type: type.value,
-		custom: custom.value
-	})
+const onTapAgree = () => {
+	const option = memberOptions.value[selectedOption.value]
+	const charge = option.charge
+	if (!checked.value) {
+		uni.showModal({
+			title: global.appName,
+			content: "我已阅读《自动续费协议》，知晓并同意会员到期后将" + charge + "元/月自动续费",
+			confirmText: "继续购买",
+			success: (res) => {
+				if (res.confirm) {
+					payOrder()
+				}
+			}
+		})
+		return
+	} else {
+		payOrder()
+	}
+}
+
+const payOrder = async () => {
+	const option = memberOptions.value[selectedOption.value]
+	const charge = option.charge * 100
+	let description = global.appName + "会员连续包月服务"
+	if (option.type === 1) {
+		description = global.appName + "会员连续包年服务"
+	} else if (option.type === 2) {
+		description = global.appName + "会员单月服务"
+	}
+	const order_no = await ordersStore.createOrder(usersStore.owner._id, option._id)
+	if (order_no.length > 0) {
+		pay.value.open({
+			total_fee: charge,
+			order_no,
+			description,
+			type: "goods"
+		})
+	} else {
+		uni.showToast({
+			title: "订单支付失败",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+	}
+}
+
+const onSuccess = (res:{
+		user_order_success:boolean, 
+		errCode:number,
+		pay_order: {
+			order_no: string
+		}
+	}) => {
+	const { errCode, pay_order } = res
+	if (errCode === 0) {
+		if (res.user_order_success) {
+			const { order_no } = pay_order
+			ordersStore.updateOrder(order_no, 1)
+		} else {
+			
+		}
+	}
+}
+
+const onCancel = (res) => {
+	console.info(res)
+}
+
+const onFail = (res) => {
+	console.info(res)
 }
 
 onMounted(async () => {
