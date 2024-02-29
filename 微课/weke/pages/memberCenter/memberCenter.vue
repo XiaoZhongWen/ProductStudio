@@ -60,8 +60,6 @@
 					color="#5073D6" />
 				<text>开通会员代表接受</text>
 				<text class="member-service" @tap.stop="onMemberService">《会员服务协议》</text>
-				<text v-if="selectedOption !== 2">与</text>
-				<text v-if="selectedOption !== 2" class="auto" @tap.stop="onAutoService">《自动续费协议》</text>
 			</label>
 		</view>
 	</view>
@@ -108,12 +106,16 @@ const capacities = [{
 
 const pay = ref()
 const onTapAgree = () => {
-	const option = memberOptions.value[selectedOption.value]
-	const charge = option.charge
+	let duration = "一个季度"
+	if (selectedOption.value === 1) {
+		duration = "半年"
+	} else if (selectedOption.value === 2) {
+		duration = "一年"
+	}
 	if (!checked.value) {
 		uni.showModal({
 			title: global.appName,
-			content: "我已阅读《自动续费协议》，知晓并同意会员到期后将" + charge + "元/月自动续费",
+			content: "我已阅读《会员服务协议》，知晓并同意购买" + duration + "的会员服务",
 			confirmText: "继续购买",
 			success: (res) => {
 				if (res.confirm) {
@@ -130,11 +132,11 @@ const onTapAgree = () => {
 const payOrder = async () => {
 	const option = memberOptions.value[selectedOption.value]
 	const charge = option.charge * 100
-	let description = global.appName + "会员连续包月服务"
+	let description = global.appName + "一个季度会员服务"
 	if (option.type === 1) {
-		description = global.appName + "会员连续包年服务"
+		description = global.appName + "半年会员服务"
 	} else if (option.type === 2) {
-		description = global.appName + "会员单月服务"
+		description = global.appName + "一年会员服务"
 	}
 	const order_no = await ordersStore.createOrder(usersStore.owner._id, option._id)
 	if (order_no.length > 0) {
@@ -164,7 +166,10 @@ const onSuccess = (res:{
 	if (errCode === 0) {
 		if (res.user_order_success) {
 			const { order_no } = pay_order
+			// 更新订单状态
 			ordersStore.updateOrder(order_no, 1)
+			// 更新会员有效期
+			
 		} else {
 			
 		}

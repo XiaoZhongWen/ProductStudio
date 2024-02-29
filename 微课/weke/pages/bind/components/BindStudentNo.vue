@@ -61,7 +61,7 @@ const onAddTap = async () => {
 		return
 	}
 	const pattern = /^\d+$/
-	if (studentNo.value.length !== 8 || !pattern.test(studentNo.value)) {
+	if (studentNo.value.length !== 9 || !pattern.test(studentNo.value)) {
 		uni.showToast({
 			title:"学号必须是八位数字",
 			duration:global.duration_toast,
@@ -80,11 +80,21 @@ const onAddTap = async () => {
 		duration:global.duration_toast,
 		icon:result?"success":"none"
 	})
+	if (result) {
+		const data = usersStore.students.filter(s => s.studentNo === studentNo.value)
+		if (data.length === 1) {
+			const student = data[0]
+			const index = students.value.findIndex(s => s._id === student._id)
+			if (index === -1) {
+				students.value.push(student)
+			}
+		}
+	}
 	studentNo.value = ''
 }
 	
 const onUnBindTap = async (studentNo:string) => {
-	if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
+	if (typeof(studentNo) === 'undefined' || studentNo.length !== 9) {
 		return
 	}
 	const result = await usersStore.unbindStudentNo(studentNo)
@@ -93,6 +103,12 @@ const onUnBindTap = async (studentNo:string) => {
 		duration:global.duration_toast,
 		icon:result?"success":"none"
 	})
+	if (result) {
+		const index = students.value.findIndex(s => s.studentNo === studentNo)
+		if (index !== -1) {
+			students.value.splice(index, 1)
+		}
+	}
 }
 	
 </script>

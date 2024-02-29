@@ -14,7 +14,7 @@
 		},
 		"type": {
 			"bsonType": "int",
-			"description": "类型, 0:月度会员、1:年度会员、2单月会员"
+			"description": "类型, 0:季度会员、1:半年会员、2:一年会员"
 		},
 		"charge": {
 			"bsonType": "double",

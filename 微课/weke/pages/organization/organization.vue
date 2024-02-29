@@ -1,12 +1,14 @@
 <template>
 	<view class="org-container">
-		<view 
-			class="card-container" 
-			v-for="org in orgs" 
-			:key="org._id" 
-			@tap="onOrgCardTap(org._id)">
-			<org-card :org="org"></org-card>
-		</view>
+		<z-paging ref="paging" v-model="dataList" @query="queryList">
+			<view
+				class="card-container" 
+				v-for="org in dataList" 
+				:key="org._id" 
+				@tap="onOrgCardTap(org._id)">
+				<org-card :org="org"></org-card>
+			</view>
+		</z-paging>
 		<view 
 			class="add-container" 
 			@tap="onAddTap" 
@@ -28,8 +30,9 @@ const global = getApp().globalData!
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
 const userId = ref(usersStore.owner._id)
-
+const paging = ref(null)
 const orgs = ref<Org[]>([])
+const dataList = ref<Org[]>([])
 
 onLoad(async (option) => {
 	const { id } = option as {id:string}
@@ -40,7 +43,6 @@ onLoad(async (option) => {
 
 onMounted(() => {
 	loadOrgs()
-	
 	uni.$on(global.event_name.didUpdateOrgData, () => {
 		loadOrgs()
 	})
@@ -102,6 +104,13 @@ const loadOrgs = () => {
 		// 家长, 这里的userId指的是被关联学员的userId
 		orgs.value = useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value) && org.type === 0)
 	}
+}
+
+const queryList = (pageNo:number, pageSize:number) => {
+	const s = pageNo * pageSize
+	const e = s + pageSize
+	const data = orgs.value.slice(s, e)
+	paging.value?.complete(data)
 }
 
 </script>

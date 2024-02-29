@@ -46,7 +46,6 @@ const list = [
 	".t-icon .t-icon-lishi1",
 	".t-icon .t-icon-lanqiu1",
 	".t-icon .t-icon-yundong",
-	".t-icon .t-icon-paiqiu",
 	".t-icon .t-icon-zuqiu",
 	".t-icon .t-icon-jianshenke",
 	".t-icon .t-icon-tiyu1",
@@ -90,6 +89,7 @@ const onChange = (e:{detail:{index:number}}) => {
 		justify-content: center;
 		align-items: center;
 		margin: $uni-spacing-col-lg 0;
+		background-repeat: no-repeat
 	}
 }
 </style>

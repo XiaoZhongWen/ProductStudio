@@ -194,8 +194,8 @@ module.exports = {
 			   avatarId: avatarId,
 			   registerDate: timestamp,
 			   lastLoginDate: timestamp,
-			   orgExpireDate: timestamp + freeDuration,
-			   familyExpireDate: timestamp + freeDuration
+			   expireDate: timestamp + freeDuration,
+			   isSubscribed: false
 		   })
 		   const { id } = res
 		   if (typeof(id) !== 'undefined' && id.length > 0) {
@@ -217,8 +217,8 @@ module.exports = {
 					avatarId: avatarId,
 			   		registerDate: timestamp,
 			   		lastLoginDate: timestamp,
-			   		orgExpireDate: timestamp + freeDuration,
-			   		familyExpireDate: timestamp + freeDuration
+			   		expireDate: timestamp + freeDuration,
+					isSubscribed: false
 			   })
 			   const { id } = res
 			   if (typeof(id) !== 'undefined' && id.length > 0) {
@@ -440,7 +440,7 @@ module.exports = {
 	* @param {Object} studentNo
 	*/
    async fetchStudentByNo(studentNo) {
-	   if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
+	   if (typeof(studentNo) === 'undefined' || studentNo.length !== 9) {
 		   return {}
 	   }
 	   const db = uniCloud.database()
@@ -588,7 +588,10 @@ module.exports = {
 			result = false
 		} else {
 			const student = res.data[0]
-			const associateIds = student.associateIds
+			let associateIds = student.associateIds
+			if (typeof(associateIds) === 'undefined') {
+				associateIds = []
+			}
 			if (associateIds.includes(bindId)) {
 				result = true
 			} else {

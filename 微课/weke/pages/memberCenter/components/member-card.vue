@@ -19,11 +19,11 @@ const desc = computed(() => {
 	let info = ''
 	const { type } = props.option
 	if (type === 0) {
-		info = "连续包月"
+		info = "季度会员"
 	} else if (type === 1) {
-		info = "连续包年"
+		info = "半年会员"
 	} else if (type === 2) {
-		info = "一个月"
+		info = "年度会员"
 	}
 	return info
 })

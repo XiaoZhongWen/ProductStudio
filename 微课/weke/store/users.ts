@@ -259,9 +259,10 @@ export const useUsersStore = defineStore('users', {
 						...this.owner,
 						type: (identityType === IdentityType.UseUnionId)? 'wx_unionid': 'wx_openid'
 					})
-					const { _id } = res as {_id: string}
+					const { _id, expireDate } = res as {_id: string, registerDate:number, lastLoginDate:number, expireDate:number}
 					if (this.owner._id.length === 0) {
 						this.owner._id = _id
+						this.owner.expireDate = expireDate
 					}
 				} else {
 					await users_co.updateStudent({...this.owner})
@@ -433,7 +434,7 @@ export const useUsersStore = defineStore('users', {
 		},
 		// 根据学号获取学员记录
 		async fetchStudentByNo(studentNo:string) {
-			if (typeof(studentNo) === 'undefined' || studentNo.length !== 8) {
+			if (typeof(studentNo) === 'undefined' || studentNo.length !== 9) {
 				return {}
 			}
 			let index = this.students.findIndex(stu => stu.studentNo === studentNo)
