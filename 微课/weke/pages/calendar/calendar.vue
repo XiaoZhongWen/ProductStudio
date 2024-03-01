@@ -33,7 +33,7 @@ import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
 import { useOrgsStore } from '@/store/orgs'
-import { computed, onMounted, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import ScheduleCard from './components/ScheduleCard.vue'
 import { timestampForBeginOfMonth, timestampForEndOfMonth, yyyyMMdd } from '@/utils/wk-date'
 import { Schedule } from "../../types/schedule";

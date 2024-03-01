@@ -52,16 +52,16 @@ onLoad(() => {
 	uni.$on(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
 })
 
+onUnload(() => {
+	uni.$off(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
+})
+
 const onDidUpdateCourseData = (data: {courseId:string}) => {
 	const { courseId } = data
 	if (props.courseId === courseId) {
 		loadProgress()
 	}
 }
-
-onUnload(() => {
-	uni.$off(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
-})
 
 onMounted(async () => {
 	if (typeof(props.courseId) === 'undefined' || props.courseId.length === 0 ||
