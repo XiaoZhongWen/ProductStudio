@@ -1,5 +1,5 @@
 <template>
-	<z-paging ref="paging" v-model="dataList" @query="queryList">
+	<z-paging ref="paging" v-model="dataList" @query="queryList" @onRefresh="onRefresh">
 		<view class="course-component-container" v-if="usersStore.isLogin">
 			<template v-for="item in dataList" :key="item.courseId">
 				<wk-course-item 
@@ -12,6 +12,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
@@ -35,13 +36,19 @@ const dataList = ref<CourseItem[]>([])
 const paging = ref(null)
 const items = ref<CourseItem[]>([])
 
-onMounted(() => {
-	loadAllCourses()
-	
+onLoad(() => {
 	uni.$on(global.event_name.didUpdateOrgCourse, async () => {
 		await loadAllCourses()
 		paging.value?.reload()
 	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didUpdateOrgCourse)
+})
+
+onMounted(() => {
+	loadAllCourses()
 })
 
 const loadAllCourses = async () => {
@@ -146,6 +153,11 @@ const loadAllCourses = async () => {
 		})
 	}
 	items.value = courseItems
+}
+
+const onRefresh = async () => {
+	await loadAllCourses()
+	paging.value?.reload()
 }
 
 const queryList = async (pageNo:number, pageSize:number) => {

@@ -1,5 +1,5 @@
 <template>
-	<z-paging ref="paging" v-model="dataList" @query="queryList">
+	<z-paging ref="paging" v-model="dataList" @query="queryList" @onRefresh="onRefresh">
 		<view class="student-component-container" v-if="usersStore.isLogin && useOrgs.orgs.length > 0">
 			<wk-student-card v-for="(student, index) in dataList" :key="student._id"
 				ref="refs"
@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { onMounted, onUpdated, ref, watch } from 'vue'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
@@ -34,24 +35,36 @@ const studentIdList = ref<string[]>([])
 const paging = ref(null)
 let refresh = false
 
-onMounted(() => {
-	loadStudents()
-	uni.$on(global.event_name.didUpdateCourseData, (data: {studentNo:string}) => {
-		const { studentNo } = data
-		if (typeof(studentNo) !== 'undefined' && studentNo.length > 0) {
-			const index = dataList.value?.findIndex(student => student.studentNo === studentNo)
-			if (typeof(index) !== 'undefined' && index !== -1) {
-				const card: InstanceType<typeof wkStudentCardVue> = refs.value[index]
-				if (card) {
-					card.loaddata()
-				}
+onLoad(() => {
+	uni.$on(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
+	uni.$on(global.event_name.didUpdateOrgData, onDidUpdateOrgData)
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
+	uni.$off(global.event_name.didUpdateOrgData, onDidUpdateOrgData)
+})
+
+const onDidUpdateCourseData = (data: {studentNo:string}) => {
+	const { studentNo } = data
+	if (typeof(studentNo) !== 'undefined' && studentNo.length > 0) {
+		const index = dataList.value?.findIndex(student => student.studentNo === studentNo)
+		if (typeof(index) !== 'undefined' && index !== -1) {
+			const card: InstanceType<typeof wkStudentCardVue> = refs.value[index]
+			if (card) {
+				card.loaddata()
 			}
 		}
-	})
-	uni.$on(global.event_name.didUpdateOrgData, () => {
-		loadStudents()
-		refresh = true
-	})
+	}
+}
+
+const onDidUpdateOrgData = () => {
+	loadStudents()
+	refresh = true
+}
+
+onMounted(() => {
+	loadStudents()
 })
 
 onUpdated(() => {
@@ -189,6 +202,10 @@ const loadClassmate = async (studentNo: string) => {
 	})
 	const studentIds = await usersStore.fetchStudentIdsByNos(studentNos)
 	return studentIds
+}
+
+const onRefresh = async () => {
+	await loadStudents()
 }
 
 const queryList = async (pageNo:number, pageSize:number) => {

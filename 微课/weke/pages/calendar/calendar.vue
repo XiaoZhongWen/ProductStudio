@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useScheduleStore } from "@/store/schedules"
 import { useOrgsStore } from '@/store/orgs'
@@ -58,7 +59,7 @@ const isShowAddBtn = computed(() => {
 			usersStore.owner.roles?.includes(2))
 })
 
-onMounted(() => {
+onLoad(() => {
 	uni.$on(global.didFinishedInitialData, async () => {
 		const date = new Date()
 		from.value = timestampForBeginOfMonth(date)
@@ -66,6 +67,10 @@ onMounted(() => {
 		selectedDate.value = yyyyMMdd(date)
 		loaddata()
 	})
+})
+
+onUnload(() => {
+	uni.$off(global.didFinishedInitialData)
 })
 
 watchEffect(() => {

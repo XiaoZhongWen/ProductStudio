@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import TeacherCard from './components/TeacherCard.vue'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
@@ -41,6 +41,13 @@ onLoad((option) => {
 	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
 		organizationId = orgId
 	}
+	uni.$on("modify-teacher-success", () => {
+		loaddata(useOrgs.myOrgs)
+	})
+})
+
+onUnload(() => {
+	uni.$off("modify-teacher-success")
 })
 
 onMounted(async () => {
@@ -88,10 +95,6 @@ const onAddTap = () => {
 		url
 	})
 }
-
-uni.$on("modify-teacher-success", () => {
-	loaddata(useOrgs.myOrgs)
-})
 
 const loaddata = async (orgs:Org[]) => {
 	const teacherIds:string[] = []

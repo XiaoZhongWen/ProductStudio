@@ -113,6 +113,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
 import { useCourseStore } from "@/store/course"
@@ -160,6 +161,21 @@ const number = computed(() => {
 const isEditable = computed(() => {
 	const org:Org = props.org
 	return org.creatorId === usersStore.owner._id
+})
+
+onLoad(() => {
+	uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) => {
+		const { iconId, orgId } = data
+		if (typeof(iconId) !== 'undefined' && iconId.length > 0 &&
+			typeof(orgId) !== 'undefined' && orgId.length > 0 &&
+			orgId === props.org._id) {
+			selectedIconId.value = iconId
+		}
+	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didSelectedIcon)
 })
 
 onMounted(async () => {
@@ -491,15 +507,6 @@ const onTeacherChange = (teacherId:string) => {
 		selectedCourseId.value = ''
 	}
 }
-
-uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) => {
-	const { iconId, orgId } = data
-	if (typeof(iconId) !== 'undefined' && iconId.length > 0 &&
-		typeof(orgId) !== 'undefined' && orgId.length > 0 &&
-		orgId === props.org._id) {
-		selectedIconId.value = iconId
-	}
-})
 
 const reset = () => {
 	selectedIconId.value = ".t-icon .t-icon-shetuan"

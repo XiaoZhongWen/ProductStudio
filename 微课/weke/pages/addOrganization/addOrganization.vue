@@ -80,7 +80,7 @@
 				</uni-list>
 			</view>
 		</view>
-		<view class="org-member-container" v-if="isCreator">
+		<view class="org-member-container" v-if="isCreator && orgId.length > 0">
 			<uni-list>
 				<uni-list-item class="item" clickable :to="toTeacher">
 					<template v-slot:header>
@@ -163,19 +163,19 @@ const org = ref<Org>({
 			})
 
 const toTeacher = computed(() => {
-	return "/pages/teacher/teacher?orgId=" + orgId.value
+	return "/pages/addTeacher/addTeacher?orgId=" + orgId.value
 })
 
 const toStudent = computed(() => {
-	return "/pages/student2/student2?orgId=" + orgId.value
+	return "/pages/addStudent/addStudent?orgId=" + orgId.value
 })
 
 const toCourse = computed(() => {
-	return '/pages/course2/course2?orgId=' + orgId.value
+	return '/pages/addCourse/addCourse?orgId=' + orgId.value
 })
 
 const toClass = computed(() => {
-	return '/pages/grade/grade?orgId=' + orgId.value
+	return '/pages/addGrade/addGrade?orgId=' + orgId.value
 })
 
 //@ts-ignore

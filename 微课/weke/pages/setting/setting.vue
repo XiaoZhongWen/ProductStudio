@@ -54,6 +54,10 @@ const onLogout = () => {
 	usersStore.$reset()
 	useOrgs.$reset()
 	uni.navigateBack()
+	uni.setStorage({
+		key:'wk-login',
+		data: {}
+	})
 }
  
  const onTapChangePwd = () => {

@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from "vue";
@@ -114,6 +115,23 @@ const courseDesc = ref('')
 const courses = ref<Course[]>([])
 const durations = ["30分钟", "35分钟", "40分钟", "45分钟", "50分钟", "60分钟"]
 const duration = ref('分钟')
+
+onLoad(() => {
+	uni.$on(global.event_name.didSelectedIcon, onDidSelectedIcon)
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didSelectedIcon, onDidSelectedIcon)
+})
+
+const onDidSelectedIcon = (data:{iconId:string, orgId:string}) => {
+	const { iconId, orgId } = data
+	if (typeof(iconId) !== 'undefined' && iconId.length > 0 &&
+		typeof(orgId) !== 'undefined' && orgId.length > 0 &&
+		orgId === props.org._id) {
+		selectedIconId.value = iconId
+	}
+}
 
 onMounted(async () => {
 	const org:Org = props.org
@@ -227,15 +245,6 @@ const onAddTap = async () => {
 		updateCourse()
 	}
 }
-
-uni.$on(global.event_name.didSelectedIcon, (data:{iconId:string, orgId:string}) => {
-	const { iconId, orgId } = data
-	if (typeof(iconId) !== 'undefined' && iconId.length > 0 &&
-		typeof(orgId) !== 'undefined' && orgId.length > 0 &&
-		orgId === props.org._id) {
-		selectedIconId.value = iconId
-	}
-})
 
 const validate = () => {
 	if (type.value === -1) {

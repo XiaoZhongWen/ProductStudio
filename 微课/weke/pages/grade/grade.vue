@@ -19,12 +19,12 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useGradesStore } from "@/store/grades";
 import { computed, onMounted, ref } from 'vue';
 import { Org } from "../../types/org";
-import { onLoad } from '@dcloudio/uni-app'
 import GradeCard from './components/GradeCard.vue'
 
 type GradeItem = {
@@ -54,6 +54,23 @@ onLoad(async (option) => {
 	if (typeof(orgId) !== 'undefined' && orgId.length > 0) {
 		organizationId.value = orgId
 	}
+	uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {
+		const { gradeId, orgId } = data
+		if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
+			typeof(orgId) === 'undefined' || orgId.length === 0) {
+			return
+		}
+		const item = {
+			gradeId: gradeId,
+			orgId: orgId
+		}
+		gradeList.value.push(item)
+		paging.value?.reload()
+	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didCreateGrade)
 })
 
 onMounted(async () => {
@@ -69,20 +86,6 @@ const isShowAddBtn = computed(() => {
 			(usersStore.owner.roles?.includes(1) ||
 				usersStore.owner.roles?.includes(2)) &&
 			!usersStore.isExpired
-})
-
-uni.$on(global.event_name.didCreateGrade, async (data:{gradeId:string, orgId:string}) => {
-	const { gradeId, orgId } = data
-	if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
-		typeof(orgId) === 'undefined' || orgId.length === 0) {
-		return
-	}
-	const item = {
-		gradeId: gradeId,
-		orgId: orgId
-	}
-	gradeList.value.push(item)
-	paging.value?.reload()
 })
 
 const onAddTap = () => {

@@ -26,7 +26,9 @@
 				key: 'wk-login',
 				success: async (res) => {
 					const data = res.data
-					console.info("show loading - getStorage")
+					if (JSON.stringify(data) === '{}') {
+						return
+					}
 					uni.showLoading({
 						title: "正在登录",
 						mask: true
@@ -39,7 +41,6 @@
 						const { stuNo, pwd } = data
 						result = await usersStore.login('stuNo', stuNo, pwd)
 					}
-					console.info("hide loading - getStorage")
 					uni.hideLoading()
 					uni.showToast({
 						title: result? "登录成功": "登录失败",
@@ -47,7 +48,6 @@
 						icon: result? "success": "none"
 					})
 					if (result) {
-						console.info("show loading - 加载初始数据")
 						uni.showLoading({
 							title: "加载初始数据",
 							mask: true
@@ -57,10 +57,9 @@
 						if (usersStore.owner.from === 'wx') {
 							await orgsStore.fetchAnonymousOrg()
 						}
-						console.info("hide loading - 加载初始数据")
 						uni.hideLoading()
 						uni.$emit(this.globalData.didFinishedInitialData)
-						if (usersStore.isExpired) {
+						if (usersStore.from === 'wx' && usersStore.isExpired) {
 							uni.showToast({
 								title: "您的会员已过期, 请续费",
 								duration: 3000,

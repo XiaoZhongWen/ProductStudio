@@ -79,7 +79,6 @@ const onTagTap = () => {
 }
 
 const onSignatureTap = () => {
-	console.info("onSignatureTap...")
 	uni.navigateTo({
 		url: "/pages/signature/signature"
 	})

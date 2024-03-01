@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { useUsersStore } from "@/store/users"
 import { RoleId } from '@/types/user'
@@ -39,9 +40,15 @@ const roles = ref([
 	}
 ])
 
-uni.$on(global.event_name.showSelectRole, () => {
-	const roleIds =  usersStore.owner.roles ?? []
-	selectedId.value = roleIds
+onLoad(() => {
+	uni.$on(global.event_name.showSelectRole, () => {
+		const roleIds =  usersStore.owner.roles ?? []
+		selectedId.value = roleIds
+	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.showSelectRole)
 })
 
 const onConfirm = () => {

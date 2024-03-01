@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 
 const global = getApp().globalData!
 const props:Readonly<{
@@ -34,10 +35,16 @@ const colors = ref([
 	{id:8, gradient: ["#4b6cb7", "#182848"], selected: false}
 ])
 
-uni.$on(global.event_name.onGradientChanged, function (data) {
-	colors.value.forEach((color) => {
-		color.selected = color.gradient.toString() === data.gradient.toString()
+onLoad(() => {
+	uni.$on(global.event_name.onGradientChanged, function (data) {
+		colors.value.forEach((color) => {
+			color.selected = color.gradient.toString() === data.gradient.toString()
+		})
 	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.onGradientChanged)
 })
 
 // @ts-ignore

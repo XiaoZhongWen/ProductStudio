@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import Profile from "./components/Profile.vue"
 import LoginAuth from './components/LoginAuth.vue'
 import LoginOption from './components/LoginOption.vue'
@@ -147,6 +147,94 @@ onLoad((option) => {
 		inviteOrgId = orgId
 		invitePhoneNumber = phoneNumber
 	}
+	
+	uni.$on(global.event_name.didSelectedRole, async () => {
+		selectRolePopup.value?.close()
+		await fetchChildren()
+		showBindPhone()
+	})
+	
+	uni.$on(global.event_name.selectRole, () => {
+		showSelectRole()
+		uni.hideTabBar()
+	})
+	
+	uni.$on(global.event_name.showWkProtocol, () => {
+		console.info('showWkProtcol')
+	})
+	
+	uni.$on(global.event_name.login, async (data) => {
+		console.info(Date.now() + " global.event_name.login " + data)
+		// 1. 验证头像
+		let url = usersStore.owner.tempFileUrl?.trim() ?? ""
+		if (url.length === 0) {
+			url = usersStore.owner.avatarUrl?.trim() ?? ""
+			usersStore.updateTempFileUrl(url)
+		}
+		if (url.length === 0) {
+			uni.showToast({
+				title:"请设置头像",
+				duration:global.duration_toast,
+				icon:"none"
+			})
+			return
+		}
+		// 2. 验证昵称
+		let nickname = data.inputValue ?? ""
+		if (nickname.length === 0) {
+			nickname = usersStore.owner.nickName ?? ""
+		}
+		if (nickname.length === 0) {
+			uni.showToast({
+				title:"请设置昵称",
+				duration:global.duration_toast,
+				icon:"none"
+			})
+			return
+		}
+		try {
+			onPopup()
+			uni.showLoading({
+				title: '正在登录...'
+			})
+			// 3. 登录
+			if (usersStore.owner.from !== 'stuNo') {
+				await usersStore.login()
+			}
+			// 4. 上传头像
+			const isUpdatedPortrait = await usersStore.uploadPortrait()
+			// 5. 更新昵称
+			const isUpdatedNickname = usersStore.updateNickname(nickname)
+			const unionid = usersStore.owner.unionid ?? ''
+			const openid = usersStore.owner.openid ?? ''
+			let isUpdated = true
+			// 6. 更新云端用户信息
+			if ((isUpdatedPortrait || isUpdatedNickname) &&
+				(usersStore.owner.from === 'stuNo' ||
+				(usersStore.owner.from === 'wx' && (unionid.length > 0 || openid.length > 0)))) {
+				isUpdated = await usersStore.updateCloudUser()
+				if (isUpdated) {
+					loadInitialData()
+				} else {
+					uni.showToast({
+						title:"用户信息更新失败",
+						duration:global.duration_toast,
+						icon:"none"
+					})
+				}
+			}
+			uni.hideLoading()
+		} catch(e) {
+			console.error(e)
+		}
+	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didSelectedRole)
+	uni.$off(global.event_name.selectRole)
+	uni.$off(global.event_name.showWkProtocol)
+	uni.$off(global.event_name.login)
 })
 
 const loginOptionPopup = ref<{
@@ -178,7 +266,6 @@ type ListItem = {
 // @ts-ignore
 const org:ListItem[] = computed({
 	get() {
-		console.info("computed org...")
 		let org = [
 			{
 				type: "shop-filled",
@@ -216,7 +303,6 @@ const org:ListItem[] = computed({
 // @ts-ignore
 const account:ListItem[] = computed({
 	get() {
-		console.info("computed account...")
 		let account = [
 			{
 				type: "phone-filled",
@@ -280,7 +366,6 @@ const other:ListItem[] = [
 ]
 
 onMounted(async () => {
-	console.info("show loading - onMounted")
 	uni.showLoading({
 		title: "加载中"
 	})
@@ -310,6 +395,8 @@ const selectRole = () => {
 			if (roles.length === 0) {
 				showSelectRole()
 				uni.hideTabBar()
+			} else {
+				showBindPhone()
 			}
 		}
 	} else if (usersStore.owner.from === 'stuNo') {
@@ -355,75 +442,6 @@ const showSelectRole = () => {
 	selectRolePopup.value?.open()
 }
 
-uni.$on(global.event_name.showWkProtocol, () => {
-	console.info('showWkProtcol')
-})
-
-uni.$on(global.event_name.login, async (data) => {
-	// 1. 验证头像
-	let url = usersStore.owner.tempFileUrl?.trim() ?? ""
-	if (url.length === 0) {
-		url = usersStore.owner.avatarUrl?.trim() ?? ""
-		usersStore.updateTempFileUrl(url)
-	}
-	if (url.length === 0) {
-		uni.showToast({
-			title:"请设置头像",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	// 2. 验证昵称
-	let nickname = data.inputValue ?? ""
-	if (nickname.length === 0) {
-		nickname = usersStore.owner.nickName ?? ""
-	}
-	if (nickname.length === 0) {
-		uni.showToast({
-			title:"请设置昵称",
-			duration:global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	try {
-		onPopup()
-		uni.showLoading({
-			title: '正在登录...'
-		})
-		// 3. 登录
-		if (usersStore.owner.from !== 'stuNo') {
-			await usersStore.login()
-		}
-		// 4. 上传头像
-		const isUpdatedPortrait = await usersStore.uploadPortrait()
-		// 5. 更新昵称
-		const isUpdatedNickname = usersStore.updateNickname(nickname)
-		const unionid = usersStore.owner.unionid ?? ''
-		const openid = usersStore.owner.openid ?? ''
-		let isUpdated = true
-		// 6. 更新云端用户信息
-		if ((isUpdatedPortrait || isUpdatedNickname) &&
-			(usersStore.owner.from === 'stuNo' ||
-			(usersStore.owner.from === 'wx' && (unionid.length > 0 || openid.length > 0)))) {
-			isUpdated = await usersStore.updateCloudUser()
-			if (isUpdated) {
-				loadInitialData()
-			} else {
-				uni.showToast({
-					title:"用户信息更新失败",
-					duration:global.duration_toast,
-					icon:"none"
-				})
-			}
-		}
-		uni.hideLoading()
-	} catch(e) {
-		console.error(e)
-	}
-})
-
 const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 	const { stuNo, pwd } = data
 	// 1. 验证学号
@@ -468,15 +486,17 @@ const nickNameBrief = (nickName:string) => {
 	return briefName
 }
 
-uni.$on(global.event_name.didSelectedRole, () => {
-	selectRolePopup.value?.close()
-	fetchChildren()
-})
-
-uni.$on(global.event_name.selectRole, () => {
-	showSelectRole()
-	uni.hideTabBar()
-})
+const showBindPhone = () => {
+	const mobile = usersStore.owner.mobile ?? ''
+	if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+		console.info("手机号空")
+		uni.showToast({
+			title:"请绑定手机号",
+			duration:global.duration_toast,
+			icon:"none"
+		})
+	}
+}
 
 const getPhoneNumber = async (e) => {
 	const { code } = e.detail
@@ -496,14 +516,18 @@ const handleTeacherInvite = async () => {
 	console.info("handleTeacherInvite: " + inviteOrgId + " " + invitePhoneNumber)
 	if (inviteOrgId.length > 0 && 
 	 	invitePhoneNumber.length > 0) {
-		const mobile = usersStore.owner.mobile ?? ''
-		if (typeof(mobile) === 'undefined' || mobile.length === 0) {
-			console.info("手机号空")
+		if (!usersStore.isLogin) {
 			uni.showToast({
-				title:"请绑定手机号",
+				title:"请先登录",
 				duration:global.duration_toast,
 				icon:"none"
 			})
+			return
+		}
+		const mobile = usersStore.owner.mobile ?? ''
+		if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+			console.info("手机号空")
+			showBindPhone()
 		} else if (mobile === invitePhoneNumber) {
 			console.info("手机号一致")
 			// 1. 添加到机构的老师集合中

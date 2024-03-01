@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { onMounted, ref } from 'vue';
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
@@ -46,6 +47,21 @@ const props = defineProps(['courseId', 'orgId'])
 const total = ref(0)
 const consume = ref(0)
 const typeName = ref('')
+
+onLoad(() => {
+	uni.$on(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
+})
+
+const onDidUpdateCourseData = (data: {courseId:string}) => {
+	const { courseId } = data
+	if (props.courseId === courseId) {
+		loadProgress()
+	}
+}
+
+onUnload(() => {
+	uni.$off(global.event_name.didUpdateCourseData, onDidUpdateCourseData)
+})
 
 onMounted(async () => {
 	if (typeof(props.courseId) === 'undefined' || props.courseId.length === 0 ||
@@ -75,13 +91,6 @@ onMounted(async () => {
 			typeName.value = "试听课"
 		}
 	}
-	
-	uni.$on(global.event_name.didUpdateCourseData, (data: {courseId:string}) => {
-		const { courseId } = data
-		if (props.courseId === courseId) {
-			loadProgress()
-		}
-	})
 })
 
 const loadProgress = async () => {

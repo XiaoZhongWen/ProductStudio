@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
 import { useOrgsStore } from '@/store/orgs'
@@ -50,6 +51,22 @@ const orgName = ref('')
 const course = ref<Course>()
 const teacher = ref<User>()
 const students = ref<Student[]>([])
+
+onLoad(() => {
+	uni.$on(global.event_name.didUpdatedGradeData, async (data:{gradeId:string}) => {
+		const { gradeId } = data
+		if (typeof(gradeId) === 'undefined' || gradeId.length === 0) {
+			return
+		}
+		if (gradeId === props.gradeId) {
+			await loadGradeData()
+		}
+	})
+})
+
+onUnload(() => {
+	uni.$off(global.event_name.didUpdatedGradeData)
+})
 
 onMounted(async () => {
 	const gradeId = props.gradeId
@@ -104,16 +121,6 @@ const onTap = (studentId:string) => {
 		})
 	}
 }
-
-uni.$on(global.event_name.didUpdatedGradeData, async (data:{gradeId:string}) => {
-	const { gradeId } = data
-	if (typeof(gradeId) === 'undefined' || gradeId.length === 0) {
-		return
-	}
-	if (gradeId === props.gradeId) {
-		await loadGradeData()
-	}
-})
 
 </script>
 

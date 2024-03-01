@@ -1,6 +1,6 @@
 <template>
-	<view class="org-container">
-		<z-paging ref="paging" v-model="dataList" @query="queryList">
+	<z-paging ref="paging" v-model="dataList" @query="queryList" @onRefresh="onRefresh">
+		<view class="org-container">
 			<view
 				class="card-container" 
 				v-for="org in dataList" 
@@ -8,19 +8,19 @@
 				@tap="onOrgCardTap(org._id)">
 				<org-card :org="org"></org-card>
 			</view>
-		</z-paging>
-		<view 
-			class="add-container" 
-			@tap="onAddTap" 
-			v-if="isShowAddBtn">
-			<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 		</view>
+	</z-paging>
+	<view
+		class="add-container" 
+		@tap="onAddTap" 
+		v-if="isShowAddBtn">
+		<uni-icons class="icon" type="plusempty" color="#fff" size=25></uni-icons>
 	</view>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
 import { Org } from "../../types/org";
@@ -39,13 +39,19 @@ onLoad(async (option) => {
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		userId.value = id
 	}
+	uni.$on(global.event_name.didUpdateOrgData, didUpdateOrgData)
 })
+
+onUnload(() => {
+	uni.$off(global.event_name.didUpdateOrgData, didUpdateOrgData)
+})
+
+const didUpdateOrgData = () => {
+	loadOrgs()
+}
 
 onMounted(() => {
 	loadOrgs()
-	uni.$on(global.event_name.didUpdateOrgData, () => {
-		loadOrgs()
-	})
 })
 
 const isShowAddBtn = computed(() => {
@@ -106,6 +112,11 @@ const loadOrgs = () => {
 	}
 }
 
+const onRefresh = async () => {
+	loadOrgs()
+	paging.value?.reload()
+}
+
 const queryList = (pageNo:number, pageSize:number) => {
 	const s = pageNo * pageSize
 	const e = s + pageSize
@@ -125,7 +136,8 @@ const queryList = (pageNo:number, pageSize:number) => {
 		height: 180px;
 		margin: $uni-spacing-col-sm 0;
 	}
-	.add-container {
+}
+.add-container {
 		display: flex;
 		position: fixed;
 		justify-content: center;
@@ -138,5 +150,4 @@ const queryList = (pageNo:number, pageSize:number) => {
 		right: $uni-spacing-row-lg;
 		z-index: 1;
 	}
-}
 </style>

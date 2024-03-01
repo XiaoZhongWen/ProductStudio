@@ -219,13 +219,15 @@ onMounted(async () => {
 		}
 	})
 	teachers = await usersStore.fetchUsers(teacherIds ?? []) as User[]
-	// if (courses.length === 0 && canBindCourse.value === true) {
-	// 	uni.showToast({
-	// 		title: "请先添加课程",
-	// 		duration: global.duration_toast,
-	// 		icon: "error"
-	// 	})
-	// }
+	if (courses.length === 0 && 
+		didBindCourseIds.length === 0 && 
+		canBindCourse.value === true) {
+		uni.showToast({
+			title: "请先添加课程",
+			duration: global.duration_toast,
+			icon: "none"
+		})
+	}
 })
 
 const bindClass = computed(() => {
