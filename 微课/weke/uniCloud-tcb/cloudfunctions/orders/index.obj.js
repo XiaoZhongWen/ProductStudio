@@ -38,5 +38,20 @@ module.exports = {
 			status
 		})
 		return res.updated === 1
+	},
+	async fetchOrders(openid, before) {
+		if (typeof(openid) === 'undefined' ||
+			openid.length === 0 || 
+			typeof(before) === 'undefined') {
+			return []
+		}
+		const pageSize = 10
+		const db = uniCloud.database()
+		const dbCmd = db.command
+		const res = await db.collection("uni-pay-orders").where({
+			openid,
+			create_date:dbCmd.lt(before)
+		}).limit(pageSize).orderBy("create_date", "desc").get()
+		return res.data
 	}
 }

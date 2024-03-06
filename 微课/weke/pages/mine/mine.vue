@@ -303,42 +303,41 @@ const org:ListItem[] = computed({
 // @ts-ignore
 const account:ListItem[] = computed({
 	get() {
-		let account = [
-			{
-				type: "phone-filled",
-				name: "绑定手机号"
-			},
-			{
-				type: "vip-filled",
-				name: "会员中心",
-				to: "/pages/memberCenter/memberCenter"
-			}
-		]
-		const mobile = usersStore.owner.mobile ?? ''
-		if (mobile.length) {
-			account = [{
-				type: "vip-filled",
-				name: "会员中心",
-				to: "/pages/memberCenter/memberCenter"
-			}]
+		const memberItem = {
+			type: "vip-filled",
+			name: "会员中心",
+			to: "/pages/memberCenter/memberCenter"
 		}
-		if (usersStore.owner.from === 'wx') {
-			const roles = usersStore.owner.roles ?? []
-			if (roles.length === 0) {
-				account = []
-			}
+		const phoneItem = {
+			type: "phone-filled",
+			name: "绑定手机号"
+		}
+		const bindStuNoItem = {
+			type: "auth-filled",
+			name: "绑定学号",
+			to: "/pages/bind/bind?type=studentNo"
+		}
+		const order = {
+			type: "cart-filled",
+			name: "订单",
+			to: "/pages/order/order"
+		}
+		let s = []
+		const roles = usersStore.owner.roles ?? []
+		if (usersStore.owner.from === 'wx' && roles.length > 0) {
 			if (roles.includes(3)) {
-				// 包含家长角色
-				account.unshift({
-					type: "auth-filled",
-					name: "绑定学号",
-					to: "/pages/bind/bind?type=studentNo"
-				})
+				s.push(bindStuNoItem)
 			}
-		} else {
-			account = []
+			const mobile = usersStore.owner.mobile ?? ''
+			if (mobile.length === 0) {
+				s.push(phoneItem)
+			}
+			if (roles.includes(1) || roles.includes(2)) {
+				s.push(memberItem)
+				s.push(order)
+			}
 		}
-		return account
+		return s
 	}
 })
  
@@ -487,14 +486,16 @@ const nickNameBrief = (nickName:string) => {
 }
 
 const showBindPhone = () => {
-	const mobile = usersStore.owner.mobile ?? ''
-	if (typeof(mobile) === 'undefined' || mobile.length === 0) {
-		console.info("手机号空")
-		uni.showToast({
-			title:"请绑定手机号",
-			duration:global.duration_toast,
-			icon:"none"
-		})
+	if (usersStore.owner.from === 'wx') {
+		const mobile = usersStore.owner.mobile ?? ''
+		if (typeof(mobile) === 'undefined' || mobile.length === 0) {
+			console.info("手机号空")
+			uni.showToast({
+				title:"请绑定手机号",
+				duration:global.duration_toast,
+				icon:"none"
+			})
+		}
 	}
 }
 

@@ -308,6 +308,25 @@ export const useUsersStore = defineStore('users', {
 				}
 			}
 		},
+		async updateExpiredDate(type: number) {
+			if (typeof(type) === 'undefined' ||
+				(type !== 0 && type !== 1 && type !== 2)) {
+				return false
+			}
+			const result = await users_co.updateExpiredDate(type, this.owner._id)
+			if (result) {
+				let duration = 30 * 24 * 60 * 60 * 1000
+				let expireDate = Date.now() + 3 * duration
+				if (type === 1) {
+					expireDate = Date.now() + 6 * duration
+				} else if (type === 2) {
+					expireDate = Date.now() + 12 * duration
+				}
+				this.owner.isSubscribed = true
+				this.owner.expireDate = expireDate
+			}
+			return result
+		},
 		// 更新头像url
 		updateAvatarUrl(avatarUrl:string) {
 			this.owner.avatarUrl = avatarUrl

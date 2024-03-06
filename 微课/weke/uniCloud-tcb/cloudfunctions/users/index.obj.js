@@ -691,5 +691,28 @@ module.exports = {
 		   })
 		   return result.data
 	   } catch(e) {}
+   },
+   async updateExpiredDate(type, userId) {
+	   if (typeof(type) === 'undefined' ||
+			typeof(userId) === 'undefined' || 
+			userId.length === 0 ||
+	   	(type !== 0 && type !== 1 && type !== 2)) {
+			return false
+	   }
+	   let duration = 30 * 24 * 60 * 60 * 1000
+	   let expireDate = Date.now() + 3 * duration
+	   if (type === 1) {
+		   expireDate = Date.now() + 6 * duration
+	   } else if (type === 2) {
+		   expireDate = Date.now() + 12 * duration
+	   }
+	   const db = uniCloud.database()
+	   const result = await db.collection('wk-users').where({
+		   _id: userId
+	   }).update({
+		   isSubscribed: true,
+		   expireDate
+	   })
+	   return result.updated === 1
    }
 }

@@ -9,7 +9,7 @@
 					:url="usersStore.owner.avatarUrl"
 					:text="nicknameBrief"></wk-icon>
 				<!-- 会员标识 -->
-				<uni-icons class="member" type="vip-filled" color="white" size=20></uni-icons>
+				<uni-icons v-if="isMember" class="member" type="vip-filled" color="white" size=20></uni-icons>
 			</template>
 			<template v-else>
 				<image class="icon" src="@/static/icon/profile.png" mode="aspectFill"></image>
@@ -33,7 +33,7 @@
 					<uni-icons type="compose" color="#c0c0c0" size=12></uni-icons>
 				</view>
 				<!-- 有效期 -->
-				<template v-if="usersStore.owner.from === 'wx'">
+				<template v-if="isAdminOrTeacher">
 					<template v-if="usersStore.isExpired">
 						<text class="expired">{{"会员已于" + yyyyMMdd(new Date(usersStore.owner.expireDate)) + "过期"}}</text>
 					</template>
@@ -88,6 +88,16 @@ const nicknameBrief = computed(() => {
 	const nickname = usersStore.owner.nickName
 	const length = nickname.length
 	return length > 2? nickname.substring(length - 2):nickname
+})
+
+const isMember = computed(() => {
+	const c1 = usersStore.owner.roles?.includes(1) || usersStore.owner.roles?.includes(2)
+	const c2 = !usersStore.isExpired
+	return c1 && c2
+})
+
+const isAdminOrTeacher = computed(() => {
+	return usersStore.owner.roles?.includes(1) || usersStore.owner.roles?.includes(2)
 })
 
 </script>

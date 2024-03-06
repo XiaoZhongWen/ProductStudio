@@ -10,7 +10,7 @@
 				</uni-pay>
 			</view>
 		</template>
-		<view class="member-card-container" v-if="!usersStore.owner.isSubscribed">
+		<view class="member-card-container" v-if="isShowPay">
 			<template v-for="option in memberOptions" :key="option._id">
 				<member-card 
 					:option="option"
@@ -19,19 +19,9 @@
 			</template>
 		</view>
 		<view class="renew-info" v-else>
-			<view class="row first">
-				<view class="left">已开启自动续费</view>
-				<view class="right">
-					<text class="close">关闭自动续费</text>
-				</view>
-			</view>
-			<view class="row">
-				<view class="left">下次续费金额</view>
-				<view class="right">5.9元</view>
-			</view>
 			<view class="row">
 				<view class="left">下次续费日期</view>
-				<view class="right">2024-02-17</view>
+				<view class="right">{{expireDate}}</view>
 			</view>
 		</view>
 		<view class="indate">{{indate}}</view>
@@ -51,8 +41,8 @@
 				</template>
 			</view>
 		</view>
-		<button v-if="!usersStore.owner.isSubscribed" class="btn" type="default" @tap="onTapAgree">{{confirm}}</button>
-		<view v-if="!usersStore.owner.isSubscribed" class="policy" @tap="onPolicyTap">
+		<button v-if="isShowPay" class="btn" type="default" @tap="onTapAgree">{{confirm}}</button>
+		<view v-if="isShowPay" class="policy" @tap="onPolicyTap">
 			<label class="radio">
 				<radio 
 					:checked="checked"
@@ -106,11 +96,11 @@ const capacities = [{
 
 const pay = ref()
 const onTapAgree = () => {
-	let duration = "一个季度"
+	let duration = "3个月"
 	if (selectedOption.value === 1) {
-		duration = "半年"
+		duration = "6个月"
 	} else if (selectedOption.value === 2) {
-		duration = "一年"
+		duration = "12个月"
 	}
 	if (!checked.value) {
 		uni.showModal({
@@ -132,11 +122,11 @@ const onTapAgree = () => {
 const payOrder = async () => {
 	const option = memberOptions.value[selectedOption.value]
 	const charge = option.charge * 100
-	let description = global.appName + "一个季度会员服务"
+	let description = global.appName + "3个月会员服务"
 	if (option.type === 1) {
-		description = global.appName + "半年会员服务"
+		description = global.appName + "6个月会员服务"
 	} else if (option.type === 2) {
-		description = global.appName + "一年会员服务"
+		description = global.appName + "12个月会员服务"
 	}
 	const order_no = await ordersStore.createOrder(usersStore.owner._id, option._id)
 	if (order_no.length > 0) {
@@ -155,7 +145,7 @@ const payOrder = async () => {
 	}
 }
 
-const onSuccess = (res:{
+const onSuccess = async (res:{
 		user_order_success:boolean, 
 		errCode:number,
 		pay_order: {
@@ -169,9 +159,7 @@ const onSuccess = (res:{
 			// 更新订单状态
 			ordersStore.updateOrder(order_no, 1)
 			// 更新会员有效期
-			
-		} else {
-			
+			usersStore.updateExpiredDate(selectedOption.value)
 		}
 	}
 }
@@ -189,12 +177,17 @@ onMounted(async () => {
 	memberOptions.value = options
 })
 
+const expireDate = computed(() => {
+	const date = usersStore.owner.expireDate
+	return yyyyMMdd(new Date(date))
+})
+
 const indate = computed(() => {
-	const expireDate = usersStore.owner.expireDate
-	if (expireDate < Date.now()) {
-		return "会员已于" + yyyyMMdd(new Date(expireDate)) + "过期"
+	const date = usersStore.owner.expireDate
+	if (date < Date.now()) {
+		return "会员已于" + expireDate.value + "过期"
 	} else {
-		return "会员有效期至" + yyyyMMdd(new Date(expireDate))
+		return "会员有效期至" + expireDate.value
 	}
 })
 
@@ -203,6 +196,12 @@ const confirm = computed(() => {
 		return ""
 	}
 	return "确认协议并以¥" + memberOptions.value[selectedOption.value].charge + "激活"
+})
+
+const isShowPay = computed(() => {
+	const c1 = usersStore.owner.isSubscribed
+	const c2 = usersStore.isExpired
+	return !c1 || c2
 })
 
 const onCardTap = (option:MemberOption) => {

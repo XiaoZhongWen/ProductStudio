@@ -20,6 +20,15 @@ export const useOrdersStore = defineStore("orders", {
 			}
 			const result = await orders_co.updateOrder(orderId, status)
 			return result
+		},
+		async fetchOrders(openid:string, before:number) {
+			if (typeof(openid) === 'undefined' || 
+				openid.length === 0 || 
+				typeof(before) === 'undefined') {
+				return []
+			}
+			const res = await orders_co.fetchOrders(openid, before)
+			return res
 		}
 	}
 })
