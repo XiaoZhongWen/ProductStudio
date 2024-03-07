@@ -63,7 +63,7 @@
 					<uni-list-item link v-for="item in other" :key="item.name" :to="item.to">
 						<template v-slot:header>
 							<view class="slot-box">
-								<uni-icons class="icon" :type="item.type" color="#fcaf2c" size=22></uni-icons>
+								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">{{item.name}}</text>
 							</view>
 						</template>
@@ -135,6 +135,7 @@ const students = ref<Student[]>([])
 
 let inviteOrgId = ''
 let invitePhoneNumber = ''
+let backToOrder = false
 
 onLoad((option) => {
 	const { orgId, phoneNumber, timestamp } = option as {
@@ -142,6 +143,7 @@ onLoad((option) => {
 		phoneNumber: string|undefined,
 		timestamp: number|undefined
 	}
+	
 	if (typeof(orgId) !== 'undefined' && orgId.length > 0 &&
 		typeof(phoneNumber) !== 'undefined' && phoneNumber.length > 0) {
 		inviteOrgId = orgId
@@ -152,6 +154,7 @@ onLoad((option) => {
 		selectRolePopup.value?.close()
 		await fetchChildren()
 		showBindPhone()
+		toOrder()
 	})
 	
 	uni.$on(global.event_name.selectRole, () => {
@@ -227,6 +230,10 @@ onLoad((option) => {
 		} catch(e) {
 			console.error(e)
 		}
+	})
+	uni.$on("backToOrder", () => {
+		backToOrder = true
+		loginOptionPopup.value?.open()
 	})
 })
 
@@ -341,28 +348,11 @@ const account:ListItem[] = computed({
 	}
 })
  
-const other:ListItem[] = [
-	 {
-	 	type: "navigate-filled",
-	 	name: "新手指南",
-		to: "/pages/guider/guider"
-	 },
-	 {
-	 	type: "chatboxes-filled",
-	 	name: "反馈意见",
-		to: "/pages/feedback/feedback"
-	 },
-	 {
-	 	type: "heart-filled",
-	 	name: "关于我们",
-		to: "/pages/about/about"
-	 },
-	 {
-	 	type: "gear-filled",
-	 	name: "设置",
-	 	to: "/pages/setting/setting"
-	 }
-]
+const other:ListItem[] = [{
+	type: "gear-filled",
+	name: "设置",
+	to: "/pages/setting/setting"
+}]
 
 onMounted(async () => {
 	uni.showLoading({
@@ -377,7 +367,9 @@ onMounted(async () => {
 // @ts-ignore
 const { isLogin, beInvited } = storeToRefs(usersStore)
 watch(isLogin, () => {
-	selectRole()
+	if (isLogin) {
+		selectRole()
+	}
 })
 
 watch(beInvited, () => {
@@ -396,10 +388,11 @@ const selectRole = () => {
 				uni.hideTabBar()
 			} else {
 				showBindPhone()
+				toOrder()
 			}
 		}
 	} else if (usersStore.owner.from === 'stuNo') {
-		
+		toOrder()
 	}
 }
 
@@ -573,6 +566,15 @@ const fetchChildren = async () => {
 		}
 	}
 	students.value = []
+}
+
+const toOrder = () => {
+	if (backToOrder) {
+		uni.navigateTo({
+			url: "/pages/order/order"
+		})
+		backToOrder = false
+	}
 }
 
 </script>

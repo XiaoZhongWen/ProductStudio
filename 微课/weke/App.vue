@@ -27,6 +27,7 @@
 				success: async (res) => {
 					const data = res.data
 					if (JSON.stringify(data) === '{}') {
+						uni.$emit(this.globalData.loginFail)
 						return
 					}
 					uni.showLoading({
@@ -66,6 +67,8 @@
 								icon: "none"
 							})
 						}
+					} else {
+						uni.$emit(this.globalData.loginFail)
 					}
 				}
 			})
@@ -82,6 +85,7 @@
 				showWkProtocol: "Protocol",
 				login: "login",
 				loginSuccess: "loginSuccess",
+				loginFail: "loginFail",
 				selectRole: "selectRole",
 				showSelectRole: "showSelectRole",
 				didSelectedRole: "didSelectedRole",

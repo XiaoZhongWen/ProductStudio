@@ -348,5 +348,15 @@
 				"selectedIconPath": "static/icon/tab/icon_tab_mine_selected.png"
 			}
 		]
+	},
+	"condition" : {//Mode configuration, effective only during development period.
+		"current": 0,//Current active mode (index entry of list)
+		"list": [
+			{
+				"name": "",//mode name
+				"path": "/pages/order/order",//startup page, can not be empty
+				"query": ""//The startup parameters are obtained in the onLoad function of the page.
+			}
+		]
 	}
 }

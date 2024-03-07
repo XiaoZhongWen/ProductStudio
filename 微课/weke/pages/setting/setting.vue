@@ -16,6 +16,18 @@
 				rightText="解除绑定" 
 				@tap="unbind" />
 		</uni-list>
+		<view class="other-container">
+			<uni-list>
+				<uni-list-item link v-for="item in other" :key="item.name" :to="item.to">
+					<template v-slot:header>
+						<view class="slot-box">
+							<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
+							<text class="slot-text">{{item.name}}</text>
+						</view>
+					</template>
+				</uni-list-item>
+			</uni-list>
+		</view>
 		<button class="btn" type="default" @tap="onLogout">
 			<text class="text">退出登录</text>
 		</button>
@@ -26,21 +38,15 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import ChangePassword from './change-password/ChangePassword'
-import { computed, ref } from "vue"
 
 const popup = ref<{
 	open: (type?: UniHelper.UniPopupType) => void
 	close: () => void
 }>()
-
-type ListItem = {
-	type: string,
-	name: string
-	to?: string
-}
 
 const usersStore = useUsersStore()
 const useOrgs = useOrgsStore()
@@ -49,6 +55,24 @@ const global = getApp().globalData!
 
 const isShowChangePwdMenu = ref(usersStore.owner.from === 'stuNo' && 
 		usersStore.owner.studentNo.length > 0)
+
+const other:ListItem[] = [
+	 {
+	 	type: "navigate-filled",
+	 	name: "新手指南",
+		to: "/pages/guider/guider"
+	 },
+	 {
+	 	type: "chatboxes-filled",
+	 	name: "反馈意见",
+		to: "/pages/feedback/feedback"
+	 },
+	 {
+	 	type: "heart-filled",
+	 	name: "关于我们",
+		to: "/pages/about/about"
+	 }
+]
 
 const onLogout = () => {
 	usersStore.$reset()
@@ -101,6 +125,37 @@ const onLogout = () => {
 		}
 		.uni-list-item {
 			border-radius: $uni-border-radius-lg;
+		}
+	}
+	.other-container {
+		margin-top: $uni-spacing-col-lg;
+		.uni-list {
+			margin: 0 $uni-spacing-row-base;
+			border-radius: $uni-border-radius-lg;
+			background-color: white;
+			.uni-list--border-top, .uni-list--border-bottom {
+				height: 0px;
+			}
+			.uni-list-item {
+				border-radius: $uni-border-radius-lg;
+			}
+		}
+		.slot-box {
+			flex-direction: row;
+			align-items: center;
+			.slot-text {
+				margin-left: $uni-padding-normal;
+				font-size: $uni-font-size-base;
+				color: $wk-text-color;
+				font-weight: 400;
+			}
+			.icon {
+				width: 30px;
+				height: 30px;
+				border-radius: $uni-border-radius-circle;
+				position: relative;
+				top: 3px;
+			}
 		}
 	}
 	.btn {
