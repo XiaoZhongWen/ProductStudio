@@ -19,13 +19,18 @@
 		<view class="other-container">
 			<uni-list>
 				<uni-list-item link v-for="item in other" :key="item.name" :to="item.to">
-					<template v-slot:header>
+					<template v-slot:body>
 						<view class="slot-box">
 							<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
 							<text class="slot-text">{{item.name}}</text>
 						</view>
 					</template>
 				</uni-list-item>
+				<view class="feedback">
+					<uni-icons class="icon" type="chatboxes-filled" color="#007aff" size=22></uni-icons>
+					<button class="contact" open-type="contact">反馈意见</button>
+					<uni-icons class="right-arrow" type="right" color="#bababa"></uni-icons>
+				</view>
 			</uni-list>
 		</view>
 		<button class="btn" type="default" @tap="onLogout">
@@ -61,11 +66,6 @@ const other:ListItem[] = [
 	 	type: "navigate-filled",
 	 	name: "新手指南",
 		to: "/pages/guider/guider"
-	 },
-	 {
-	 	type: "chatboxes-filled",
-	 	name: "反馈意见",
-		to: "/pages/feedback/feedback"
 	 },
 	 {
 	 	type: "heart-filled",
@@ -155,6 +155,39 @@ const onLogout = () => {
 				border-radius: $uni-border-radius-circle;
 				position: relative;
 				top: 3px;
+			}
+		}
+		.feedback {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			padding-left: 16px;
+			border-top: solid 1px #f1f1f1;
+			button::after {
+				border-width: 0px;
+			}
+			.contact {
+				display: flex;
+				align-items: center;
+				background-color: transparent;
+				font-size: $uni-font-size-base;
+				color: $wk-text-color;
+				font-weight: 400;
+				height: 49px;
+				text-align: left;
+				width: 100%;
+				padding-left: 4px;
+			}
+			.icon {
+				width: 30px;
+				height: 30px;
+				border-radius: $uni-border-radius-circle;
+				position: relative;
+				top: 3px;
+			}
+			.right-arrow {
+				position: relative;
+				right: $uni-spacing-row-base;
 			}
 		}
 	}

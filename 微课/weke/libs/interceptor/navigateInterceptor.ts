@@ -1,6 +1,6 @@
 import { useUsersStore } from "@/store/users"
 
-const whiteList = ["/pages/memberCenter/memberCenter", "/uni_modules/uni-pay/pages"]
+const whiteList = ["/pages/memberCenter/memberCenter", "/uni_modules/uni-pay/pages", "/pages/webPage/webPage"]
 
 export default function() {
 	const usersStore = useUsersStore()
@@ -14,6 +14,7 @@ export default function() {
 			}
 			if (usersStore.isLogin) {
 				const { url } = e
+				console.info(url)
 				const index = whiteList.findIndex(item => url.includes(item))
 				if (index !== -1) {
 					return true

@@ -213,11 +213,9 @@ const onPolicyTap = () => {
 }
 
 const onMemberService = () => {
-	
-}
-
-const onAutoService = () => {
-	
+	uni.navigateTo({
+		url: "/pages/webPage/webPage?targetUrl=" + global.domain + "agreement/member/index.html"
+	})
 }
 
 </script>

@@ -163,7 +163,9 @@ onLoad((option) => {
 	})
 	
 	uni.$on(global.event_name.showWkProtocol, () => {
-		console.info('showWkProtcol')
+		uni.navigateTo({
+			url: "/pages/webPage/webPage?targetUrl=" + global.domain + "agreement/user/index.html"
+		})
 	})
 	
 	uni.$on(global.event_name.login, async (data) => {

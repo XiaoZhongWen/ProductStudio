@@ -81,6 +81,7 @@
 			login_failure_toast: "登录失败",
 			auth_request_failure_toast: "个人信息获取失败",
 			user_info_request_auth: "完善您的个人信息",
+			domain: "https://tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732.tcloudbaseapp.com/",
 			event_name: {
 				showWkProtocol: "Protocol",
 				login: "login",

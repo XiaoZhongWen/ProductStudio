@@ -111,7 +111,7 @@
             {
                 "navigationBarTitleText": "关于我们",
                 "enablePullDownRefresh": false,
-				"backgroundColor": "#F2F4FD"
+				"backgroundColor": "#FFFFFF"
             }
         }
         ,{
@@ -292,6 +292,15 @@
         	"style" : 
         	{
         		"navigationBarTitleText" : "订单",
+        		"enablePullDownRefresh" : false,
+				"backgroundColor": "#F2F4FD"
+        	}
+        },
+        {
+        	"path" : "pages/webPage/webPage",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "",
         		"enablePullDownRefresh" : false,
 				"backgroundColor": "#F2F4FD"
         	}
