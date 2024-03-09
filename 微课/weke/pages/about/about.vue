@@ -22,7 +22,6 @@
 				</uni-list-item>
 			</uni-list>
 		</view>
-		<image src="../../static/icon/fwh.jpg" mode="aspectFit"></image>
 	</view>
 </template>
 

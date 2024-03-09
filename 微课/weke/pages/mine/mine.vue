@@ -41,14 +41,12 @@
 			<view class="account-container">
 				<uni-list>
 					<uni-list-item link v-for="item in account" :key="item.name" :to="item.to">
-						<template v-slot:header v-if="item.type !== 'phone-filled'">
-							<view class="slot-box">
+						<template v-slot:header>
+							<view class="slot-box" v-if="item.type !== 'phone-filled'">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">{{item.name}}</text>
 							</view>
-						</template>
-						<template v-slot:header v-else>
-							<button open-type="getPhoneNumber" @getphonenumber="getPhoneNumber" class="slot-box btn" :plain="true">
+							<button v-else open-type="getPhoneNumber" @getphonenumber="getPhoneNumber" class="slot-box btn" :plain="true">
 								<uni-icons class="icon" :type="item.type" color="#007aff" size=22></uni-icons>
 								<text class="slot-text">{{item.name}}</text>
 							</button>
@@ -495,6 +493,7 @@ const showBindPhone = () => {
 }
 
 const getPhoneNumber = async (e) => {
+	debugger
 	const { code } = e.detail
 	const result = await usersStore.fetchPhoneNumber(code)
 	const res = typeof(result) !== 'undefined' && result.length > 0
