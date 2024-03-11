@@ -51,7 +51,9 @@ const onClick = (type:string) => {
 			url: "/pages/webPage/webPage?targetUrl=" + global.domain + "agreement/user/index.html"
 		})
 	} else if (type === 'locked-filled') {
-		
+		uni.navigateTo({
+			url: "/pages/webPage/webPage?targetUrl=" + global.domain + "agreement/privacy/index.html"
+		})
 	}
 }
 
