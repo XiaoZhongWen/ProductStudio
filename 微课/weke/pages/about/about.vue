@@ -43,9 +43,21 @@ const other:ListItem[] = [
 	 }
 ]	
 
-const onClick = (type:string) => {
+const onClick = async (type:string) => {
 	if (type === 'weixin') {
-		
+		uni.showLoading({
+			title: "加载中..."
+		})
+		const result = await uniCloud.getTempFileURL({
+			fileList: ["cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/qrCode/fwh.jpg"]
+		})
+		uni.hideLoading()
+		const { tempFileURL } = result.fileList[0]
+		if (typeof(tempFileURL) !== 'undefined' && tempFileURL.length > 0) {
+			uni.previewImage({
+				urls:[tempFileURL]
+			})
+		}
 	} else if (type === 'person-filled') {
 		uni.navigateTo({
 			url: "/pages/webPage/webPage?targetUrl=" + global.domain + "agreement/user/index.html"

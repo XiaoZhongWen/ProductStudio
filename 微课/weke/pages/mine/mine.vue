@@ -69,6 +69,10 @@
 				</uni-list>
 			</view>
 			
+			<uni-card title="嗒嗒课吧" sub-title="服务号" extra="点我关注" thumbnail="/static/icon/app_icon.png" @tap="followMe">
+				<text class="uni-body">关注嗒嗒课吧服务号，您将接收到上课提醒、消课提醒、排课通知、课程变更通知、课程取消通知、课程充值通知、课程绑定通知等</text>
+			</uni-card>
+			
 			<!-- popup 登录选择 -->
 			<uni-popup 
 				ref="loginOptionPopup" 
@@ -347,6 +351,22 @@ const account:ListItem[] = computed({
 		return s
 	}
 })
+
+const followMe = async () => {
+	uni.showLoading({
+		title: "加载中..."
+	})
+	const result = await uniCloud.getTempFileURL({
+		fileList: ["cloud://tcb-pwxt7mejf8zs8rb-1cwte216d53a.7463-tcb-pwxt7mejf8zs8rb-1cwte216d53a-1319472732/ddkb/qrCode/fwh.jpg"]
+	})
+	uni.hideLoading()
+	const { tempFileURL } = result.fileList[0]
+	if (typeof(tempFileURL) !== 'undefined' && tempFileURL.length > 0) {
+		uni.previewImage({
+			urls:[tempFileURL]
+		})
+	}
+}
  
 const other:ListItem[] = [{
 	type: "gear-filled",
