@@ -259,7 +259,7 @@ const onTeacherTap = (teacherId: string) => {
 }
 
 const orgLogo = (org:Org) => {
-	let logo = org.logoUrl
+	let logo = org.logoUrl ?? '/static/icon/org.png'
 	if (org.type === 1) {
 		const users = usersStore.users.filter(u => u._id === org.creatorId)
 		if (users.length === 1) {

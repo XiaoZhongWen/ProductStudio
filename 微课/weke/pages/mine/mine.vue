@@ -215,6 +215,7 @@ onLoad((option) => {
 			const unionid = usersStore.owner.unionid ?? ''
 			const openid = usersStore.owner.openid ?? ''
 			let isUpdated = true
+			uni.hideLoading()
 			// 6. 更新云端用户信息
 			if ((isUpdatedPortrait || isUpdatedNickname) &&
 				(usersStore.owner.from === 'stuNo' ||
@@ -230,7 +231,6 @@ onLoad((option) => {
 					})
 				}
 			}
-			uni.hideLoading()
 		} catch(e) {
 			console.error(e)
 		}
@@ -474,7 +474,6 @@ const onStuNoLogin = async(data:{stuNo:string, pwd:string}) => {
 		})
 		return
 	}
-	
 	uni.showLoading({
 		title: '正在登录...'
 	})
@@ -513,7 +512,6 @@ const showBindPhone = () => {
 }
 
 const getPhoneNumber = async (e) => {
-	debugger
 	const { code } = e.detail
 	const result = await usersStore.fetchPhoneNumber(code)
 	const res = typeof(result) !== 'undefined' && result.length > 0
@@ -528,8 +526,9 @@ const getPhoneNumber = async (e) => {
 }
 
 const handleTeacherInvite = async () => {
-	console.info("handleTeacherInvite: " + inviteOrgId + " " + invitePhoneNumber)
-	if (inviteOrgId.length > 0 && 
+	if (typeof(inviteOrgId) !== 'undefined' &&
+		typeof(invitePhoneNumber) !== 'undefined' &&
+		inviteOrgId.length > 0 && 
 	 	invitePhoneNumber.length > 0) {
 		if (!usersStore.isLogin) {
 			uni.showToast({

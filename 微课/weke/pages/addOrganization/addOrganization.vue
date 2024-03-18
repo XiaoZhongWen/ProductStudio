@@ -1,22 +1,22 @@
 <template>
 	<view class="add-org-container">
-		<view class="card-container">
+		<!-- <view class="card-container">
 			<org-card :org="org"></org-card>
-		</view>
+		</view> -->
 		<view class="org-edit-container">
 			<view v-if="isCreator" class="header">
 				<upload-image :url="org.logoUrl" prompt="图标" @onChooseAvatar="onChooseAvatar"></upload-image>
 			</view>
 			<view class="body">
 				<uni-list>
-					<uni-list-item class="item">
+					<!-- <uni-list-item class="item">
 						<template v-slot:header>
 							<view class="decoration">
 								<text class="text">外观</text>
 								<color-card :disabled="!isCreator" @onColorChanged="onColorChanged"></color-card>
 							</view>
 						</template>
-					</uni-list-item>
+					</uni-list-item> -->
 					<uni-list-item class="item">
 						<template v-slot:header>
 							<view class="slot-box">
@@ -251,26 +251,7 @@ const onTapAdd = async () => {
 		})
 		return
 	}
-	// 2. 验证机构创建时间
-	if (didSelectedDate === false) {
-		uni.showToast({
-			title: "请填写创建时间",
-			duration: global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	const date = new Date(org.value.createDate)
-	const now = Date.now()
-	if (date.getTime() > now) {
-		uni.showToast({
-			title: "创建时间有误",
-			duration: global.duration_toast,
-			icon:"none"
-		})
-		return
-	}
-	// 3. 验证机构创建者
+	// 2. 验证机构创建者
 	if (org.value.creatorId !== usersStore.owner._id) {
 		uni.showToast({
 			title: "权限错误",

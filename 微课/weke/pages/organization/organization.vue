@@ -6,7 +6,15 @@
 				v-for="org in dataList" 
 				:key="org._id" 
 				@tap="onOrgCardTap(org._id)">
-				<org-card :org="org"></org-card>
+				<uni-card 
+					margin="0px"
+					:title="org.name" 
+					:sub-title="org.addr" 
+					:extra="org.nickname" 
+					:thumbnail="logoUrl(org)">
+					<text class="uni-body">{{org.desc}}</text>
+				</uni-card>
+				<!-- <org-card :org="org"></org-card> -->
 			</view>
 		</view>
 	</z-paging>
@@ -61,6 +69,11 @@ const isShowAddBtn = computed(() => {
 			!usersStore.isExpired
 })
 
+const logoUrl = (org:Org) => {
+	const url = org.logoUrl ?? ''
+	return url.length > 0? url: '/static/icon/org.png'
+}
+
 const onAddTap = () => {
 	uni.navigateTo({
 		url: "/pages/addOrganization/addOrganization"
@@ -110,6 +123,7 @@ const loadOrgs = () => {
 		// 家长, 这里的userId指的是被关联学员的userId
 		orgs.value = useOrgs.orgs.filter(org => org.studentIds?.includes(userId.value) && org.type === 0)
 	}
+	paging.value?.reload()
 }
 
 const onRefresh = async () => {
@@ -117,10 +131,20 @@ const onRefresh = async () => {
 	paging.value?.reload()
 }
 
-const queryList = (pageNo:number, pageSize:number) => {
+const queryList = async (pageNo:number, pageSize:number) => {
 	const s = pageNo * pageSize
 	const e = s + pageSize
 	const data = orgs.value.slice(s, e)
+	for (let org of data) {
+		const nickname = org.nickname ?? ''
+		if (nickname.length === 0) {
+			const users = await usersStore.fetchUsers([org.creatorId])
+			if (users.length > 0) {
+				const user = users[0]
+				org.nickname = user.nickName
+			}
+		}
+	}
 	paging.value?.complete(data)
 }
 
@@ -132,9 +156,9 @@ const queryList = (pageNo:number, pageSize:number) => {
 	flex-direction: column;
 	align-items: center;
 	.card-container {
-		width: 90%;
-		height: 180px;
-		margin: $uni-spacing-col-sm 0;
+		width: 100%;
+		width: 95%;
+		margin-top: $uni-spacing-row-base;
 	}
 }
 .add-container {
