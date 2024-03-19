@@ -114,9 +114,8 @@ module.exports = {
 	/**
 	 * 获取所有与用户相关的机构信息
 	 * @param {userId} 机构创建者id
-	 * @param {excludes} 排除的机构id集合
 	 */
-	async fetchOrgs(userId, excludes, from="wx") {
+	async fetchOrgs(userId, from="wx") {
 		if (typeof(userId) === 'undefined' || userId.length === 0) {
 			return []
 		}
@@ -129,13 +128,11 @@ module.exports = {
 		
 		// 1. 创建者
 		res_creator = await db.collection("wk-orgs").where({
-			_id: dbCmd.nin(excludes),
 			creatorId: userId,
 		}).get()
 		
 		// 2. 老师
 		res_teacher = await db.collection("wk-orgs").where({
-			_id: dbCmd.nin(excludes),
 			teacherIds: userId,
 		}).get()
 		
@@ -145,7 +142,6 @@ module.exports = {
 		}).get()
 		for (let student of students.data) {
 			const res = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
 				studentIds: student._id,
 			}).get()
 			res_parents.data.push(...res.data)
@@ -154,7 +150,6 @@ module.exports = {
 		// 4. 学员
 		if (from === 'stuNo') {
 			res_students = await db.collection("wk-orgs").where({
-				_id: dbCmd.nin(excludes),
 				studentIds: userId,
 			}).get()
 		}

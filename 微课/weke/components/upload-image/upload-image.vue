@@ -4,12 +4,12 @@
 			class="circle"
 			type="default"
 			plain="true"
-			open-type="chooseAvatar"
+			:open-type="props.editable?'chooseAvatar':''"
 			@chooseavatar="onChooseAvatar">
 			<template v-if="props.url.length">
 				<view class="imgContainer">
 					<image class="img" :src="props.url" mode="aspectFill"></image>
-					<text class="text">修改{{props.prompt}}</text>
+					<text class="text" v-if="props.editable">修改{{props.prompt}}</text>
 				</view>
 			</template>
 			<template v-else>
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps(['url', 'prompt'])
+const props = defineProps(['url', 'prompt', 'editable'])
 const emit = defineEmits(['onChooseAvatar'])
 
 const onChooseAvatar = (res:UniHelper.ButtonOnChooseavatarEvent) => {

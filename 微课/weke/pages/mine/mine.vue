@@ -636,7 +636,7 @@ const toOrder = () => {
 		border: none;
 		padding: 0;
 		line-height: 1;
-		width: 100%;
+		width: 300px;
 		text-align: left;
 	}
 }

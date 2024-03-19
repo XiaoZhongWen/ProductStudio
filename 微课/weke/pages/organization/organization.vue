@@ -86,7 +86,12 @@ const onOrgCardTap = (orgId:string) => {
 	})
 }
 
-const loadOrgs = () => {
+const loadOrgs = async () => {
+	uni.showLoading({
+		title: "正在加载"
+	})
+	await useOrgs.loadOrgData()
+	uni.hideLoading()
 	if (userId.value === usersStore.owner._id) {
 		// 管理员 | 老师
 		let res:Org[] = []

@@ -166,14 +166,12 @@ export const useOrgsStore = defineStore('orgs', {
 		async loadOrgData() {
 			const usersStore = useUsersStore()
 			let result = true
-			const didLoadedOrgIds = this.orgs.map(org => org._id)
 			try {
 				const orgs = await orgs_co.fetchOrgs(
 					usersStore.owner._id,
-					didLoadedOrgIds,
 					usersStore.owner.from
 				)
-				this.orgs.push(...orgs)
+				this.orgs = orgs
 				// 按创建时间降序排序
 				this.orgs.sort((a, b) => {
 					const date1 = new Date(a.createDate)

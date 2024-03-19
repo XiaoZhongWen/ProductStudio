@@ -4,8 +4,8 @@
 			<org-card :org="org"></org-card>
 		</view> -->
 		<view class="org-edit-container">
-			<view v-if="isCreator" class="header">
-				<upload-image :url="org.logoUrl" prompt="图标" @onChooseAvatar="onChooseAvatar"></upload-image>
+			<view class="header">
+				<upload-image :url="org.logoUrl" :editable="isCreator" prompt="图标" @onChooseAvatar="onChooseAvatar"></upload-image>
 			</view>
 			<view class="body">
 				<uni-list>
@@ -80,38 +80,116 @@
 				</uni-list>
 			</view>
 		</view>
-		<view class="org-member-container" v-if="isCreator && orgId.length > 0">
+		<view class="org-member-container" v-if="orgId.length > 0">
 			<uni-list>
-				<uni-list-item class="item" clickable :to="toTeacher">
+				<uni-list-item class="item" direction="column">
 					<template v-slot:header>
 						<view class="slot-box">
-							<text class="slot-text">添加老师</text>
-							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+							<text class="slot-text">老师</text>
+							<uni-icons
+								@tap.stop="onAddTeacher"
+								v-if="isCreator" 
+								class="right-arrow" 
+								type="plus-filled" 
+								color="#5073D6" 
+								size="24">
+							</uni-icons>
 						</view>
 					</template>
-				</uni-list-item>
-				<uni-list-item class="item" clickable :to="toStudent">
-					<template v-slot:header>
-						<view class="slot-box">
-							<text class="slot-text">添加学员</text>
-							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
-						</view>
+					<template v-slot:body>
+						<uni-grid :column="5" :show-border="false" :square="false" @change="onTapTeacherItem">
+							<uni-grid-item v-for="(teacher, index) in teachers" :index="index" :key="index">
+								<wk-portrait
+									class="cell"
+									:url="teacher.avatarUrl"
+									:name="teacher.nickName"
+								></wk-portrait>
+							</uni-grid-item>
+						</uni-grid>
 					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable :to="toCourse">
+				<uni-list-item class="item" direction="column">
 					<template v-slot:header>
 						<view class="slot-box">
-							<text class="slot-text">添加课程</text>
-							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+							<text class="slot-text">学员</text>
+							<uni-icons 
+								@tap.stop="onAddStudent"
+								v-if="isCreator" 
+								class="right-arrow" 
+								type="plus-filled" 
+								color="#5073D6" 
+								size="24">
+							</uni-icons>
 						</view>
 					</template>
+					<template v-slot:body>
+						<uni-grid :column="5" :show-border="false" :square="false">
+							<uni-grid-item v-for="(student, index) in students" :index="index" :key="index">
+								<view class="grid-item-box">
+									<wk-portrait
+										class="cell"
+										:url="student.avatarUrl"
+										:name="student.nickName"
+									></wk-portrait>
+								</view>
+							</uni-grid-item>
+						</uni-grid>
+					</template>
 				</uni-list-item>
-				<uni-list-item class="item" clickable :to="toClass">
+				<uni-list-item class="item" direction="column">
 					<template v-slot:header>
 						<view class="slot-box">
-							<text class="slot-text">添加班级</text>
-							<uni-icons class="right-arrow" type="forward" color="#808080"></uni-icons>
+							<text class="slot-text">课程</text>
+							<uni-icons 
+								@tap.stop="onAddCourse"
+								v-if="isCreator" 
+								class="right-arrow" 
+								type="plus-filled" 
+								color="#5073D6" 
+								size="24">
+							</uni-icons>
 						</view>
+					</template>
+					<template v-slot:body>
+						<uni-grid :column="5" :show-border="false" :square="false">
+							<uni-grid-item v-for="(course, index) in courses" :index="index" :key="index">
+								<view class="grid-item-box">
+									<wk-portrait
+										class="cell"
+										:url="course.icon"
+										:name="course.name"
+									></wk-portrait>
+								</view>
+							</uni-grid-item>
+						</uni-grid>
+					</template>
+				</uni-list-item>
+				<uni-list-item class="item" direction="column">
+					<template v-slot:header>
+						<view class="slot-box">
+							<text class="slot-text">班级</text>
+							<uni-icons 
+								@tap.stop="onAddClass"
+								v-if="isCreator" 
+								class="right-arrow" 
+								type="plus-filled" 
+								color="#5073D6" 
+								size="24">
+							</uni-icons>
+						</view>
+					</template>
+					<template v-slot:body>
+						<uni-grid :column="5" :show-border="false" :square="false">
+							<uni-grid-item v-for="(grade, index) in classes" :index="index" :key="index">
+								<view class="grid-item-box">
+									<wk-portrait
+										class="cell"
+										:url="grade.icon"
+										:name="grade.name"
+									></wk-portrait>
+								</view>
+							</uni-grid-item>
+						</uni-grid>
 					</template>
 				</uni-list-item>
 			</uni-list>
@@ -127,14 +205,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { Org } from '@/types/org'
 import { useOrgsStore } from '@/store/orgs'
 import { useUsersStore } from "@/store/users"
+import { useCourseStore } from "@/store/course"
+import { useGradesStore } from "@/store/grades"
+import { User, Student } from '../../types/user'
+import { Course } from '../../types/course'
+import { Grade } from '../../types/grade'
 
 const useOrgs = useOrgsStore()
 const usersStore = useUsersStore()
+const useCourses = useCourseStore()
+const useGrades = useGradesStore()
 const global = getApp().globalData!
 
 let didSelectedDate = false
@@ -162,24 +247,13 @@ const org = ref<Org>({
 				type: 0
 			})
 
-const toTeacher = computed(() => {
-	return "/pages/addTeacher/addTeacher?orgId=" + orgId.value
-})
-
-const toStudent = computed(() => {
-	return "/pages/addStudent/addStudent?orgId=" + orgId.value
-})
-
-const toCourse = computed(() => {
-	return '/pages/addCourse/addCourse?orgId=' + orgId.value
-})
-
-const toClass = computed(() => {
-	return '/pages/addGrade/addGrade?orgId=' + orgId.value
-})
+const teachers = ref<User[]>([])
+const students = ref<Student[]>([])
+const courses = ref<Course[]>([])
+const classes = ref<Grade[]>([])
 
 //@ts-ignore
-onLoad((option) => {
+onLoad(async (option) => {
 	let title = "创建机构"
 	const id = option!.orgId
 	if (typeof(id) !== 'undefined') {
@@ -221,6 +295,22 @@ onLoad((option) => {
 		uni.setNavigationBarTitle({
 			title:title
 		})
+		uni.showLoading({
+			title: "正在加载"
+		})
+		const tIds = [org.value.creatorId]
+		tIds.push(...org.value.teacherIds)
+		teachers.value = await usersStore.fetchUsers(tIds) as User[]
+		if (org.value.studentIds.length > 0) {
+			students.value = await usersStore.fetchStudentsByIds(org.value.studentIds) as Student[]
+		}
+		if (org.value.courseIds.length > 0) {
+			courses.value = await useCourses.fetchCourses(org.value.courseIds) as Course[]
+		}
+		if (org.value.classIds.length > 0) {
+			classes.value = await useGrades.fetchGrades(org.value.classIds) as Grade[]
+		}
+		uni.hideLoading()
 	}
 	uni.$emit(global.event_name.onGradientChanged, {gradient:org.value.gradient})
 })
@@ -306,6 +396,39 @@ const onTapAdd = async () => {
 			icon:"none"
 		})
 	}
+}
+
+const onTapTeacherItem = (e:{"detail":{"index":number}}) => {
+	const { index } = e.detail
+	if (typeof(index) !== 'undefined') {
+		uni.navigateTo({
+			url: "/pages/member-course/member-course?id=" + teachers.value[index]._id
+		})
+	}
+}
+
+const onAddTeacher = () => {
+	uni.navigateTo({
+		url: "/pages/addTeacher/addTeacher?orgId=" + orgId.value
+	})
+}
+
+const onAddStudent = () => {
+	uni.navigateTo({
+		url: "/pages/addStudent/addStudent?orgId=" + orgId.value
+	})
+}
+
+const onAddCourse = () => {
+	uni.navigateTo({
+		url: '/pages/addCourse/addCourse?orgId=' + orgId.value
+	})
+}
+
+const onAddClass = () => {
+	uni.navigateTo({
+		url: '/pages/addGrade/addGrade?orgId=' + orgId.value
+	})
 }
 	
 </script>
@@ -436,6 +559,11 @@ const onTapAdd = async () => {
 					right: -4px;
 					bottom: -2px;
 				}
+			}
+			.cell {
+				display: flex;
+				justify-content: center;
+				align-items: center;
 			}
 		}
 	}
