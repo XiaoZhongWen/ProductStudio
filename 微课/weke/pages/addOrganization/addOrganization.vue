@@ -123,7 +123,7 @@
 						</view>
 					</template>
 					<template v-slot:body>
-						<uni-grid :column="5" :show-border="false" :square="false">
+						<uni-grid :column="5" :show-border="false" :square="false" @change="onTapStudentItem">
 							<uni-grid-item v-for="(student, index) in students" :index="index" :key="index">
 								<view class="grid-item-box">
 									<wk-portrait
@@ -154,11 +154,10 @@
 						<uni-grid :column="5" :show-border="false" :square="false">
 							<uni-grid-item v-for="(course, index) in courses" :index="index" :key="index">
 								<view class="grid-item-box">
-									<wk-portrait
-										class="cell"
-										:url="course.icon"
-										:name="course.name"
-									></wk-portrait>
+									<view class="cell">
+										<view :class="course.icon"></view>
+										<text class="sub-name">{{course.name}}</text>
+									</view>
 								</view>
 							</uni-grid-item>
 						</uni-grid>
@@ -182,11 +181,10 @@
 						<uni-grid :column="5" :show-border="false" :square="false">
 							<uni-grid-item v-for="(grade, index) in classes" :index="index" :key="index">
 								<view class="grid-item-box">
-									<wk-portrait
-										class="cell"
-										:url="grade.icon"
-										:name="grade.name"
-									></wk-portrait>
+									<view class="cell">
+										<view :class="grade.icon"></view>
+										<text class="sub-name">{{grade.name}}</text>
+									</view>
 								</view>
 							</uni-grid-item>
 						</uni-grid>
@@ -407,6 +405,16 @@ const onTapTeacherItem = (e:{"detail":{"index":number}}) => {
 	}
 }
 
+const onTapStudentItem = (e:{"detail":{"index":number}}) => {
+	const { index } = e.detail
+	if (typeof(index) !== 'undefined') {
+		const s = students.value[index]
+		uni.navigateTo({
+			url: "/pages/course-bind/course-bind?studentNo="+s.studentNo+"&orgIds="+orgId.value
+		})
+	}
+}
+
 const onAddTeacher = () => {
 	uni.navigateTo({
 		url: "/pages/addTeacher/addTeacher?orgId=" + orgId.value
@@ -562,8 +570,14 @@ const onAddClass = () => {
 			}
 			.cell {
 				display: flex;
+				flex-direction: column;
 				justify-content: center;
 				align-items: center;
+			}
+			.sub-name {
+				font-size: $uni-font-size-sm;
+				color: $wk-text-color-grey;
+				text-align: center;
 			}
 		}
 	}

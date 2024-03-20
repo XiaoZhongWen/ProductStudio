@@ -254,8 +254,7 @@ const totalConsumeCourses = computed(() => {
 })
 
 const orgNames = computed(() => {
-	const orgIds = entries.value.map(entry => entry.orgId)
-	const orgs = useOrgs.orgs.filter(o => orgIds.includes(o._id))
+	const orgs = useOrgs.orgs.filter(o => oIds.includes(o._id))
 	const names = orgs.map(o => o.name)
 	return names.join(" ")
 })
@@ -422,7 +421,18 @@ const onBindCourse = async () => {
 			
 			const notifications:BindCourseNotification[] = []
 			const courses = courseStore.courses.filter(c => c._id === selectedCourseId.value)
+			
+			const notifyIds:string[] = [usersStore.owner._id]
+			if (!notifyIds.includes(selectedTeacherId.value)) {
+				notifyIds.push(selectedTeacherId.value)
+			}
 			student.value.associateIds?.forEach(id => {
+				if (!notifyIds.includes(id)) {
+					notifyIds.push(id)
+				}
+			})
+			
+			notifyIds.forEach(id => {
 				const item:BindCourseNotification = {
 					userId: id,
 					student: student.value?.nickName ?? '',

@@ -89,7 +89,9 @@ export const useOrgsStore = defineStore('orgs', {
 		async createAnonymousOrg() {
 			const usersStore = useUsersStore()
 			const userId = usersStore.owner._id
-			if (this.anonymousOrg._id.length === 0) {
+			const roles = usersStore.owner.roles ?? []
+			if (this.anonymousOrg._id.length === 0 && 
+				(roles.includes(1) || roles.includes(2))) {
 				const date = new Date(Date.now())
 				const month = date.getMonth() + 1
 				const createDate = date.getFullYear() + "-" + month + "-" + date.getDate()
@@ -99,25 +101,27 @@ export const useOrgsStore = defineStore('orgs', {
 				const orgId = await orgs_co.createOrg(this.anonymousOrg)
 				if (orgId.length > 0) {
 					this.anonymousOrg._id = orgId
-				} else {
 				}
 			}
 		},
 		// 获取匿名机构
 		async fetchAnonymousOrg() {
 			const usersStore = useUsersStore()
-			const userId = usersStore.owner._id
-			if (this.anonymousOrg.creatorId === userId) {
-				return this.anonymousOrg
-			}
-			const org = await orgs_co.fetchAnonymousOrg(userId)
-			if (JSON.stringify(org) !== "{}") {
-				this.anonymousOrg = {
-					...this.anonymousOrg,
-					...org
+			const roles = usersStore.owner.roles ?? []
+			if (roles.includes(1) || roles.includes(2)) {
+				const userId = usersStore.owner._id
+				if (this.anonymousOrg.creatorId === userId) {
+					return this.anonymousOrg
 				}
-			} else {
-				await this.createAnonymousOrg()
+				const org = await orgs_co.fetchAnonymousOrg(userId)
+				if (JSON.stringify(org) !== "{}") {
+					this.anonymousOrg = {
+						...this.anonymousOrg,
+						...org
+					}
+				} else {
+					await this.createAnonymousOrg()
+				}
 			}
 		},
 		// 上传机构图标

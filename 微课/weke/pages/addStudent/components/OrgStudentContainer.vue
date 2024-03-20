@@ -55,6 +55,7 @@ const onLongPress = (e) => {
 }
 
 const onStudentTap = (studentNo: string) => {
+	selectedId.value = ''
 	uni.navigateTo({
 		url: "/pages/course-bind/course-bind?studentNo="+studentNo+"&orgIds="+props.orgId
 	})

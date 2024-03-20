@@ -334,6 +334,7 @@ const updateCourse = async () => {
 			uni.showLoading({
 				title:"更新中"
 			})
+			debugger
 			const result = await courseStore.updateCourse({
 				_id: selectedCourseId.value,
 				name: courseName.value,
