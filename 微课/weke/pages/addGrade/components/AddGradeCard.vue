@@ -564,6 +564,7 @@ const reset = () => {
 				text-align: center;
 				text-overflow: ellipsis;
 				white-space: nowrap;
+				overflow: hidden;
 			}
 		}
 		.grade-cell-selected {

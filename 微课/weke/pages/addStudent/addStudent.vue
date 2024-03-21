@@ -11,7 +11,7 @@
 			</text>
 		</view>
 		<OrgStudentContainer
-			v-if="org.studentIds?.length ?? 0 > 0"
+			v-if="isShowOrgStuContainer(org)"
 			:orgId="org._id"
 		/>
 		<view class="edit-container">
@@ -86,25 +86,30 @@ const orgs = computed<Org[]>({
 	get() {
 		const userId = usersStore.owner._id
 		let normalOrgs = []
-		if (usersStore.owner.roles?.includes(1)) {
+		if (usersStore.owner.roles?.includes(1) || usersStore.owner.roles?.includes(2)) {
 			const orgs = useOrgs.orgs.filter(org => org.creatorId === userId)
 			if (orgs.length > 0) {
 				normalOrgs.push(...orgs)
 			}
 		}
-		if (usersStore.owner.roles?.includes(2) &&
-			useOrgs.anonymousOrg._id.length > 0) {
-			const index = normalOrgs.findIndex(org => org._id === useOrgs.anonymousOrg._id)
-			if (index === -1) {
-				normalOrgs.push(useOrgs.anonymousOrg)
-			}
-		}
+		// if (usersStore.owner.roles?.includes(2) &&
+		// 	useOrgs.anonymousOrg._id.length > 0) {
+		// 	const index = normalOrgs.findIndex(org => org._id === useOrgs.anonymousOrg._id)
+		// 	if (index === -1) {
+		// 		normalOrgs.push(useOrgs.anonymousOrg)
+		// 	}
+		// }
 		if (organizationId.value.length > 0) {
 			normalOrgs = normalOrgs.filter(org => org._id === organizationId.value)
 		}
 		return normalOrgs
 	}
 })
+
+const isShowOrgStuContainer = (org:Org) => {
+	const count = org.studentIds?.length ?? 0
+	return count > 0
+}
 
 const onAddTap = async (data:{info:EditInfo}) => {
 	const { orgId, name, phoneNumber } = data.info

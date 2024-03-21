@@ -178,7 +178,7 @@
 						</view>
 					</template>
 					<template v-slot:body>
-						<uni-grid :column="5" :show-border="false" :square="false">
+						<uni-grid :column="5" :show-border="false" :square="false" @change="onTapGradeItem">
 							<uni-grid-item v-for="(grade, index) in classes" :index="index" :key="index">
 								<view class="grid-item-box">
 									<view class="cell">
@@ -290,6 +290,9 @@ onLoad(async (option) => {
 		org.value.classIds = classIds ?? []
 		isCreator.value = creatorId === usersStore.owner._id
 		title = isCreator.value === true? "更新机构": "机构详情"
+		if (!isCreator.value && org.value.logoUrl.length === 0) {
+			org.value.logoUrl = "/static/icon/org.png"
+		}
 		uni.setNavigationBarTitle({
 			title:title
 		})
@@ -411,6 +414,16 @@ const onTapStudentItem = (e:{"detail":{"index":number}}) => {
 		const s = students.value[index]
 		uni.navigateTo({
 			url: "/pages/course-bind/course-bind?studentNo="+s.studentNo+"&orgIds="+orgId.value
+		})
+	}
+}
+
+const onTapGradeItem = (e:{"detail":{"index":number}}) => {
+	const { index } = e.detail
+	if (typeof(index) !== 'undefined') {
+		const c = classes.value[index]
+		uni.navigateTo({
+			url: "/pages/addGrade/addGrade?gradeId="+c._id
 		})
 	}
 }

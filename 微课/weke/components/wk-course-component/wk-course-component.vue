@@ -156,6 +156,7 @@ const loadAllCourses = async () => {
 }
 
 const onRefresh = async () => {
+	await usersStore.loadAllEntries(true)
 	await loadAllCourses()
 	paging.value?.reload()
 }

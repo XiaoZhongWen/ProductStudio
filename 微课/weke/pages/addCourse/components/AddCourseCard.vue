@@ -334,7 +334,6 @@ const updateCourse = async () => {
 			uni.showLoading({
 				title:"更新中"
 			})
-			debugger
 			const result = await courseStore.updateCourse({
 				_id: selectedCourseId.value,
 				name: courseName.value,
@@ -417,6 +416,7 @@ const reset = () => {
 			text-align: center;
 			text-overflow: ellipsis;
 			white-space: nowrap;
+			overflow: hidden;
 		}
 	}
 	.course-cell-selected {

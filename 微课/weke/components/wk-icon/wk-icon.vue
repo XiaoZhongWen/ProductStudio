@@ -34,6 +34,7 @@ const cls = computed(() => {
 	color: white;
 	font-size: $uni-font-size-base;
 	font-weight: bold;
+	text-align: center;
 	.icon {
 		width: 100%;
 		height: 100%;

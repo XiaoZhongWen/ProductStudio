@@ -31,6 +31,10 @@ const props = defineProps(['url', 'name'])
 	}
 	.name {
 		margin: $uni-spacing-col-sm 0;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
 	}
 }
 </style>

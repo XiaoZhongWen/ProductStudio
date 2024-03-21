@@ -669,11 +669,12 @@ export const useUsersStore = defineStore('users', {
 			}
 			return result
 		},
-		async loadAllEntries() {
-			if (this.entries.length > 0) {
+		async loadAllEntries(refresh=false) {
+			if (this.entries.length > 0 && refresh !== true) {
 				return
 			}
 			try {
+				this.entries.length = 0
 				let loop = true
 				let before = Date.now()
 				while(loop) {
@@ -684,14 +685,14 @@ export const useUsersStore = defineStore('users', {
 						this.owner.from
 					) as Entry[]
 					loop = false
+					entries.forEach(entry => {
+						const index = this.entries.findIndex(e => e._id === entry._id)
+						if (index === -1) {
+							this.entries.push(entry)
+							loop = true
+						}
+					})
 					if (entries.length) {
-						entries.forEach(entry => {
-							const index = this.entries.findIndex(e => e._id === entry._id)
-							if (index === -1) {
-								this.entries.push(entry)
-								loop = true
-							}
-						})
 						const entry = entries.slice(-1)[0]
 						before = entry.modifyDate
 					}

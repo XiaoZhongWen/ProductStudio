@@ -34,7 +34,8 @@ const props = defineProps(['orgId'])
 const students = ref<Student[]>([])
 const selectedId = ref('')
 
-watchEffect(async() => {
+watchEffect(async () => {
+	console.info("watchEffect ...")
 	const anonymousOrgId = useOrgs.anonymousOrg._id
 	const res = useOrgs.orgs.filter(org => org._id === props.orgId)
 	let org: Org | undefined = undefined
