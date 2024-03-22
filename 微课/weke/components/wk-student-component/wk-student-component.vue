@@ -173,8 +173,9 @@ const loadTeacherStudent = async () => {
 	const ids = await usersStore.fetchStudentIdsByNos(studentNos)
 	// 匿名机构的学员
 	const studentIds:string[] = []
-	if (useOrgs.anonymousOrg._id.length > 0) {
-		const o = useOrgs.anonymousOrg.studentIds ?? []
+	const orgs = useOrgs.orgs.filter(org => org.type === 1 && org.creatorId === userId)
+	if (orgs.length > 0) {
+		const o = orgs[0].studentIds ?? []
 		if (o.length > 0) {
 			studentIds.push(...o)
 		}

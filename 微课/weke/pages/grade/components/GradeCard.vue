@@ -29,12 +29,11 @@
 </template>
 
 <script setup lang="ts">
-import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useGradesStore } from "@/store/grades"
 import { useOrgsStore } from '@/store/orgs'
 import { useCourseStore } from "@/store/course"
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Course } from "../../../types/course";
 import { Grade } from "../../../types/grade";
 import { Student, User } from "../../../types/user";
@@ -52,23 +51,7 @@ const course = ref<Course>()
 const teacher = ref<User>()
 const students = ref<Student[]>([])
 
-onLoad(() => {
-	uni.$on(global.event_name.didUpdatedGradeData, async (data:{gradeId:string}) => {
-		const { gradeId } = data
-		if (typeof(gradeId) === 'undefined' || gradeId.length === 0) {
-			return
-		}
-		if (gradeId === props.gradeId) {
-			await loadGradeData()
-		}
-	})
-})
-
-onUnload(() => {
-	uni.$off(global.event_name.didUpdatedGradeData)
-})
-
-onMounted(async () => {
+onMounted(() => {
 	const gradeId = props.gradeId
 	const orgId = props.orgId
 	if (typeof(gradeId) === 'undefined' || gradeId.length === 0 ||
@@ -79,7 +62,7 @@ onMounted(async () => {
 		title: "加载中"
 	})
 	
-	await loadGradeData()
+	loadGradeData()
 	
 	const orgs = useOrgs.orgs.filter(o => o._id === orgId)
 	if (orgs.length === 1) {
@@ -88,28 +71,43 @@ onMounted(async () => {
 	}
 	
 	uni.hideLoading()
+	
+	uni.$on(global.event_name.didUpdatedGradeData, async (data:{gradeId:string}) => {
+		const { gradeId } = data
+		if (typeof(gradeId) === 'undefined' || gradeId.length === 0) {
+			return
+		}
+		if (gradeId === props.gradeId) {
+			loadGradeData()
+		}
+	})
 })
 
-const loadGradeData = async () => {
-	const grades = await gradesStore.fetchGrades([props.gradeId])
+onUnmounted(() => {
+	uni.$off(global.event_name.didUpdatedGradeData)
+})
+
+const loadGradeData = () => {
+	const grades = gradesStore.grades.filter(c => c._id === props.gradeId)
 	if (grades.length === 1) {
 		grade.value = grades[0]
 	}
 	if (grade.value?.courseId) {
 		const courseIds = [grade.value.courseId] ?? []
-		const courses = await courseStore.fetchCourses(courseIds)
+		const courses = courseStore.courses.filter(c => courseIds.includes(c._id))
 		if (courses.length === 1) {
 			course.value = courses[0]
 		}
 	}
 	const teacherId = grade.value?.teacherId ?? ''
 	if (teacherId.length > 0) {
-		const users = await usersStore.fetchUsers([teacherId]) as User[]
+		const users = usersStore.users.filter(u => u._id === teacherId)
 		if (users.length === 1) {
 			teacher.value = users[0]
 		}
 	}
-	students.value = await usersStore.fetchStudentsByIds(grade.value?.studentIds ?? [])
+	const studentIds = grade.value?.studentIds ?? []
+	students.value = usersStore.students.filter(s => studentIds.includes(s._id))
 }
 
 const onTap = (studentId:string) => {

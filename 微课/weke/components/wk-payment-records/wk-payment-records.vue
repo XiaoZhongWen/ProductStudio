@@ -14,7 +14,7 @@
 		</view>
 		<view class="section" v-if="r && r.status !== 3">
 			<text class="title">续课时间:</text>
-			<text class="desc">{{format(new Date(r.date))}}</text>
+			<text class="desc">{{yyyyMMdd(new Date(r.date))}}</text>
 		</view>
 		<view class="section" v-if="course">
 			<text class="title">{{courseDesc}}</text>
@@ -42,7 +42,7 @@ import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
 import { PaymentRecord } from '../../types/PaymentRecord'
 import { User } from '../../types/user'
-import { format } from '@/utils/wk-date'
+import { format, yyyyMMdd } from '@/utils/wk-date'
 import { Course } from '../../types/course'
 
 const global = getApp().globalData!

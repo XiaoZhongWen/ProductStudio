@@ -345,6 +345,14 @@ export const useCourseStore = defineStore('course', {
 				return false
 			}
 			const result = await course_co.changeCourseTeacher(entryId, teacherId)
+			if (result) {
+				const usersStore = useUsersStore()
+				const datas = usersStore.entries.filter(entry => entry._id === entryId)
+				if (datas.length === 1) {
+					const entry = datas[0]
+					entry.teacherId = teacherId
+				}
+			}
 			return result
 		},
 		async fetchPaymentRecords(courseId:string, studentNo:string, before:number) {

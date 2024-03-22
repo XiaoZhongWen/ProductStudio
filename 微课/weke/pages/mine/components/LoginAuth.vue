@@ -14,6 +14,7 @@
 		<view class="body">
 			<upload-image
 				class="portrait"
+				editable
 				:url="usersStore.owner.tempFileUrl"
 				prompt="头像"
 				@onChooseAvatar="onChooseAvatar">

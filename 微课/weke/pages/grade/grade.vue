@@ -23,6 +23,7 @@ import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useGradesStore } from "@/store/grades";
+import { useCourseStore } from "@/store/course"
 import { computed, onMounted, ref } from 'vue';
 import { Org } from "../../types/org";
 import GradeCard from './components/GradeCard.vue'
@@ -34,6 +35,7 @@ type GradeItem = {
 
 const global = getApp().globalData!
 const usersStore = useUsersStore()
+const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 const useGrades = useGradesStore()
 
@@ -112,6 +114,7 @@ const queryList = (pageNo:number, pageSize:number) => {
 }
 
 const loaddata = async () => {
+	const ds:GradeItem[] = []
 	const roles = usersStore.owner.roles
 	if (organizationId.value.length === 0) {
 		if (userId.value === usersStore.owner._id) {
@@ -122,13 +125,27 @@ const loaddata = async () => {
 												org.teacherIds?.includes(userId.value))
 					const orgs:Org[] = []
 					orgs.push(...res)
+					
+					const cIds:string[] = []
+					orgs.forEach(org => {
+						cIds.push(...(org.classIds ?? []))
+					})
+					const grades = await useGrades.fetchGrades(cIds)
 					orgs.forEach(org => {
 						org.classIds?.forEach(cId => {
-							const item = {
-								gradeId: cId,
-								orgId: org._id
+							const data = grades.filter(c => c._id === cId)
+							if (data.length > 0) {
+								const grade = data[0]
+								// 如果有管理员角色, 则添加机构的所有班级
+								// 如果没有管理员角色, 则只添加授课老师是自己的班级
+								if (roles?.includes(1) || grade.teacherId === userId.value) {
+									const item = {
+										gradeId: cId,
+										orgId: org._id
+									}
+									ds.push(item)
+								}
 							}
-							gradeList.value.push(item)
 						})
 					})
 				}
@@ -140,7 +157,7 @@ const loaddata = async () => {
 						gradeId: grade._id,
 						orgId: grade.orgId
 					}
-					gradeList.value.push(item)
+					ds.push(item)
 				})
 			}
 		} else {
@@ -151,7 +168,7 @@ const loaddata = async () => {
 					gradeId: grade._id,
 					orgId: grade.orgId
 				}
-				gradeList.value.push(item)
+				ds.push(item)
 			})
 		}
 	} else {
@@ -162,10 +179,45 @@ const loaddata = async () => {
 					gradeId: cId,
 					orgId: org._id
 				}
-				gradeList.value.push(item)
+				ds.push(item)
 			})
 		})
 	}
+	
+	const classIds:string[] = []
+	ds.forEach(c => {
+		classIds.push(c.gradeId)
+	})
+	// 加载所有班级数据
+	const classes = await useGrades.fetchGrades(classIds)
+	const courseIds:string[] = []
+	const teacherIds:string[] = []
+	const studentIds:string[] = []
+	classes.forEach(c => {
+		const courseId = c.courseId ?? ''
+		if (courseId.length > 0 && !courseIds.includes(courseId)) {
+			courseIds.push(courseId)
+		}
+		const teacherId = c.teacherId ?? ''
+		if (teacherId.length > 0 && !teacherIds.includes(teacherId)) {
+			teacherIds.push(teacherId)
+		}
+		c.studentIds?.forEach(sId => {
+			if (!studentIds.includes(sId)) {
+				studentIds.push(sId)
+			}
+		})
+	})
+	// 加载所有课程数据
+	await courseStore.fetchCourses(courseIds)
+	
+	// 加载所有老师数据
+	await usersStore.fetchUsers(teacherIds)
+	
+	// 加载所有学生数据
+	await usersStore.fetchStudentsByIds(studentIds)
+	gradeList.value = ds
+	paging.value?.reload()
 }
 
 </script>

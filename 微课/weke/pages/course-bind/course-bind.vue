@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, onMounted, ref } from 'vue';
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'

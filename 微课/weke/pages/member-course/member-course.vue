@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useOrgsStore } from '@/store/orgs'
@@ -86,12 +86,21 @@ const usersStore = useUsersStore()
 const courseStore = useCourseStore()
 const useOrgs = useOrgsStore()
 
+let teacherId = ''
 const ds = ref<MemberCourseInfo[]>([])
 const teacher = ref<User>()
 
-onLoad(async (option) => {
+onLoad((option) => {
 	const { id } = option as { id: string }
-	const entries = usersStore.entries.filter(entry => entry.teacherId === id)
+	teacherId = id
+})
+
+onShow(() => {
+	loaddata()
+})
+
+const loaddata = (async () => {
+	const entries = usersStore.entries.filter(entry => entry.teacherId === teacherId)
 	let courseIds:string[] = []
 	entries.forEach(entry => {
 		if (!courseIds.includes(entry.courseId)) {
@@ -102,7 +111,7 @@ onLoad(async (option) => {
 		title: "加载中"
 	})
 	const courses = await courseStore.fetchCourses(courseIds)
-	const users = await usersStore.fetchUsers([id]) as User[]
+	const users = await usersStore.fetchUsers([teacherId]) as User[]
 	if (users.length === 1) {
 		teacher.value = users[0]
 	}
@@ -113,7 +122,7 @@ onLoad(async (option) => {
 			title: teacher.value.nickName
 		})
 	}
-	
+	ds.value.length = 0
 	courses.forEach(async c => {
 		let orgId = ''
 		let orgName = ''
