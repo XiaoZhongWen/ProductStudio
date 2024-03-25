@@ -2,11 +2,23 @@
 	<view class="org-container">
 		<view class="top">
 			<upload-image
+				editable
 				class="portrait"
 				:url="avatarUrl"
 				prompt="头像"
 				@onChooseAvatar="onChooseAvatar">
 			</upload-image>
+			<view class="child-name">
+				<uni-easyinput
+					class="uni-mt-5" 
+					:clearable="false"
+					:suffixIcon="isShowEditIcon?'checkbox':''" 
+					v-model="childName" 
+					placeholder="更新名字"
+					@focus="onFocus"
+					@iconClick="onUpdated">
+				</uni-easyinput>
+			</view>
 		</view>
 		<uni-list>
 			<uni-list-item link v-for="item in org" :key="item.name" :to="item.to">
@@ -27,21 +39,27 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { Student } from '../../types/user';
 
+const global = getApp().globalData!
+
 const usersStore = useUsersStore()
 const _id = ref<string>('')
 let _studentNo = ''
+const childName = ref('')
+const isShowEditIcon = ref(false)
 
 onLoad(async (option) => {
 	const { id } = option as {id:string}
 	if (typeof(id) !== 'undefined' && id.length > 0) {
 		_id.value = id
-		const res = usersStore.students.filter(student => student._id === id)
-		if (res.length === 1) {
+		const s = [...usersStore.children, ...usersStore.students]
+		const res = s.filter(child => child._id === id)
+		if (res.length > 0) {
 			const student:Student = res[0]
 			_studentNo = student.studentNo
 			uni.setNavigationBarTitle({
 				title: student.nickName ?? ''
 			})
+			childName.value = student.nickName
 		}
 	}
 })
@@ -73,8 +91,9 @@ const org:ListItem[] = computed({
 // @ts-ignore
 const avatarUrl = computed({
 	get() {
-		const res = usersStore.students.filter(student => student._id === _id.value)
-		if (res.length === 1) {
+		const s = [...usersStore.children, ...usersStore.students]
+		const res = s.filter(student => student._id === _id.value)
+		if (res.length > 0) {
 			const student:Student = res[0]
 			if (typeof(student.avatarUrl) === 'undefined' || student.avatarUrl.length === 0) {
 				return ""
@@ -87,9 +106,33 @@ const avatarUrl = computed({
 	}
 })
 
-const onChooseAvatar = (data:{url:string}) => {
+const onChooseAvatar = async (data:{url:string}) => {
 	const url = data.url ?? ""
-	usersStore.updateStudentAvatar(_id.value, url)
+	const res = await usersStore.updateStudentAvatar(_id.value, url)
+	uni.showToast({
+		title: res? "更新成功":"更新失败",
+		duration: global.duration_toast,
+		icon: res? "success": "none"
+	})
+}
+
+const onFocus = () => {
+	isShowEditIcon.value = true
+}
+
+const onUpdated = async () => {
+	const res = await usersStore.updateStudentNickname(_id.value, childName.value)
+	if (res) {
+		uni.setNavigationBarTitle({
+			title: childName.value
+		})
+		isShowEditIcon.value = false
+	}
+	uni.showToast({
+		title: res? "更新成功":"更新失败",
+		duration: global.duration_toast,
+		icon: res? "success": "none"
+	})
 }
 
 </script>
@@ -99,6 +142,12 @@ const onChooseAvatar = (data:{url:string}) => {
 	margin-top: $uni-spacing-col-lg;
 	.top {
 		padding-bottom: 20px;
+		.child-name {
+			margin: $uni-spacing-row-base $uni-spacing-row-base 0 $uni-spacing-row-base;
+			.uni-easyinput__content-input {
+				text-align: center;
+			}
+		}
 	}
 	.uni-list {
 		margin: 0 $uni-spacing-row-base;

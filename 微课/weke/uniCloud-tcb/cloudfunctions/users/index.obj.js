@@ -168,6 +168,23 @@ module.exports = {
 		return result
    },
    /**
+   	* 更新学员昵称
+   	*/
+   async updateStudentNickname(stuNo, nickName) {
+	   if (typeof(stuNo) === 'undefined' || stuNo.length === 0 ||
+			typeof(nickName) === 'undefined' || nickName.length === 0) {
+			return false
+	   }
+	   const db = uniCloud.database()
+	   const res = await db.collection('wk-student').where({
+			studentNo: stuNo
+	   }).update({
+			nickName
+	   })
+	   result = res.updated === 1
+	   return result
+   },
+   /**
 	* 更新用户信息
 	* @param {Object} user
 	*/

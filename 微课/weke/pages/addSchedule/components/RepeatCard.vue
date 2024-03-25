@@ -175,7 +175,7 @@ const onConfirm = () => {
 .repeat-card-container {
 	display: flex;
 	flex-direction: column;
-	width: 300px;
+	width: 375px;
 	.top {
 		display: flex;
 		flex-direction: row;

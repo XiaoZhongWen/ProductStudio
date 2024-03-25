@@ -63,7 +63,7 @@ const onAddTap = async () => {
 	const pattern = /^\d+$/
 	if (studentNo.value.length !== 9 || !pattern.test(studentNo.value)) {
 		uni.showToast({
-			title:"学号必须是八位数字",
+			title:"学号必须是九位数字",
 			duration:global.duration_toast,
 			icon:"none"
 		})

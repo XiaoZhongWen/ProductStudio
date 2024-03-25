@@ -279,10 +279,11 @@ export const useUsersStore = defineStore('users', {
 		async updateStudentAvatar(id:string, avatarUrl:string) {
 			if (typeof(id) === 'undefined' || id.length === 0 ||
 				typeof(avatarUrl) === 'undefined' || avatarUrl.length === 0) {
-				return
+				return false
 			}
-			const res = this.students.filter(student => student._id === id)
-			if (res.length === 1) {
+			const s = [...this.students, ...this.children]
+			const res = s.filter(student => student._id === id)
+			if (res.length > 0) {
 				const student = res[0]
 				const prefix = "ddkb/header/"
 				// @ts-ignore
@@ -302,11 +303,38 @@ export const useUsersStore = defineStore('users', {
 							}).catch(() => {
 							})
 						}
-						student.avatarId = fileID
-						student.avatarUrl = avatarUrl
+						s.forEach(stu => {
+							if (stu._id === id) {
+								stu.avatarId = fileID
+								stu.avatarUrl = avatarUrl
+							}
+						})
 					}
+					return success
 				}
 			}
+			return false
+		},
+		async updateStudentNickname(id:string, nickname:string) {
+			if (typeof(id) === 'undefined' || id.length === 0 ||
+				typeof(nickname) === 'undefined' || nickname.length === 0) {
+				return false
+			}
+			const s = [...this.students, ...this.children]
+			const res = s.filter(student => student._id === id)
+			if (res.length > 0) {
+				const student = res[0]
+				const success = await users_co.updateStudentNickname(student.studentNo, nickname)
+				if (success === true) {
+					s.forEach(stu => {
+						if (stu._id === id) {
+							stu.nickName = nickname
+						}
+					})
+				}
+				return success
+			}
+			return false
 		},
 		async updateExpiredDate(type: number) {
 			if (typeof(type) === 'undefined' ||

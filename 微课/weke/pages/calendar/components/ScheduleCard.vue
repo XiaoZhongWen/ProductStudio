@@ -2,14 +2,14 @@
 	<view class="schedule-card-container">
 		<view class="top">
 			<view :class="statusCls">{{statusDesc}}</view>
-			<uni-tag
+			<!-- <uni-tag
 				v-if="props.schedule.status === 0"
 				class="notify" 
 				size="small"
 				@tap.stop="onNotify"
 				:text="props.schedule.isNotified?'已通知':'通知'" 
 				:type="props.schedule.isNotified?'':'success'"  
-				:circle="true" />
+				:circle="true" /> -->
 		</view>
 		<view class="content">
 			<view class="left" v-if="hasPermission">
@@ -113,6 +113,21 @@
 				</view>
 				<view :class="duration">
 					<text>上课时间: {{dateDesc}} {{start}} ~ {{end}} {{props.schedule.remind?'⏰':''}} </text>
+				</view>
+				<view class="section duration" v-if="props.schedule.status === 0">
+					<text>上课提醒: </text>
+					<template v-if="props.schedule.isNotified">
+						<text>已提醒</text>
+					</template>
+					<template v-else>
+						<uni-icons
+							@tap.stop="onNotify"
+							type="weixin" 
+							color="#5073D6" 
+							size="24" 
+							class="notify">
+						</uni-icons>
+					</template>
 				</view>
 			</view>
 		</view>
@@ -713,8 +728,14 @@ const consume = computed(() => {
 				}
 			}
 			.section {
+				position: relative;
 				font-size: $uni-font-size-sm;
 				color: $wk-text-color-grey;
+				.notify {
+					position: absolute;
+					top: -3px;
+					left: 54px;
+				}
 			}
 			.tag {
 				margin: $uni-spacing-col-lg $uni-spacing-col-lg 0 0 ;

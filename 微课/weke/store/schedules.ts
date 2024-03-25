@@ -217,7 +217,7 @@ export const useScheduleStore = defineStore('schedules', {
 					const roles = user.roles ?? []
 					if (roles.includes(3) && roles.length === 1) {
 						// 家长
-						const children = userStore.students.filter(s => s.associateIds?.includes(id))
+						const children = await userStore.fetchChildren(id)
 						if (children.length > 0) {
 							const res = await schedules_co.fetchSchedules({
 								date, roles,
@@ -328,7 +328,7 @@ export const useScheduleStore = defineStore('schedules', {
 					const roles = user.roles ?? []
 					if (roles.includes(3) && roles.length === 1) {
 						// 家长
-						const children = userStore.students.filter(s => s.associateIds?.includes(id))
+						const children = await userStore.fetchChildren(id)
 						if (children.length > 0) {
 							const res = await schedules_co.fetchSchedulesDate({
 								from, to, roles,
