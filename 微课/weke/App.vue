@@ -59,7 +59,7 @@
 							await orgsStore.fetchAnonymousOrg()
 						}
 						uni.hideLoading()
-						uni.$emit(this.globalData.didFinishedInitialData)
+						uni.$emit(this.globalData.event_name.didFinishedInitialData)
 						if (usersStore.from === 'wx' && usersStore.isExpired) {
 							uni.showToast({
 								title: "您的会员已过期, 请续费",
@@ -97,7 +97,8 @@
 				didUpdateOrgData: "didUpdateOrgData",
 				didUpdatedGradeData: "didUpdatedGradeData",
 				didCreateGrade: "didCreateGrade",
-				didFinishedInitialData: "didFinishedInitialData"
+				didFinishedInitialData: "didFinishedInitialData",
+				needUpdateCalendarData: "needUpdateCalendarData"
 			}
 		}
 	}

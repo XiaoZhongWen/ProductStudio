@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watchEffect } from 'vue';
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useUsersStore } from "@/store/users"
 import { useOrgsStore } from '@/store/orgs'
 import { useScheduleStore } from "@/store/schedules"
@@ -46,6 +46,7 @@ const selected = ref<CourseTag[]>([])
 const schedules = ref<Schedule[]>([])
 const isShowLoading = ref(false)
 const paging = ref(null)
+const global = getApp().globalData!
 
 onLoad(async (option) => {
 	const { id, role } = option as {
@@ -54,6 +55,10 @@ onLoad(async (option) => {
 	}
 	_id.value = id
 	_role.value = role
+})
+
+onUnload(() => {
+	uni.$emit(global.event_name.needUpdateCalendarData)
 })
 
 onMounted(async () => {

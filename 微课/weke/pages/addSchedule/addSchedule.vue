@@ -8,7 +8,7 @@
 						value="0" 
 						color="#5073D6"
 						:checked="selectedCourseType === 0" />
-					<text :class="selectedCourseType === 0? 'selectedColor':'textColor'">学员</text>
+					<text :class="selectedCourseType === 0? 'selectedColor':'textColor'">一对一</text>
 				</label>
 				<label class="radio">
 					<radio 

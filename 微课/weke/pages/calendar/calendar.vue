@@ -11,12 +11,29 @@
 				@monthSwitch="onMonthSwitch">
 			</wu-calendar>
 			<uni-load-more v-if="isShowLoading" status="loading" />
-			<template v-for="schedule in schedules" :key="schedule._id">
-				<ScheduleCard 
-					class="scheduleCard" 
-					:ownId="usersStore.owner._id"
-					:schedule="schedule" 
-					@tap="onScheduleCardTap(schedule)" />
+			<template v-if="usersStore.owner.roles?.includes(1)">
+				<uni-collapse  accordion v-model="accordionVal">
+					<template v-for="key in scheduleMap.keys()" :key="key">
+						<uni-collapse-item :title="sectionName(key)">
+							<template v-for="schedule in scheduleMap.get(key)" :key="schedule._id">
+								<ScheduleCard
+									:ownId="usersStore.owner._id"
+									:schedule="schedule" 
+									@tap="onScheduleCardTap(schedule)" />
+								<view style="height: 10px;"></view>
+							</template>
+						</uni-collapse-item>
+					</template>
+				</uni-collapse>
+			</template>
+			<template v-else>
+				<template v-for="schedule in schedules" :key="schedule._id">
+					<ScheduleCard 
+						class="scheduleCard" 
+						:ownId="usersStore.owner._id"
+						:schedule="schedule" 
+						@tap="onScheduleCardTap(schedule)" />
+				</template>
 			</template>
 			<view
 				class="add-container" 
@@ -51,7 +68,9 @@ const to = ref<number>()
 const isShowLoading = ref(false)
 const selected = ref<CourseTag[]>([])
 const schedules = ref<Schedule[]>([])
+const scheduleMap = ref<Map<string, Schedule[]>>(new Map())
 const paging = ref(null)
+const accordionVal = ref("1")
 
 const isShowAddBtn = computed(() => {
 	return !usersStore.isExpired && 
@@ -60,7 +79,14 @@ const isShowAddBtn = computed(() => {
 })
 
 onLoad(() => {
-	uni.$on(global.didFinishedInitialData, async () => {
+	uni.$on(global.event_name.didFinishedInitialData, async () => {
+		const date = new Date()
+		from.value = timestampForBeginOfMonth(date)
+		to.value = timestampForEndOfMonth(date)
+		selectedDate.value = yyyyMMdd(date)
+		loaddata()
+	})
+	uni.$on(global.event_name.needUpdateCalendarData, async () => {
 		const date = new Date()
 		from.value = timestampForBeginOfMonth(date)
 		to.value = timestampForEndOfMonth(date)
@@ -70,7 +96,8 @@ onLoad(() => {
 })
 
 onUnload(() => {
-	uni.$off(global.didFinishedInitialData)
+	uni.$off(global.event_name.didFinishedInitialData)
+	uni.$off(global.event_name.needUpdateCalendarData)
 })
 
 watchEffect(() => {
@@ -100,10 +127,45 @@ watchEffect(() => {
 	  return a.startTime - b.startTime;
 	})
 	schedules.value = res
-	
+	if (usersStore.owner.roles?.includes(1)) {
+		const map = new Map<string, Schedule[]>()
+		res.forEach(item => {
+			const teacherId = item.teacherId
+			if (!map.has(teacherId)) {
+				map.set(teacherId, [])
+			}
+			const array = map.get(teacherId)
+			if (typeof(array) !== 'undefined') {
+				array.push(item)
+			}
+		})
+		const mySchedules = map.get(userId) ?? []
+		if (mySchedules.length > 0) {
+			const sortedMap = new Map<string, Schedule[]>()
+			sortedMap.set(userId, mySchedules)
+			Array.from(map.entries()).forEach(([key, value]) => {
+				if (key !== userId) {
+					sortedMap.set(key, value)
+				}
+			})
+			scheduleMap.value = sortedMap
+		}
+	}
 	const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
 	isShowLoading.value = index !== -1 && schedules.value.length === 0
 })
+
+const sectionName = (teacherId:string) => {
+	if (teacherId === usersStore.owner._id) {
+		return "我的排课"
+	}
+	const data = usersStore.users.filter(user => user._id === teacherId)
+	if (data.length > 0) {
+		const teacher = data[0]
+		return teacher.nickName + "的排课"
+	}
+	return ''
+}
 
 const calendarChange = async (e:{fulldate:string}) => {
 	const { fulldate } = e
@@ -197,6 +259,9 @@ const loaddata = async () => {
 		right: $uni-spacing-row-lg;
 		z-index: 1;
 	}
+	.scheduleCard {
+		margin: $uni-spacing-row-base $uni-spacing-row-base 0 $uni-spacing-row-base;
+	}
 	.wu-calendar__content {
 		background-color: transparent !important;
 		.wu-calendar__header-btn-box {
@@ -206,8 +271,23 @@ const loaddata = async () => {
 			color: $wk-text-color-grey;
 		}
 	}
-	.scheduleCard {
-		margin: $uni-spacing-row-base $uni-spacing-row-base 0 $uni-spacing-row-base;
+	.uni-collapse {
+		background-color: transparent;
+		.uni-collapse-item {
+			.uni-collapse-item__title {
+				background-color: transparent;
+			}
+			.uni-collapse-item__wrap-content.uni-collapse-item--border {
+				border-bottom-width: 0px;
+			}
+		}
+		.uni-collapse-item__wrap-content.open {
+			padding-left: $uni-spacing-row-base;
+			padding-right: $uni-spacing-row-base;
+		}
+	}
+	.uni-collapse-item__title-box, .uni-collapse-item__wrap {
+		background-color: transparent;
 	}
 }
 </style>

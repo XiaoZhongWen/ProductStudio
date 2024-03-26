@@ -24,7 +24,7 @@
 				<view class="main">
 					<template v-if="props.schedule.classId">
 						<view v-if="grade" :class="grade.icon"></view>
-						<text v-if="grade" class="class-name">{{grade.name}}</text>
+						<text v-if="grade" class="nickName">{{grade.name}}</text>
 						<wk-circle-progress
 							v-if="total > 0"
 							class="circle-progress" 

@@ -158,7 +158,7 @@ module.exports = {
 		}
 	},
 	async fetchSchedules(param) {
-		const { date, roles, ids } = param
+		const { date, roles, ids, orgIds } = param
 		if ((typeof(date) === 'undefined' || date.length === 0) ||
 			(typeof(ids) === 'undefined' || ids.length === 0) ||
 			typeof(roles) === 'undefined') {
@@ -169,10 +169,13 @@ module.exports = {
 		const db = uniCloud.database()
 		const dbCmd = db.command
 		if (roles.includes(1) || roles.includes(2)) {
-			const result = await db.collection('wk-schedules').where({
+			const result = await db.collection('wk-schedules').where(dbCmd.or({
 				courseDate: date,
 				teacherId: dbCmd.in(ids)
-			}).get()
+			}, {
+				courseDate: date,
+				orgId: dbCmd.in(orgIds)
+			})).get()
 			result.data.forEach(r => {
 				const index = schedules.findIndex(s => s._id === r._id)
 				if (index === -1) {
@@ -192,7 +195,7 @@ module.exports = {
 		return schedules
 	},
 	async fetchSchedulesDate(param) {
-		const { from, to, roles, ids } = param
+		const { from, to, roles, ids, orgIds } = param
 		if (typeof(from) === 'undefined' ||
 			typeof(to) === 'undefined' ||
 			from > to ||
@@ -206,11 +209,15 @@ module.exports = {
 		const dbCmd = db.command
 		
 		if (roles.includes(1) || roles.includes(2)) {
-			const result = await db.collection('wk-schedules').where({
+			const result = await db.collection('wk-schedules').where(dbCmd.or({
 				startTime: dbCmd.gte(from),
 				endTime: dbCmd.lte(to),
 				teacherId: dbCmd.in(ids)
-			}).field({ 'courseDate': true, 'status': true }).get()
+			}, {
+				startTime: dbCmd.gte(from),
+				endTime: dbCmd.lte(to),
+				orgId: dbCmd.in(orgIds)
+			})).field({ 'courseDate': true, 'status': true }).get()
 			result.data.forEach(r => {
 				const item = r.courseDate + "|" + r.status
 				if (!scheduleDates.includes(item)) {

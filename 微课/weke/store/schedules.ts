@@ -4,10 +4,10 @@ import { useUsersStore } from "@/store/users"
 import { useCourseStore } from "@/store/course"
 import { useGradesStore } from "@/store/grades"
 import { useSenderStore } from "@/store/sender"
+import { useOrgsStore } from './orgs'
 import { hhmm, timestampForBeginOfMonth, timestampForEndOfMonth, ymd } from '@/utils/wk-date'
 import { User } from '../types/user'
 import { CancelNotification, ConsumeNotification } from '../types/notification'
-import { useOrgsStore } from './orgs'
 
 const schedules_co = uniCloud.importObject('schedules', {
 	customUI: true
@@ -227,9 +227,12 @@ export const useScheduleStore = defineStore('schedules', {
 						}
 					} else {
 						// 管理员|老师
+						const orgStore = useOrgsStore()
+						const orgIds = orgStore.orgs.filter(org => org.creatorId === id).map(org => org._id)
 						const res = await schedules_co.fetchSchedules({
 							date, roles,
-							ids: [id]
+							ids: [id],
+							orgIds
 						}) as Schedule[]
 						result.push(...res)
 					}
@@ -338,9 +341,12 @@ export const useScheduleStore = defineStore('schedules', {
 						}
 					} else {
 						// 管理员|老师
+						const orgStore = useOrgsStore()
+						const orgIds = orgStore.orgs.filter(org => org.creatorId === id).map(org => org._id)
 						const res = await schedules_co.fetchSchedulesDate({
 							from, to, roles,
-							ids: [id]
+							ids: [id],
+							orgIds
 						}) as {date: string, status: number}[]
 						result.push(...res)
 					}
