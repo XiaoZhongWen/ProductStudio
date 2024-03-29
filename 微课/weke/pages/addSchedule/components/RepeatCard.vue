@@ -57,6 +57,7 @@
 			<wu-calendar
 				:insert="true"
 				:date="dates"
+				@change="onCalendarChange"
 				mode="multiple"
 				color="#5073D6"
 				slideSwitchMode="horizontal">
@@ -111,6 +112,10 @@ const desc = computed(() => {
 const onChange = (e:{detail:{value:string}}) => {
 	const { value } = e.detail
 	selectedOption.value = parseInt(value)
+}
+
+const onCalendarChange = (e:{multiple:string[]}) => {
+	dates.value = e.multiple
 }
 
 const onSelectedDay = (e:{target:{id:string}}) => {

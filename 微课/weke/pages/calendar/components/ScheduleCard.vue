@@ -224,7 +224,6 @@ onMounted(async () => {
 	if (studentIds.length > 0) {
 		await usersStore.fetchStudentsByIds(studentIds)
 	}
-	
 	const classId = props.schedule.classId ?? ''
 	if (typeof(classId) !== 'undefined' && 
 		classId.length > 0) {

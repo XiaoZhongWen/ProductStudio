@@ -17,11 +17,12 @@ export const useGradesStore = defineStore('grades', {
 			if (typeof(gIds) === 'undefined' || gIds.length === 0) {
 				return []
 			}
-			const gradeIds = this.grades.map(grade => grade._id)
+			let gradeIds = this.grades.map(grade => grade._id)
 			const ids1 = gIds.filter(id => !gradeIds.includes(id))
 			let other = [] as Grade[]
 			if (ids1.length > 0) {
 				other = await grades_co.fetchGrades(ids1) as Grade[]
+				gradeIds = this.grades.map(grade => grade._id)
 				other.forEach(c => {
 					if (!gradeIds.includes(c._id)) {
 						this.grades.push(c)

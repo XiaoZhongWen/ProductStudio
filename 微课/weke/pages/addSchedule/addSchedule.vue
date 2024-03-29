@@ -121,7 +121,7 @@
 			</view>
 		</view>
 		<view class="section other">
-			<view class="row">
+			<!-- <view class="row">
 				<view class="left">
 					<view class="top">
 						<uni-icons type="notification-filled" color="#5073D6"></uni-icons>
@@ -139,7 +139,7 @@
 						style="transform:scale(0.7)" 
 						@change="onNoticeSwitchChange" />
 				</view>
-			</view>
+			</view> -->
 			<view 
 				class="row space" 
 				@tap="onRepeatTap" 
@@ -801,6 +801,14 @@ const remainCount = computed(() => {
 })
 
 const onStudentTap = async (type:string) => {
+	if (students.value.length === 0) {
+		uni.showToast({
+			title: "您没有可选择的学员, 请检查是否添加了学员或者是否给学员绑定了课程",
+			duration: global.duration_toast,
+			icon: 'none'
+		})
+		return
+	}
 	if (students.value.length < 2 && selectedCourseType.value === 0) {
 		return
 	}
@@ -836,6 +844,14 @@ const onStudentTap = async (type:string) => {
 }
 
 const onTeacherTap = () => {
+	if (teachers.value.length === 0) {
+		uni.showToast({
+			title: "您没有可选择的老师, 请检查是否添加了老师或者老师是否关联了相应的学员和课程",
+			duration: global.duration_toast,
+			icon: 'none'
+		})
+		return
+	}
 	if (teachers.value.length < 2) {
 		return
 	}
@@ -857,6 +873,14 @@ const onTeacherTap = () => {
 }
 
 const onClassTap = () => {
+	if (grades.value.length === 0) {
+		uni.showToast({
+			title: "您没有可选择的班级, 请检查是否添加了班级或者班级是否关联了相应的课程和老师",
+			duration: global.duration_toast,
+			icon: 'none'
+		})
+		return
+	}
 	if (grades.value.length < 2 || scheduleId.value.length > 0) {
 		return
 	}
@@ -874,6 +898,14 @@ const onClassTap = () => {
 }
 
 const onCourseTap = () => {
+	if (courses.value.length === 0) {
+		uni.showToast({
+			title: "您没有可选择的课程, 请检查是否添加了课程或者课程是否关联了相应的学员和老师",
+			duration: global.duration_toast,
+			icon: 'none'
+		})
+		return
+	}
 	// 课程数小于2或者该排课已经发送过通知
 	if (courses.value.length < 2 || originalSchedule.value?.isNotified) {
 		return
@@ -919,8 +951,8 @@ const onRepeatConfirm = (data: {
 	const { option, days, dates } = data
 	repeatOption.value = option
 	repeatDays.value = days
-	repeatDates.value = dates
 	repeatPopup.value?.close()
+	repeatDates.value = dates
 }
 
 const radioChange = (e:{detail:{value:string}}) => {
@@ -1001,7 +1033,9 @@ const calendarConfirm = (e:{fulldate:string}) => {
 	const deadline = new Date(fulldate)
 	deadline.setHours(0, 0, 0, 0)
 	if (deadline.getTime() >= start.getTime()) {
-		endRepeatDate.value = fulldate
+		if (validateRepeatDays(fulldate)) {
+			endRepeatDate.value = fulldate
+		}
 	} else {
 		uni.showToast({
 			title: "截止日期不能早于排课日期",
@@ -1074,9 +1108,14 @@ const validate = () => {
 			return false
 		}
 	}
-	if (repeatOption.value !== 0 && 
+	const res = validateRepeatDays(endRepeatDate.value)
+	return res
+}
+
+const validateRepeatDays = (endRepeatDate:string) => {
+	if (repeatOption.value !== 0 &&
 		repeatOption.value !== 4) {
-		if (endRepeatDate.value.length === 0) {
+		if (endRepeatDate.length === 0) {
 			uni.showToast({
 				title: "请选择截止日期",
 				duration: global.duration_toast,
@@ -1084,7 +1123,7 @@ const validate = () => {
 			})
 			return false
 		} else {
-			const deadline = new Date(endRepeatDate.value)
+			const deadline = new Date(endRepeatDate)
 			let daysOfWeek:number[] = []
 			if (repeatOption.value === 1) {
 				// 每天
@@ -1105,8 +1144,8 @@ const validate = () => {
 					duration: global.duration_toast,
 					icon: "none"
 				})
-				return false
 			}
+			return total <= 50
 		}
 	}
 	if (repeatOption.value === 4 && repeatDates.value.length > 50) {
@@ -1467,7 +1506,7 @@ const modifyTimeNotification = (originalTime:string, newTime:string) => {
 		}
 		.space {
 			font-size: $uni-font-size-base;
-			margin-top: $uni-spacing-col-base;
+			// margin-top: $uni-spacing-col-base;
 			.left {
 				.repeat {
 					margin-left: $uni-spacing-row-sm;
