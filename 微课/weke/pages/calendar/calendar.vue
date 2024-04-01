@@ -118,6 +118,7 @@ watchEffect(() => {
 	const key2 = userId + "-" + selectedDate.value
 	const values = scheduleStore.schedulesMap.get(key2) ?? []
 	const res = values.filter(s => s.courseDate === selectedDate.value)
+	
 	res.sort((a, b) => {
 	  // 先按status递增排序
 	  if (a.status !== b.status) {
@@ -149,6 +150,8 @@ watchEffect(() => {
 				}
 			})
 			scheduleMap.value = sortedMap
+		} else {
+			scheduleMap.value = map
 		}
 	}
 	const index = scheduleDates.findIndex(item => item.date === selectedDate.value)
@@ -219,6 +222,9 @@ const onScheduleCardTap = (schedule: Schedule) => {
 }
 
 const onRefresh = async () => {
+	const date = new Date(selectedDate.value)
+	from.value = timestampForBeginOfMonth(date)
+	to.value = timestampForEndOfMonth(date)
 	await loaddata()
 	paging.value?.complete()
 }

@@ -122,6 +122,7 @@ export const useScheduleStore = defineStore('schedules', {
 				consume
 			}) as {id:string, startTime: number, endTime: number, courseDate: string}[]
 			const userStore = useUsersStore()
+			const orgStore = useOrgsStore()
 			if (typeof(items) !== 'undefined' &&
 				items.length > 0) {
 				items.forEach(item => {
@@ -144,8 +145,12 @@ export const useScheduleStore = defineStore('schedules', {
 						consume,
 						status: 0
 					}
-					
 					const ids:string[] = [teacherId]
+					const orgs = orgStore.orgs.filter(o => o._id === orgId)
+					if (orgs.length > 0) {
+						const org = orgs[0]
+						ids.push(org.creatorId)
+					}
 					if (studentId.length > 0) {
 						ids.push(studentId)
 					} else if (classId.length > 0 && presentIds.length > 0) {
@@ -473,6 +478,7 @@ export const useScheduleStore = defineStore('schedules', {
 			}
 			const userStore = useUsersStore()
 			const courseStore = useCourseStore()
+			const orgStore = useOrgsStore()
 			let studentNo = ''
 			if (studentId.length > 0) {
 				const students = userStore.students.filter(s => s._id === studentId)
@@ -509,10 +515,15 @@ export const useScheduleStore = defineStore('schedules', {
 				schedules.forEach(s => {
 					s.status = status	
 				})
-				if (status === 2 || consume === 0) {
+				if (consume === 0) {
 					return true
 				}
-				const notifications:ConsumeNotification[] = []
+				const notifications:ConsumeNotification[]&CancelNotification[] = []
+				const schedule = schedules[0]
+				const date = new Date(schedule.startTime)
+				const endDate = new Date(schedule.endTime)
+				const time = ymd(date) + " " + hhmm(date) + "~" + hhmm(endDate)
+				const orgs = orgStore.orgs.filter(o => o._id === schedule.orgId)
 				if (studentId.length > 0) {
 					userStore.entries.forEach(e => {
 						if (e.studentId === studentNo &&
@@ -521,20 +532,34 @@ export const useScheduleStore = defineStore('schedules', {
 							e.orgId === orgId) {
 							if (status === 0) {
 								e.consume -= consume
-							} else if (status === 1) {
-								e.consume += consume
+							} else if (status === 1 || status === 2) {
+								if (status === 1) {
+									e.consume += consume
+								}
 								const index = userStore.students.findIndex(s => s.studentNo === studentNo)
 								if (index !== -1) {
 									const s = userStore.students[index]
 									s.associateIds?.forEach(id => {
-										const item:ConsumeNotification = {
-											userId: id,
-											student: s.nickName,
-											course: courses[0].name,
-											consume,
-											surplus: e.total - e.consume
+										if (status === 1) {
+											const item:ConsumeNotification = {
+												userId: id,
+												student: s.nickName,
+												course: courses[0].name,
+												consume,
+												surplus: e.total - e.consume
+											}
+											notifications.push(item)
+										} else if (status === 2) {
+											const item:CancelNotification = {
+												userId: id,
+												orgName: orgs[0].name,
+												student: s.nickName,
+												course: courses[0].name,
+												time,
+												reason: "学生请假"
+											}
+											notifications.push(item)
 										}
-										notifications.push(item)
 									})
 								}
 							}
@@ -548,20 +573,34 @@ export const useScheduleStore = defineStore('schedules', {
 							e.orgId === orgId) {
 							if (status === 0) {
 								e.consume -= consume
-							} else if (status === 1) {
-								e.consume += consume
+							} else if (status === 1 || status === 2) {
+								if (status === 1) {
+									e.consume += consume
+								}
 								const index = userStore.students.findIndex(s => s.studentNo === e.studentId)
 								if (index !== -1) {
 									const s = userStore.students[index]
 									s.associateIds?.forEach(id => {
-										const item:ConsumeNotification = {
-											userId: id,
-											student: s.nickName,
-											course: courses[0].name,
-											consume,
-											surplus: e.total - e.consume
+										if (status === 1) {
+											const item:ConsumeNotification = {
+												userId: id,
+												student: s.nickName,
+												course: courses[0].name,
+												consume,
+												surplus: e.total - e.consume
+											}
+											notifications.push(item)
+										} else if (status === 2) {
+											const item:CancelNotification = {
+												userId: id,
+												orgName: orgs[0].name,
+												student: s.nickName,
+												course: courses[0].name,
+												time,
+												reason: "学生请假"
+											}
+											notifications.push(item)
 										}
-										notifications.push(item)
 									})
 								}
 							}		
@@ -570,7 +609,11 @@ export const useScheduleStore = defineStore('schedules', {
 				}
 				if (notifications.length > 0) {
 					const sender = useSenderStore()
-					sender.templateMessage(notifications, "schedule_consume")
+					let type = "schedule_consume"
+					if (status === 2) {
+						type = "schedule_cancel"
+					}
+					sender.templateMessage(notifications, type)
 				}
 			}
 			return result

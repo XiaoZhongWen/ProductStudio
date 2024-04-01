@@ -362,7 +362,13 @@ const onLeaveTap = async () => {
 }
 
 const onDeleteTap = () => {
-	const content = "确定要取消学员" + student.value?.nickName + "在" + dateDesc.value + start.value + "~" + end.value + "的" + course.value?.name + "课程吗?"
+	let prefix = "学员"
+	let name = student.value?.nickName
+	if (props.schedule.classId) {
+		prefix = "班级"
+		name = grade.value?.name
+	}
+	const content = "确定要取消" + prefix + name + "在" + dateDesc.value + start.value + "~" + end.value + "的" + course.value?.name + "课程吗?"
 	uni.showModal({
 		title: global.appName,
 		content: content,
