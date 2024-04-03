@@ -149,7 +149,9 @@ export const useScheduleStore = defineStore('schedules', {
 					const orgs = orgStore.orgs.filter(o => o._id === orgId)
 					if (orgs.length > 0) {
 						const org = orgs[0]
-						ids.push(org.creatorId)
+						if (!ids.includes(org.creatorId)) {
+							ids.push(org.creatorId)
+						}
 					}
 					if (studentId.length > 0) {
 						ids.push(studentId)
@@ -161,6 +163,7 @@ export const useScheduleStore = defineStore('schedules', {
 					const _date = new Date(item.courseDate)
 					const from = timestampForBeginOfMonth(_date)
 					const to = timestampForEndOfMonth(_date)
+					
 					ids.forEach(id => {
 						// 更新schedulesMap缓存
 						key = id + "-" + item.courseDate

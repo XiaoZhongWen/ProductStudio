@@ -51,7 +51,7 @@ onUnload(() => {
 	uni.$off(global.event_name.showSelectRole)
 })
 
-const onConfirm = () => {
+const onConfirm = async () => {
 	const roleIds =  usersStore.owner.roles ?? []
 	if (selectedId.value.length) {
 		let flag = roleIds.length !== selectedId.value.length
@@ -61,7 +61,7 @@ const onConfirm = () => {
 		}
 		if (flag) {
 			// 更新角色数据
-			usersStore.updateRoles(selectedId.value)
+			await usersStore.updateRoles(selectedId.value)
 		} else {
 			console.info("角色未变更")
 		}

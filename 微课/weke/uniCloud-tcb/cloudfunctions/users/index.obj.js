@@ -521,7 +521,7 @@ module.exports = {
 		}
 		let identity = md5(name + "-" + mobile)
 		// 开发环境
-		identity = mobile
+		// identity = mobile
 		const db = uniCloud.database()
 		let res = await db.collection('wk-student').where({
 			identity: identity

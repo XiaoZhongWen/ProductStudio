@@ -120,7 +120,7 @@
 				<text class="desc">{{totalConsume}}</text>
 			</view>
 		</view>
-		<view class="section other">
+		<view class="section other" v-if="scheduleId.length === 0">
 			<!-- <view class="row">
 				<view class="left">
 					<view class="top">

@@ -118,7 +118,6 @@ watchEffect(() => {
 	const key2 = userId + "-" + selectedDate.value
 	const values = scheduleStore.schedulesMap.get(key2) ?? []
 	const res = values.filter(s => s.courseDate === selectedDate.value)
-	
 	res.sort((a, b) => {
 	  // 先按status递增排序
 	  if (a.status !== b.status) {

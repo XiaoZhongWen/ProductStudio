@@ -61,12 +61,20 @@ const global = getApp().globalData!
 const isShowChangePwdMenu = ref(usersStore.owner.from === 'stuNo' && 
 		usersStore.owner.studentNo.length > 0)
 
+// const other:ListItem[] = [
+// 	 {
+// 	 	type: "navigate-filled",
+// 	 	name: "新手指南",
+// 		to: "/pages/guider/guider"
+// 	 },
+// 	 {
+// 	 	type: "heart-filled",
+// 	 	name: "关于我们",
+// 		to: "/pages/about/about"
+// 	 }
+// ]
+
 const other:ListItem[] = [
-	 {
-	 	type: "navigate-filled",
-	 	name: "新手指南",
-		to: "/pages/guider/guider"
-	 },
 	 {
 	 	type: "heart-filled",
 	 	name: "关于我们",
